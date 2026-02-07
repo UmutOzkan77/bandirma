@@ -1,5 +1,5 @@
 /**
- * Header Bileşeni - Başlık ve navigasyon ikonları
+ * Header Bileşeni
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';

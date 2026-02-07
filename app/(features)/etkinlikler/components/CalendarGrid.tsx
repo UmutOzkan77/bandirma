@@ -1,5 +1,5 @@
 /**
- * CalendarGrid Bileşeni - Aylık takvim görünümü
+ * CalendarGrid Bileşeni - Aylık takvim
  */
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
@@ -53,7 +53,6 @@ export default function CalendarGrid({ currentDate, events, selectedDate, onDate
                     <Text style={styles.navIcon}>›</Text>
                 </TouchableOpacity>
             </View>
-
             <View style={styles.weekDaysRow}>
                 {DAYS_OF_WEEK.map((day, index) => (
                     <View key={index} style={styles.weekDayCell}>
@@ -61,15 +60,12 @@ export default function CalendarGrid({ currentDate, events, selectedDate, onDate
                     </View>
                 ))}
             </View>
-
             <View style={styles.daysGrid}>
                 {calendarDays.map((day, index) => {
                     if (day === null) return <View key={`empty-${index}`} style={styles.dayCell} />;
-
                     const dateStr = formatDate(day);
                     const dayEvents = events.get(dateStr) || [];
                     const isSelected = selectedDate === dateStr;
-
                     return (
                         <TouchableOpacity key={`day-${day}`} style={styles.dayCell} onPress={() => onDateSelect(dateStr)} activeOpacity={0.7}>
                             <View style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>
@@ -86,7 +82,6 @@ export default function CalendarGrid({ currentDate, events, selectedDate, onDate
                     );
                 })}
             </View>
-
             <Text style={styles.footerText}>{MONTHS_TR[month].toUpperCase()} AJANDASI</Text>
         </View>
     );

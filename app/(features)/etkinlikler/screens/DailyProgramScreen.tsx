@@ -36,7 +36,7 @@ export default function DailyProgramScreen({ selectedDate, onDateChange, onEvent
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <Text style={styles.title}>Günlük Program </Text>
+                <Text style={styles.title}>Günlük Program</Text>
                 <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
                     <Text style={styles.closeIcon}>✕</Text>
                 </TouchableOpacity>

@@ -1,10 +1,7 @@
 /**
  * Etkinlikler Modülü Ana Ekranı
  * Tüm ekranları koordine eden ana bileşen
- * 
- * Bandırma Onyedi Eylül Üniversitesi - Etkinlikler Modülü
  */
-
 import React, { useState } from 'react';
 import { View, StyleSheet, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

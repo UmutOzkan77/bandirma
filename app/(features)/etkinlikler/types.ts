@@ -23,13 +23,7 @@ export interface Event {
     color: string;
 }
 
-export type NotificationType =
-    | 'timeChange'
-    | 'dateChange'
-    | 'cancelled'
-    | 'newEvent'
-    | 'locationChange'
-    | 'reminder';
+export type NotificationType = 'timeChange' | 'dateChange' | 'cancelled' | 'newEvent' | 'locationChange' | 'reminder';
 
 export interface Notification {
     id: string;

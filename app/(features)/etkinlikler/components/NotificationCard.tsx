@@ -1,5 +1,5 @@
 /**
- * NotificationCard Bileşeni - Bildirim kartları
+ * NotificationCard Bileşeni
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';

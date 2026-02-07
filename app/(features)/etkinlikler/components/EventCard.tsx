@@ -15,7 +15,6 @@ interface EventCardProps {
 export default function EventCard({ event, community }: EventCardProps) {
     return (
         <View style={styles.container}>
-            {/* Üst Alan - Topluluk Bilgisi */}
             <View style={styles.header}>
                 <Image source={{ uri: community.logo }} style={styles.logo} />
                 <View style={styles.headerText}>
@@ -23,17 +22,12 @@ export default function EventCard({ event, community }: EventCardProps) {
                     <Text style={styles.timeAgo}>{getTimeAgo(event.createdAt)}</Text>
                 </View>
             </View>
-
-            {/* Orta Alan - Etkinlik Görseli */}
             <View style={styles.imageContainer}>
                 <Image source={{ uri: event.image }} style={styles.eventImage} resizeMode="cover" />
             </View>
-
-            {/* Alt Alan - Etkinlik Detayları */}
             <View style={styles.content}>
                 <Text style={styles.eventTitle}>{event.title}</Text>
                 <Text style={styles.eventDescription} numberOfLines={2}>{event.description}</Text>
-
                 <View style={styles.detailsContainer}>
                     <View style={styles.detailItem}>
                         <Text style={styles.detailIcon}>📅</Text>
