@@ -105,7 +105,7 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                     style={styles.calendarButton}
                     onPress={onNavigateToStatistics}
                 >
-                    <Text style={styles.calendarIcon}>�</Text>
+                    <Text style={styles.calendarIcon}>📅</Text>
                 </TouchableOpacity>
             </View>
 
