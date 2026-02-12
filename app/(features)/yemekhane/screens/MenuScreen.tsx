@@ -7,7 +7,7 @@
  */
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { weeklyMenuData, densityData, serviceHours, DailyMenu } from '../mockData';
 import DaySelector from '../components/DaySelector';
 import MealSection from '../components/MealSection';
@@ -15,7 +15,8 @@ import VoteSection from '../components/VoteSection';
 import DensityIndicator from '../components/DensityIndicator';
 
 interface MenuScreenProps {
-    // Ekran içi navigasyon için props eklenebilir
+    onNavigateToStatistics?: () => void;
+    onNavigateToFeedback?: () => void;
 }
 
 // Bugünden itibaren sonraki 5 iş gününü (hafta içi) getiren fonksiyon
@@ -59,7 +60,7 @@ const getNext5Weekdays = (): DailyMenu[] => {
     return weekdays;
 };
 
-export default function MenuScreen({ }: MenuScreenProps) {
+export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedback }: MenuScreenProps) {
     // Önümüzdeki 5 iş günü
     const displayMenuData = useMemo(() => getNext5Weekdays(), []);
 
@@ -100,8 +101,11 @@ export default function MenuScreen({ }: MenuScreenProps) {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Günün Menüsü</Text>
-                <TouchableOpacity style={styles.notificationButton}>
-                    <Text style={styles.notificationIcon}>🔔</Text>
+                <TouchableOpacity
+                    style={styles.calendarButton}
+                    onPress={onNavigateToStatistics}
+                >
+                    <Text style={styles.calendarIcon}>�</Text>
                 </TouchableOpacity>
             </View>
 
@@ -148,6 +152,16 @@ export default function MenuScreen({ }: MenuScreenProps) {
                     onVote={handleVote}
                 />
 
+                {/* Yorum Yap Butonu */}
+                <TouchableOpacity
+                    style={styles.feedbackButton}
+                    activeOpacity={0.8}
+                    onPress={onNavigateToFeedback}
+                >
+                    <Text style={styles.feedbackButtonIcon}>💬</Text>
+                    <Text style={styles.feedbackButtonText}>Yorum Yap</Text>
+                </TouchableOpacity>
+
                 {/* Alt boşluk */}
                 <View style={styles.bottomSpacer} />
             </View>
@@ -173,7 +187,7 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.bold,
         color: colors.textLight,
     },
-    notificationButton: {
+    calendarButton: {
         width: 40,
         height: 40,
         borderRadius: borderRadius.full,
@@ -181,7 +195,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    notificationIcon: {
+    calendarIcon: {
         fontSize: 20,
     },
     content: {
@@ -208,6 +222,27 @@ const styles = StyleSheet.create({
         fontSize: fontSize.sm,
         color: colors.primaryAccent,
         fontWeight: fontWeight.semibold,
+    },
+    feedbackButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.primaryDark,
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.lg,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
+        borderRadius: borderRadius.lg,
+        gap: spacing.sm,
+        ...shadows.card,
+    },
+    feedbackButtonIcon: {
+        fontSize: 20,
+    },
+    feedbackButtonText: {
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.bold,
+        color: colors.textLight,
     },
     bottomSpacer: {
         height: spacing.xxxl,
