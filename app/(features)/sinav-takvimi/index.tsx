@@ -36,16 +36,7 @@ export default function SinavTakvimiScreen() {
                 return <CalendarScreen onNavigateToCalculator={navigateToCalculator} />;
             case 'calculator':
                 return <CalculatorScreen />;
-            case 'profile':
-                return (
-                    <View style={styles.placeholderScreen}>
-                        <Text style={styles.placeholderIcon}>👤</Text>
-                        <Text style={styles.placeholderTitle}>Profil</Text>
-                        <Text style={styles.placeholderText}>
-                            Bu sayfa yakında eklenecek
-                        </Text>
-                    </View>
-                );
+
             default:
                 return <HomeScreen onNavigateToCalendar={navigateToCalendar} />;
         }
@@ -70,7 +61,7 @@ export default function SinavTakvimiScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundMain,
     },
     content: {
         flex: 1,
@@ -79,7 +70,7 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundMain,
         padding: 32,
     },
     placeholderIcon: {

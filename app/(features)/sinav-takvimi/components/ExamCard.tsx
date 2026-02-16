@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     },
     seeAllText: {
         fontSize: fontSize.sm,
-        color: colors.primaryAccent,
+        color: colors.accent,
         fontWeight: fontWeight.medium,
     },
     locationRow: {
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     countdownBox: {
-        backgroundColor: colors.backgroundLight,
+        backgroundColor: colors.backgroundSubtle,
         borderRadius: borderRadius.md,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.sm,

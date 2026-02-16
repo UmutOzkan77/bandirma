@@ -215,7 +215,7 @@ export default function CalculatorScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundMain,
     },
     header: {
         flexDirection: 'row',
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
     },
     progressFill: {
         height: '100%',
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
         borderRadius: borderRadius.full,
     },
     progressText: {
@@ -306,19 +306,19 @@ const styles = StyleSheet.create({
         paddingVertical: spacing.md,
         marginTop: spacing.sm,
         borderWidth: 1,
-        borderColor: colors.primaryAccent,
+        borderColor: colors.accent,
         borderRadius: borderRadius.md,
         borderStyle: 'dashed',
-        backgroundColor: colors.primaryAccent + '10',
+        backgroundColor: colors.accent + '10',
     },
     addIcon: {
         fontSize: fontSize.lg,
-        color: colors.primaryAccent,
+        color: colors.accent,
         marginRight: spacing.sm,
     },
     addText: {
         fontSize: fontSize.sm,
-        color: colors.primaryAccent,
+        color: colors.accent,
         fontWeight: fontWeight.medium,
     },
     finalCard: {
@@ -359,7 +359,7 @@ const styles = StyleSheet.create({
         height: 60,
         borderRadius: 30,
         borderWidth: 2,
-        borderColor: colors.primaryAccent,
+        borderColor: colors.accent,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.md,
@@ -388,21 +388,21 @@ const styles = StyleSheet.create({
     requiredHighlight: {
         fontSize: fontSize.xl,
         fontWeight: fontWeight.bold,
-        color: colors.primaryAccent,
+        color: colors.accent,
     },
     resultCard: {
-        backgroundColor: colors.primaryAccent + '20',
+        backgroundColor: colors.accent + '20',
         marginHorizontal: spacing.lg,
         marginBottom: spacing.lg,
         padding: spacing.lg,
         borderRadius: borderRadius.lg,
         borderWidth: 1,
-        borderColor: colors.primaryAccent + '50',
+        borderColor: colors.accent + '50',
     },
     resultTitle: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.primaryAccent,
+        color: colors.accent,
         marginBottom: spacing.md,
     },
     resultMessage: {
@@ -414,7 +414,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
         marginHorizontal: spacing.lg,
         padding: spacing.lg,
         borderRadius: borderRadius.md,
@@ -427,7 +427,7 @@ const styles = StyleSheet.create({
     calculateText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.primaryDark,
+        color: colors.textInverse,
     },
     bottomSpacing: {
         height: spacing.xxxl,

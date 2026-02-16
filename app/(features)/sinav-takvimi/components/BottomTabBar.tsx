@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, shadows } from '../theme';
 
-export type TabName = 'home' | 'calendar' | 'calculator' | 'profile';
+export type TabName = 'home' | 'calendar' | 'calculator';
 
 interface TabItem {
     key: TabName;
@@ -23,7 +23,6 @@ const TABS: TabItem[] = [
     { key: 'home', label: 'Ana Sayfa', icon: '🏠' },
     { key: 'calendar', label: 'Takvim', icon: '📅' },
     { key: 'calculator', label: 'Notlar', icon: '📊' },
-    { key: 'profile', label: 'Profil', icon: '👤' },
 ];
 
 export default function BottomTabBar({ activeTab, onTabPress }: BottomTabBarProps) {
@@ -56,7 +55,7 @@ export default function BottomTabBar({ activeTab, onTabPress }: BottomTabBarProp
 const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        backgroundColor: colors.primaryNavy,
+        backgroundColor: colors.backgroundCard,
         borderTopWidth: 1,
         borderTopColor: colors.border,
         paddingBottom: spacing.md,
