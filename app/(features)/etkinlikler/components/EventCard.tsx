@@ -2,7 +2,7 @@
  * EventCard Bileşeni - Feed kart yapısı
  */
 import React from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../theme';
 import { Event, Community } from '../types';
 import { getTimeAgo, formatDateTurkish } from '../mockData';
@@ -10,15 +10,18 @@ import { getTimeAgo, formatDateTurkish } from '../mockData';
 interface EventCardProps {
     event: Event;
     community: Community;
+    onCommunityPress?: (communityId: string) => void;
 }
 
-export default function EventCard({ event, community }: EventCardProps) {
+export default function EventCard({ event, community, onCommunityPress }: EventCardProps) {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
                 <Image source={{ uri: community.logo }} style={styles.logo} />
                 <View style={styles.headerText}>
-                    <Text style={styles.communityName}>{community.name}</Text>
+                    <TouchableOpacity onPress={() => onCommunityPress?.(community.id)}>
+                        <Text style={styles.communityName}>{community.name}</Text>
+                    </TouchableOpacity>
                     <Text style={styles.timeAgo}>{getTimeAgo(event.createdAt)}</Text>
                 </View>
             </View>

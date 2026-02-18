@@ -7,6 +7,8 @@ export interface Community {
     name: string;
     logo: string;
     isVerified: boolean;
+    description?: string;
+    memberCount?: number;
 }
 
 export interface Event {
@@ -35,4 +37,4 @@ export interface Notification {
     isRead: boolean;
 }
 
-export type ScreenType = 'feed' | 'calendar' | 'dailyProgram' | 'notifications';
+export type ScreenType = 'feed' | 'calendar' | 'dailyProgram' | 'notifications' | 'communityDetail';
