@@ -63,9 +63,7 @@ export default function DersProgramiScreen() {
         setSelectedDate(date);
     };
 
-    const handleSettingsPress = () => {
-        // TODO: Implement settings
-    };
+
 
     const handleAddCourse = () => {
         setIsModalVisible(true);
@@ -95,10 +93,7 @@ export default function DersProgramiScreen() {
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
             {/* Header with month/year */}
-            <Header
-                monthYear={monthYear}
-                onSettingsPress={handleSettingsPress}
-            />
+            <Header monthYear={monthYear} />
 
             {/* Day Selector */}
             <DaySelector
