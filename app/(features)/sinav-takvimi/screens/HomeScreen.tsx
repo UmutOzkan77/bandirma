@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { currentStudent, upcomingExams, todayLessons, campusNews } from '../mockData';
 import ExamAlertBanner from '../components/ExamAlertBanner';
 import ExamCard from '../components/ExamCard';
@@ -95,7 +95,7 @@ export default function HomeScreen({ onNavigateToCalendar }: HomeScreenProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundMain,
     },
     header: {
         flexDirection: 'row',
@@ -113,7 +113,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: 24,
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.md,
@@ -121,7 +121,7 @@ const styles = StyleSheet.create({
     avatarText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.primaryDark,
+        color: colors.primary,
     },
     welcomeText: {
         justifyContent: 'center',
@@ -142,6 +142,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.backgroundCard,
         alignItems: 'center',
         justifyContent: 'center',
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     notificationIcon: {
         fontSize: 20,
@@ -161,7 +163,7 @@ const styles = StyleSheet.create({
     },
     seeAllLink: {
         fontSize: fontSize.sm,
-        color: colors.primaryAccent,
+        color: colors.accent,
         fontWeight: fontWeight.medium,
     },
     lessonsContainer: {
@@ -176,9 +178,10 @@ const styles = StyleSheet.create({
         marginBottom: spacing.sm,
         borderWidth: 1,
         borderColor: colors.border,
+        ...shadows.card,
     },
     lessonTime: {
-        backgroundColor: colors.backgroundLight,
+        backgroundColor: colors.backgroundSubtle,
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: borderRadius.sm,
@@ -187,7 +190,7 @@ const styles = StyleSheet.create({
     lessonTimeText: {
         fontSize: fontSize.sm,
         fontWeight: fontWeight.bold,
-        color: colors.primaryAccent,
+        color: colors.accent,
     },
     lessonInfo: {
         flex: 1,
@@ -213,10 +216,11 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         borderWidth: 1,
         borderColor: colors.border,
+        ...shadows.card,
     },
     newsImagePlaceholder: {
         height: 100,
-        backgroundColor: colors.backgroundLight,
+        backgroundColor: colors.backgroundSubtle,
         alignItems: 'center',
         justifyContent: 'center',
     },

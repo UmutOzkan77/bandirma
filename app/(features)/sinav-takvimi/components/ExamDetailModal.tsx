@@ -122,7 +122,7 @@ export default function ExamDetailModal({ visible, exam, onClose, onNavigateToCa
                             <Switch
                                 value={reminderEnabled}
                                 onValueChange={handleReminderToggle}
-                                trackColor={{ false: colors.border, true: colors.primaryAccent }}
+                                trackColor={{ false: colors.border, true: colors.accent }}
                                 thumbColor={colors.textPrimary}
                             />
                         </View>
@@ -149,11 +149,11 @@ export default function ExamDetailModal({ visible, exam, onClose, onNavigateToCa
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.6)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-end',
     },
     container: {
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundModal,
         borderTopLeftRadius: borderRadius.xxl,
         borderTopRightRadius: borderRadius.xxl,
         padding: spacing.xl,
@@ -162,7 +162,7 @@ const styles = StyleSheet.create({
         ...shadows.modal,
     },
     badge: {
-        backgroundColor: colors.primaryAccent + '30',
+        backgroundColor: colors.accent + '20',
         paddingHorizontal: spacing.md,
         paddingVertical: spacing.sm,
         borderRadius: borderRadius.sm,
@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         fontSize: fontSize.xs,
-        color: colors.primaryAccent,
+        color: colors.accent,
         fontWeight: fontWeight.bold,
         letterSpacing: 1,
     },
@@ -217,6 +217,8 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
         borderRadius: borderRadius.md,
         marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     reminderContent: {
         flexDirection: 'row',
@@ -232,21 +234,21 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.medium,
     },
     reminderMessageContainer: {
-        backgroundColor: colors.primaryAccent + '20',
+        backgroundColor: colors.accent + '10',
         padding: spacing.md,
         borderRadius: borderRadius.md,
         marginBottom: spacing.md,
     },
     reminderMessageText: {
         fontSize: fontSize.sm,
-        color: colors.primaryAccent,
+        color: colors.accent,
         textAlign: 'center',
     },
     viewNotesButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
         padding: spacing.lg,
         borderRadius: borderRadius.md,
         marginBottom: spacing.md,
@@ -257,7 +259,7 @@ const styles = StyleSheet.create({
     },
     viewNotesText: {
         fontSize: fontSize.md,
-        color: colors.primaryDark,
+        color: colors.textInverse,
         fontWeight: fontWeight.bold,
     },
     notesSection: {
@@ -265,6 +267,8 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.lg,
         padding: spacing.lg,
         marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     notesSectionTitle: {
         fontSize: fontSize.lg,
@@ -273,7 +277,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     noteCard: {
-        backgroundColor: colors.backgroundLight,
+        backgroundColor: colors.backgroundSubtle,
         borderRadius: borderRadius.md,
         padding: spacing.md,
         marginBottom: spacing.sm,
@@ -293,7 +297,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.accentBlue,
+        backgroundColor: colors.secondary,
         padding: spacing.md,
         borderRadius: borderRadius.md,
         marginTop: spacing.md,
@@ -304,7 +308,7 @@ const styles = StyleSheet.create({
     },
     calculatorText: {
         fontSize: fontSize.sm,
-        color: colors.textPrimary,
+        color: colors.textInverse,
         fontWeight: fontWeight.semibold,
     },
     closeButton: {

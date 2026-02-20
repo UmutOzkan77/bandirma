@@ -11,10 +11,10 @@ import { calendarData, monthlyFavorite, turkishMonths, weeklyMenuData, DailyMenu
 import CalendarView from '../components/CalendarView';
 
 interface StatisticsScreenProps {
-    // Props eklenebilir
+    onGoBack?: () => void;
 }
 
-export default function StatisticsScreen({ }: StatisticsScreenProps) {
+export default function StatisticsScreen({ onGoBack }: StatisticsScreenProps) {
     const [currentMonth, setCurrentMonth] = useState(1); // Şubat (0-indexed -> 1)
     const [currentYear, setCurrentYear] = useState(2026);
 
@@ -66,7 +66,7 @@ export default function StatisticsScreen({ }: StatisticsScreenProps) {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity style={styles.backButton}>
+                <TouchableOpacity style={styles.backButton} onPress={onGoBack}>
                     <Text style={styles.backIcon}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>İstatistikler</Text>

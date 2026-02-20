@@ -1,6 +1,7 @@
 /**
  * Yemekhane Modülü Ana Ekranı
- * Tab navigasyonu ile tüm alt ekranları birleştirir
+ * Navigasyon butonları ile ekranlar arası geçiş
+ * Bottom tab bar kaldırıldı
  * 
  * Bandırma Onyedi Eylül Üniversitesi - Yemekhane Modülü
  */
@@ -8,50 +9,56 @@ import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from './theme';
-import BottomTabBar, { TabName } from './components/BottomTabBar';
 import MenuScreen from './screens/MenuScreen';
-import AnalyticsScreen from './screens/AnalyticsScreen';
 import StatisticsScreen from './screens/StatisticsScreen';
 import FeedbackScreen from './screens/FeedbackScreen';
 
-export default function YemekhaneScreen() {
-    // Aktif tab state'i
-    const [activeTab, setActiveTab] = useState<TabName>('menu');
+type ScreenName = 'menu' | 'statistics' | 'feedback';
 
-    // Aktif ekranı render et
+export default function YemekhaneScreen() {
+    const [activeScreen, setActiveScreen] = useState<ScreenName>('menu');
+
     const renderScreen = () => {
-        switch (activeTab) {
+        switch (activeScreen) {
             case 'menu':
-                return <MenuScreen />;
-            case 'analytics':
-                return <AnalyticsScreen />;
+                return (
+                    <MenuScreen
+                        onNavigateToStatistics={() => setActiveScreen('statistics')}
+                        onNavigateToFeedback={() => setActiveScreen('feedback')}
+                    />
+                );
             case 'statistics':
-                return <StatisticsScreen />;
+                return (
+                    <StatisticsScreen
+                        onGoBack={() => setActiveScreen('menu')}
+                    />
+                );
             case 'feedback':
-                return <FeedbackScreen />;
+                return (
+                    <FeedbackScreen
+                        onGoBack={() => setActiveScreen('menu')}
+                    />
+                );
             default:
-                return <MenuScreen />;
+                return (
+                    <MenuScreen
+                        onNavigateToStatistics={() => setActiveScreen('statistics')}
+                        onNavigateToFeedback={() => setActiveScreen('feedback')}
+                    />
+                );
         }
     };
 
-    // İstatistikler ekranı için arka plan rengi
     const containerStyle = [
         styles.container,
-        activeTab === 'statistics' && { backgroundColor: colors.backgroundDark }
+        activeScreen === 'statistics' && { backgroundColor: colors.backgroundDark }
     ];
 
     return (
         <SafeAreaView style={containerStyle} edges={['top']}>
-            {/* Ana içerik */}
             <View style={styles.content}>
                 {renderScreen()}
             </View>
-
-            {/* Alt navigasyon çubuğu */}
-            <BottomTabBar
-                activeTab={activeTab}
-                onTabPress={setActiveTab}
-            />
         </SafeAreaView>
     );
 }

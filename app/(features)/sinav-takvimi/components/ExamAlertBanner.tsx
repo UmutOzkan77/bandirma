@@ -50,7 +50,7 @@ const styles = StyleSheet.create({
         width: 48,
         height: 48,
         borderRadius: borderRadius.md,
-        backgroundColor: colors.backgroundLight,
+        backgroundColor: colors.backgroundSubtle,
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: spacing.md,
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     badge: {
-        backgroundColor: colors.primaryAccent + '30',
+        backgroundColor: colors.accent + '20',
         paddingHorizontal: spacing.sm,
         paddingVertical: spacing.xs,
         borderRadius: borderRadius.sm,
@@ -71,7 +71,7 @@ const styles = StyleSheet.create({
     },
     badgeText: {
         fontSize: fontSize.xs,
-        color: colors.primaryAccent,
+        color: colors.accent,
         fontWeight: fontWeight.bold,
     },
     title: {
@@ -85,7 +85,7 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
     },
     button: {
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.sm,
         borderRadius: borderRadius.full,
@@ -94,6 +94,6 @@ const styles = StyleSheet.create({
     buttonText: {
         fontSize: fontSize.sm,
         fontWeight: fontWeight.semibold,
-        color: colors.primaryDark,
+        color: colors.textInverse,
     },
 });

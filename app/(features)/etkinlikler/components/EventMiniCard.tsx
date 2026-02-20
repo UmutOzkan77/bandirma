@@ -4,14 +4,15 @@
 import React from 'react';
 import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../theme';
-import { Event } from '../types';
+import { Event, Community } from '../types';
 
 interface EventMiniCardProps {
     event: Event;
-    onDetailsPress: (eventId: string) => void;
+    community?: Community;
+    onDetailsPress?: (eventId: string) => void;
 }
 
-export default function EventMiniCard({ event, onDetailsPress }: EventMiniCardProps) {
+export default function EventMiniCard({ event, community, onDetailsPress }: EventMiniCardProps) {
     const timeDisplay = event.endTime ? `${event.time} - ${event.endTime}` : event.time;
 
     return (
@@ -29,10 +30,12 @@ export default function EventMiniCard({ event, onDetailsPress }: EventMiniCardPr
                         <Text style={styles.detailText}>{timeDisplay}</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.detailsButton} onPress={() => onDetailsPress(event.id)} activeOpacity={0.7}>
-                    <Text style={styles.detailsButtonText}>Detayları Gör</Text>
-                    <Text style={styles.arrowIcon}>›</Text>
-                </TouchableOpacity>
+                {onDetailsPress && (
+                    <TouchableOpacity style={styles.detailsButton} onPress={() => onDetailsPress(event.id)} activeOpacity={0.7}>
+                        <Text style={styles.detailsButtonText}>Detayları Gör</Text>
+                        <Text style={styles.arrowIcon}>›</Text>
+                    </TouchableOpacity>
+                )}
             </View>
         </View>
     );

@@ -1,45 +1,52 @@
 /**
  * Sınav Takvimi Modülü Tema Dosyası
- * Dark navy temalı tasarım - Sınav takvimi UI için özelleştirilmiş
+ * Light Theme (Aydınlık Tema) - Yemekhane modülü ile uyumlu
  */
 
 export const colors = {
-    // Primary Colors - Dark Navy Theme
-    primaryDark: '#0A1628',       // Ana arka plan - koyu lacivert
-    primaryNavy: '#0F2744',       // Kart arka planları
-    primaryAccent: '#2DD4BF',     // Teal vurgu rengi
-    accentBlue: '#3B82F6',        // Mavi vurgu
+    // Primary Colors
+    primary: '#004A99',          // Ana renk (Standart Mavi)
+    secondary: '#2DD4BF',        // İkincil renk (Teal/Yeşil - Ayrıntılar için)
+    accent: '#004A99',           // Vurgu rengi (Standart Mavi)
 
     // Status Colors
-    success: '#22C55E',           // Başarılı durumlar
-    error: '#EF4444',             // Hata, çakışma uyarıları
-    warning: '#F59E0B',           // Uyarı rengi
+    success: '#22C55E',          // Başarılı
+    error: '#EF4444',            // Hata
+    warning: '#F59E0B',          // Uyarı
+    info: '#3B82F6',             // Bilgi
 
     // Background Colors
-    backgroundDark: '#0A1628',    // Ana arka plan
-    backgroundCard: '#0F2744',    // Kart arka planları
-    backgroundLight: '#1A365D',   // Açık kart arka planları
-    backgroundInput: '#1E3A5F',   // Input arka planları
+    backgroundMain: '#F8FAFC',   // Ana arka plan (Açık Gri)
+    backgroundCard: '#FFFFFF',   // Kart arka plan (Beyaz)
+    backgroundInput: '#F1F5F9',  // Input alanları
+    backgroundModal: '#FFFFFF',  // Modal arka plan
+    backgroundSubtle: '#F1F5F9', // Hafif arka plan vurguları
 
     // Text Colors
-    textPrimary: '#FFFFFF',       // Ana metin
-    textSecondary: '#94A3B8',     // İkincil metin
-    textMuted: '#64748B',         // Soluk metin
-    textAccent: '#2DD4BF',        // Vurgulu metin
+    textPrimary: '#1E293B',      // Ana metin (Koyu Slate)
+    textSecondary: '#64748B',    // İkincil metin (Slate)
+    textMuted: '#94A3B8',        // Silik metin
+    textInverse: '#FFFFFF',      // Koyu zemin üstü açık metin
+    textAccent: '#004A99',       // Vurgulu metin (Standart Mavi)
+    textHighlight: '#2DD4BF',    // Yeşil detay metni
 
-    // Border & Shadow
-    border: '#1E3A5F',            // Sınır rengi
-    borderLight: '#2D4A6F',       // Açık sınır
-    shadow: 'rgba(0, 0, 0, 0.3)', // Gölge rengi
+    // Borders
+    border: '#E2E8F0',           // Standart kenarlık
+    borderLight: '#F1F5F9',      // Hafif kenarlık
 
-    // Calendar specific
-    calendarBg: '#0F2744',        // Takvim arka plan
-    examBlock: '#3B82F6',         // Sınav bloğu rengi
-    conflictBlock: '#EF4444',     // Çakışma bloğu rengi
+    // Feature Specific
+    calendarBg: '#FFFFFF',       // Takvim zemin
+    examBlock: '#E0F2FE',        // Sınav kutusu zemin (Açık Mavi)
+    examBlockText: '#0369A1',    // Sınav kutusu metin (Koyu Mavi)
+    conflictBlock: '#FEE2E2',    // Çakışma kutusu zemin (Açık Kırmızı)
+    conflictBlockText: '#B91C1C',// Çakışma kutusu metin (Koyu Kırmızı)
 
-    // Tab colors
-    tabActive: '#2DD4BF',         // Aktif tab
-    tabInactive: '#64748B',       // Pasif tab
+    // Tab Colors
+    tabActive: '#004A99', // Standart Mavi
+    tabInactive: '#64748B',
+
+    // Shadows
+    shadow: 'rgba(0, 0, 0, 0.05)',
 };
 
 export const spacing = {
@@ -82,32 +89,36 @@ export const fontWeight = {
 
 export const shadows = {
     card: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.2,
+        shadowColor: '#64748B',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
         shadowRadius: 8,
-        elevation: 4,
+        elevation: 2,
     },
     button: {
-        shadowColor: '#2DD4BF',
+        shadowColor: '#004A99', // Mavi Shadow
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 3,
     },
     modal: {
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 16,
+        shadowOpacity: 0.1,
+        shadowRadius: 24,
         elevation: 8,
     },
 };
 
 // Countdown timer için renk gradyanları
 export const countdownColors = {
-    days: colors.primaryAccent,
-    hours: colors.accentBlue,
+    days: colors.secondary,
+    hours: colors.accent,
     minutes: colors.warning,
     seconds: colors.error,
 };
+
+export default function Theme() {
+    return null;
+}

@@ -101,3 +101,7 @@ export const satisfactionColors = {
     neutral: '#94A3B8',         // Eşit
     negative: colors.error,     // Beğenilmedi
 };
+
+export default function Theme() {
+    return null;
+}

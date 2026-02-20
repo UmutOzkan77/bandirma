@@ -1,14 +1,13 @@
 /**
  * AnalyticsScreen
  * Yemek Analizleri ekranı - Tasarım 2
- * Memnuniyet göstergesi ve popüler yemekler
+ * Sadece günlük memnuniyet göstergesi
  */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
-import { dailySatisfactionData, popularMealsData } from '../mockData';
+import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { colors, spacing, fontSize, fontWeight } from '../theme';
+import { dailySatisfactionData } from '../mockData';
 import SatisfactionMeter from '../components/SatisfactionMeter';
-import PopularMealCard from '../components/PopularMealCard';
 
 interface AnalyticsScreenProps {
     // Props eklenebilir
@@ -20,9 +19,6 @@ export default function AnalyticsScreen({ }: AnalyticsScreenProps) {
             {/* Header */}
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Yemek Analizleri</Text>
-                <TouchableOpacity style={styles.calendarButton}>
-                    <Text style={styles.calendarIcon}>📅</Text>
-                </TouchableOpacity>
             </View>
 
             <ScrollView
@@ -34,19 +30,6 @@ export default function AnalyticsScreen({ }: AnalyticsScreenProps) {
                     percentage={dailySatisfactionData.percentage}
                     totalVotes={dailySatisfactionData.totalVotes}
                 />
-
-                {/* Popüler yemekler başlığı */}
-                <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Haftanın En Beğenilenleri</Text>
-                    <TouchableOpacity>
-                        <Text style={styles.sectionLink}>Bu Hafta</Text>
-                    </TouchableOpacity>
-                </View>
-
-                {/* Popüler yemek kartları */}
-                {popularMealsData.map((meal) => (
-                    <PopularMealCard key={meal.id} meal={meal} />
-                ))}
 
                 {/* Alt boşluk */}
                 <View style={styles.bottomSpacer} />
@@ -76,37 +59,8 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.bold,
         color: colors.textDark,
     },
-    calendarButton: {
-        width: 40,
-        height: 40,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.backgroundLight,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    calendarIcon: {
-        fontSize: 20,
-    },
     content: {
         flex: 1,
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        paddingTop: spacing.lg,
-        paddingBottom: spacing.md,
-    },
-    sectionTitle: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
-        color: colors.textDark,
-    },
-    sectionLink: {
-        fontSize: fontSize.md,
-        color: colors.primaryAccent,
-        fontWeight: fontWeight.medium,
     },
     bottomSpacer: {
         height: spacing.xxxl,

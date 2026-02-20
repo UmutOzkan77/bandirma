@@ -4,7 +4,7 @@
  */
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Modal } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { Exam, WeekDay, timeSlots } from '../mockData';
 
 type ViewMode = 'weekly' | 'monthly';
@@ -146,8 +146,8 @@ export default function WeeklyCalendar({
                                                         <Text style={styles.conflictText}>ÇAKIŞMA</Text>
                                                     </View>
                                                 )}
-                                                <Text style={styles.examCode} numberOfLines={1}>
-                                                    {exam.courseCode}
+                                                <Text style={styles.examCode} numberOfLines={2} ellipsizeMode="tail">
+                                                    {exam.courseName}
                                                 </Text>
                                             </TouchableOpacity>
                                         )}
@@ -306,7 +306,7 @@ export default function WeeklyCalendar({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundMain,
     },
     header: {
         flexDirection: 'row',
@@ -351,14 +351,14 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.border,
     },
     viewOptionActive: {
-        backgroundColor: colors.primaryAccent + '20',
+        backgroundColor: colors.accent + '10',
     },
     viewOptionText: {
         fontSize: fontSize.md,
         color: colors.textSecondary,
     },
     viewOptionTextActive: {
-        color: colors.primaryAccent,
+        color: colors.accent,
         fontWeight: fontWeight.semibold,
     },
     weekNav: {
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     dayNumberSelected: {
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
     },
     dayNumberText: {
         fontSize: fontSize.md,
@@ -417,7 +417,7 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.semibold,
     },
     dayNumberTextSelected: {
-        color: colors.primaryDark,
+        color: colors.textInverse,
     },
     gridContainer: {
         flex: 1,
@@ -470,18 +470,19 @@ const styles = StyleSheet.create({
     },
     conflictText: {
         fontSize: 8,
-        color: colors.textPrimary,
+        color: colors.conflictBlockText,
         fontWeight: fontWeight.bold,
     },
     examCode: {
-        fontSize: fontSize.xs,
-        color: colors.textPrimary,
+        fontSize: 10,
+        color: colors.examBlockText,
         fontWeight: fontWeight.semibold,
+        textAlign: 'center',
     },
     conflictWarning: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.error + '20',
+        backgroundColor: colors.error + '10',
         marginHorizontal: spacing.lg,
         marginBottom: spacing.lg,
         padding: spacing.md,
@@ -513,7 +514,7 @@ const styles = StyleSheet.create({
     },
     conflictActionText: {
         fontSize: fontSize.sm,
-        color: colors.textPrimary,
+        color: colors.textInverse,
         fontWeight: fontWeight.semibold,
     },
     resolvedMessage: {
@@ -537,17 +538,18 @@ const styles = StyleSheet.create({
     },
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'center',
         alignItems: 'center',
         padding: spacing.lg,
     },
     modalContent: {
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundModal,
         borderRadius: borderRadius.xl,
         padding: spacing.xl,
         width: '100%',
         maxWidth: 400,
+        ...shadows.modal,
     },
     modalTitle: {
         fontSize: fontSize.xl,
@@ -570,6 +572,8 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
         borderRadius: borderRadius.md,
         marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     modalOptionIcon: {
         fontSize: 24,
@@ -607,7 +611,7 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
     },
     conflictExamsList: {
-        backgroundColor: colors.backgroundCard,
+        backgroundColor: colors.backgroundSubtle,
         borderRadius: borderRadius.md,
         padding: spacing.lg,
         marginBottom: spacing.lg,
@@ -619,7 +623,7 @@ const styles = StyleSheet.create({
     conflictExamCode: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.primaryAccent,
+        color: colors.accent,
         marginBottom: spacing.xs,
     },
     conflictExamName: {
@@ -638,7 +642,7 @@ const styles = StyleSheet.create({
     conflictInfoBox: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: colors.warning + '20',
+        backgroundColor: colors.warning + '10',
         padding: spacing.md,
         borderRadius: borderRadius.md,
         marginBottom: spacing.lg,
@@ -654,16 +658,17 @@ const styles = StyleSheet.create({
         lineHeight: 18,
     },
     modalCloseButton: {
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.accent,
         paddingVertical: spacing.lg,
         paddingHorizontal: spacing.xl,
         borderRadius: borderRadius.md,
         alignItems: 'center',
+        ...shadows.button,
     },
     modalCloseButtonText: {
         fontSize: fontSize.md,
         fontWeight: fontWeight.bold,
-        color: colors.primaryDark,
+        color: colors.textInverse,
     },
     examDetailHeader: {
         flexDirection: 'row',
@@ -686,6 +691,8 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.md,
         padding: spacing.lg,
         marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     examDetailRow: {
         flexDirection: 'row',

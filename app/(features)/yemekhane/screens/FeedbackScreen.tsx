@@ -42,10 +42,10 @@ const storage = {
 };
 
 interface FeedbackScreenProps {
-    // Props eklenebilir
+    onGoBack?: () => void;
 }
 
-export default function FeedbackScreen({ }: FeedbackScreenProps) {
+export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
     const [sortBy, setSortBy] = useState<SortOption>('helpful');
     const [showSortMenu, setShowSortMenu] = useState(false);
 
@@ -139,6 +139,9 @@ export default function FeedbackScreen({ }: FeedbackScreenProps) {
         <View style={styles.container}>
             {/* Header */}
             <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={onGoBack}>
+                    <Text style={styles.backIcon}>←</Text>
+                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Öğrenci Geri Bildirimleri</Text>
                 <TouchableOpacity style={styles.searchButton}>
                     <Text style={styles.searchIcon}>🔍</Text>
@@ -300,6 +303,16 @@ const styles = StyleSheet.create({
         paddingTop: spacing.xl,
         paddingBottom: spacing.md,
         backgroundColor: colors.cardWhite,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    backIcon: {
+        fontSize: 24,
+        color: colors.textDark,
     },
     headerTitle: {
         fontSize: fontSize.xxl,
