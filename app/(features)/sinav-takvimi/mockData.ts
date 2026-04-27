@@ -60,9 +60,9 @@ export interface WeekDay {
 // Mock Data
 
 export const currentStudent: Student = {
-    id: '1',
-    name: 'Ahmet Yılmaz',
-    department: 'Bilgisayar Mühendisliği',
+    id: '2411504084',
+    name: 'İlayda Bilgili',
+    department: 'İngilizce Bilgisayar Mühendisliği',
     faculty: 'Mühendislik Fakültesi',
 };
 

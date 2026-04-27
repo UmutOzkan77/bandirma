@@ -1,168 +1,155 @@
-/**
- * MenuScreen
- * Günün Menüsü ekranı - Tasarım 1
- * Tüm sayfa kayar (header dahil)
- * 
- * Bandırma Onyedi Eylül Üniversitesi - Şubat 2026
- */
-import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { weeklyMenuData, densityData, serviceHours, DailyMenu } from '../mockData';
+import { serviceHours, DailyMenu, Meal } from '../mockData';
 import DaySelector from '../components/DaySelector';
 import MealSection from '../components/MealSection';
 import VoteSection from '../components/VoteSection';
 import DensityIndicator from '../components/DensityIndicator';
+import { useAcademic } from '../../../../contexts/AcademicContext';
 
 interface MenuScreenProps {
     onNavigateToStatistics?: () => void;
     onNavigateToFeedback?: () => void;
 }
 
-// Bugünden itibaren sonraki 5 iş gününü (hafta içi) getiren fonksiyon
-const getNext5Weekdays = (): DailyMenu[] => {
-    const today = new Date();
-    const todayDate = today.getDate();
-    const weekdays: DailyMenu[] = [];
+const dayNames = ['Pazar', 'Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi'];
+const dayShorts = ['Paz', 'Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt'];
 
-    // Bugünden başlayarak 5 hafta içi gün bul
-    let checkDate = todayDate;
-    let daysChecked = 0;
+type VoteMap = Record<string, { likes: number; dislikes: number }>;
 
-    while (weekdays.length < 5 && daysChecked < 30) {
-        // Bu tarihe ait menü var mı kontrol et
-        const menu = weeklyMenuData.find(m => m.dayNumber === checkDate);
+function mapMenuData(menuPeriodDays: NonNullable<ReturnType<typeof useAcademic>['menuPeriod']>['days']): DailyMenu[] {
+    return menuPeriodDays.map((day) => {
+        const dateObj = new Date(day.serviceDate + 'T12:00:00');
+        const meals: Meal[] = day.items
+            .sort((a, b) => a.sortOrder - b.sortOrder)
+            .map((item) => ({
+                id: item.id,
+                name: item.itemName,
+                type: (item.itemType as any) || 'mainDish',
+                calories: item.calories || 0,
+            }));
 
-        if (menu) {
-            // Hafta sonu değilse ekle (Cumartesi=6, Pazar=0)
-            const isWeekend = menu.dayName === 'Cumartesi' || menu.dayName === 'Pazar';
-            if (!isWeekend) {
-                weekdays.push(menu);
-            }
-        }
-
-        checkDate++;
-        daysChecked++;
-
-        // Ay sonunu geçtiyse aya göre ayarla
-        if (checkDate > 28) {
-            break;
-        }
-    }
-
-    // Eğer yeterli gün bulunamadıysa, mevcut verilerden ilk 5 hafta içi günü al
-    if (weekdays.length < 5) {
-        return weeklyMenuData
-            .filter(m => m.dayName !== 'Cumartesi' && m.dayName !== 'Pazar')
-            .slice(0, 5);
-    }
-
-    return weekdays;
-};
+        return {
+            id: day.id,
+            date: day.serviceDate,
+            dayName: dayNames[dateObj.getDay()],
+            dayShort: dayShorts[dateObj.getDay()],
+            dayNumber: dateObj.getDate(),
+            lunchTime: serviceHours.birinciOgretimOgle,
+            dinnerTime: serviceHours.ikinciOgretimAksam,
+            meals,
+            votes: {
+                likes: 0,
+                dislikes: 0,
+            },
+        };
+    });
+}
 
 export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedback }: MenuScreenProps) {
-    // Önümüzdeki 5 iş günü
-    const displayMenuData = useMemo(() => getNext5Weekdays(), []);
-
-    // Seçili gün state'i (varsayılan: ilk gün)
-    const [selectedDayId, setSelectedDayId] = useState<string>(displayMenuData[0]?.id || '3');
-
-    // Kullanıcı oyları state'i (gün ID'sine göre)
+    const { loading, menuPeriod } = useAcademic();
+    const [selectedDayId, setSelectedDayId] = useState('');
     const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike' | null>>({});
+    const [votes, setVotes] = useState<VoteMap>({});
 
-    // Seçili günün menüsü
-    const selectedMenu = useMemo(() => {
-        return weeklyMenuData.find(day => day.id === selectedDayId) || displayMenuData[0];
-    }, [selectedDayId, displayMenuData]);
+    const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days) : []), [menuPeriod]);
 
-    // Toplam kalori hesapla
+    useEffect(() => {
+        if (menuData.length > 0 && !selectedDayId) {
+            setSelectedDayId(menuData[0].id);
+        }
+    }, [menuData, selectedDayId]);
+
+    const selectedMenu = useMemo(() => menuData.find((day) => day.id === selectedDayId) || menuData[0], [menuData, selectedDayId]);
+
+    const selectedVotes = selectedMenu ? votes[selectedMenu.id] ?? { likes: selectedMenu.votes.likes, dislikes: selectedMenu.votes.dislikes } : { likes: 0, dislikes: 0 };
+
     const totalCalories = useMemo(() => {
+        if (!selectedMenu) return 0;
         return selectedMenu.meals.reduce((sum, meal) => sum + meal.calories, 0);
     }, [selectedMenu]);
 
-    // Şu anki saat kontrolü
     const currentHour = new Date().getHours();
     const isLunchTime = currentHour >= 11 && currentHour < 14;
+    const densityLevel = currentHour < 12 ? 'low' : currentHour < 14 ? 'high' : 'medium';
+    const densityPercent = currentHour < 12 ? 35 : currentHour < 14 ? 82 : 58;
 
-    // Oy verme işlemi
     const handleVote = (vote: 'like' | 'dislike') => {
-        setUserVotes(prev => ({
-            ...prev,
-            [selectedDayId]: vote
-        }));
+        if (!selectedMenu) return;
+        setVotes((current) => {
+            const currentVote = current[selectedMenu.id] ?? { likes: 0, dislikes: 0 };
+            return {
+                ...current,
+                [selectedMenu.id]: {
+                    likes: currentVote.likes + (vote === 'like' ? 1 : 0),
+                    dislikes: currentVote.dislikes + (vote === 'dislike' ? 1 : 0),
+                },
+            };
+        });
+        setUserVotes((current) => ({ ...current, [selectedMenu.id]: vote }));
     };
 
+    if (loading) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <ActivityIndicator size="large" color={colors.textLight} />
+                <Text style={styles.loadingText}>Yemekhane menusu yukleniyor...</Text>
+            </View>
+        );
+    }
+
+    if (!selectedMenu) {
+        return (
+            <View style={[styles.container, styles.centered]}>
+                <Text style={styles.loadingText}>Gecerli bir yemekhane periyodu bulunamadi.</Text>
+            </View>
+        );
+    }
+
     return (
-        <ScrollView
-            style={styles.container}
-            showsVerticalScrollIndicator={false}
-            bounces={true}
-        >
-            {/* Header */}
+        <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Günün Menüsü</Text>
-                <TouchableOpacity
-                    style={styles.calendarButton}
-                    onPress={onNavigateToStatistics}
-                >
+                <Text style={styles.headerTitle}>Gunun Menusu</Text>
+                <TouchableOpacity style={styles.calendarButton} onPress={onNavigateToStatistics}>
                     <Text style={styles.calendarIcon}>📅</Text>
                 </TouchableOpacity>
             </View>
 
-            {/* Gün seçici - Sadece hafta içi günler */}
-            <DaySelector
-                days={displayMenuData}
-                selectedDayId={selectedDayId}
-                onDaySelect={setSelectedDayId}
-            />
+            <DaySelector days={menuData} selectedDayId={selectedDayId} onDaySelect={setSelectedDayId} />
 
-            {/* İçerik alanı */}
             <View style={styles.content}>
-                {/* Tarih ve toplam kalori */}
                 <View style={styles.dateInfo}>
-                    <Text style={styles.dateText}>
-                        {selectedMenu.date} - {selectedMenu.dayName}
-                    </Text>
-                    <Text style={styles.calorieText}>
-                        Toplam: {totalCalories} kcal
-                    </Text>
+                    <Text style={styles.dateText}>{selectedMenu.date} - {selectedMenu.dayName}</Text>
+                    <Text style={styles.calorieText}>Toplam: {totalCalories} kcal</Text>
                 </View>
 
-                {/* Yoğunluk göstergesi */}
                 <DensityIndicator
-                    level={densityData.current}
-                    percentFull={densityData.percentFull}
-                    lastUpdated={densityData.lastUpdated}
+                    level={densityLevel as any}
+                    percentFull={densityPercent}
+                    lastUpdated={menuPeriod ? 'Cache aktif' : 'Yeni cekildi'}
                 />
 
-                {/* Günün Menüsü */}
                 <MealSection
                     mealTime="lunch"
                     timeRange={serviceHours.birinciOgretimOgle}
                     meals={selectedMenu.meals}
                     isOpen={isLunchTime}
-                    isAvailable={true}
+                    isAvailable
                 />
 
-                {/* Oylama bölümü */}
                 <VoteSection
-                    likes={selectedMenu.votes.likes}
-                    dislikes={selectedMenu.votes.dislikes}
+                    likes={selectedVotes.likes}
+                    dislikes={selectedVotes.dislikes}
                     userVote={userVotes[selectedDayId] || null}
                     onVote={handleVote}
                 />
 
-                {/* Yorum Yap Butonu */}
-                <TouchableOpacity
-                    style={styles.feedbackButton}
-                    activeOpacity={0.8}
-                    onPress={onNavigateToFeedback}
-                >
+                <TouchableOpacity style={styles.feedbackButton} activeOpacity={0.8} onPress={onNavigateToFeedback}>
                     <Text style={styles.feedbackButtonIcon}>💬</Text>
                     <Text style={styles.feedbackButtonText}>Yorum Yap</Text>
                 </TouchableOpacity>
 
-                {/* Alt boşluk */}
                 <View style={styles.bottomSpacer} />
             </View>
         </ScrollView>
@@ -173,6 +160,14 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.primaryDark,
+    },
+    centered: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        color: colors.textLight,
+        marginTop: 12,
     },
     header: {
         flexDirection: 'row',
@@ -191,58 +186,53 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: borderRadius.full,
-        backgroundColor: `${colors.textLight}20`,
+        backgroundColor: colors.cardWhite,
         alignItems: 'center',
         justifyContent: 'center',
+        ...shadows.button,
     },
     calendarIcon: {
-        fontSize: 20,
+        fontSize: 18,
     },
     content: {
-        backgroundColor: colors.backgroundLight,
-        borderTopLeftRadius: borderRadius.xl,
-        borderTopRightRadius: borderRadius.xl,
-        marginTop: spacing.md,
-        minHeight: 600,
+        paddingBottom: spacing.xxxl,
     },
     dateInfo: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.lg,
-        paddingBottom: spacing.sm,
+        marginBottom: spacing.md,
     },
     dateText: {
         fontSize: fontSize.md,
-        fontWeight: fontWeight.semibold,
-        color: colors.textDark,
+        color: colors.textLight,
+        fontWeight: fontWeight.medium,
     },
     calorieText: {
         fontSize: fontSize.sm,
-        color: colors.primaryAccent,
-        fontWeight: fontWeight.semibold,
+        color: colors.textLight,
+        opacity: 0.85,
     },
     feedbackButton: {
+        backgroundColor: colors.cardWhite,
+        marginHorizontal: spacing.lg,
+        marginTop: spacing.md,
+        borderRadius: borderRadius.lg,
+        paddingVertical: spacing.lg,
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.primaryDark,
-        marginHorizontal: spacing.lg,
-        marginTop: spacing.lg,
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.xl,
-        borderRadius: borderRadius.lg,
         gap: spacing.sm,
-        ...shadows.card,
+        ...shadows.button,
     },
     feedbackButtonIcon: {
-        fontSize: 20,
+        fontSize: 18,
     },
     feedbackButtonText: {
-        fontSize: fontSize.lg,
+        fontSize: fontSize.md,
         fontWeight: fontWeight.bold,
-        color: colors.textLight,
+        color: colors.textDark,
     },
     bottomSpacer: {
         height: spacing.xxxl,

@@ -1,11 +1,8 @@
-/**
- * ExamCard Component
- * Sıradaki sınav kartı - geri sayım timer'ı ile
- */
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { Exam, getCountdown } from '../mockData';
+import type { Exam } from '../utils';
+import { getCountdown } from '../utils';
 
 interface ExamCardProps {
     exam: Exam;
@@ -27,52 +24,34 @@ export default function ExamCard({ exam, onPress, showFullDetails = false }: Exa
     const formatNumber = (num: number) => num.toString().padStart(2, '0');
 
     return (
-        <TouchableOpacity
-            style={styles.container}
-            onPress={onPress}
-            activeOpacity={0.8}
-        >
+        <TouchableOpacity style={styles.container} onPress={onPress} activeOpacity={0.85}>
             <View style={styles.header}>
-                <Text style={styles.title}>{exam.courseCode} - {exam.courseName}</Text>
-                {showFullDetails && (
-                    <TouchableOpacity style={styles.seeAllButton}>
-                        <Text style={styles.seeAllText}>Tümünü Gör</Text>
-                    </TouchableOpacity>
-                )}
+                <View style={styles.titleSection}>
+                    <Text style={styles.title}>{exam.courseCode}</Text>
+                    <Text style={styles.subtitle}>{exam.courseName}</Text>
+                </View>
+                {showFullDetails && <Text style={styles.examType}>{exam.examType.toUpperCase()}</Text>}
             </View>
 
             <View style={styles.locationRow}>
-                <Text style={styles.locationIcon}>📍</Text>
-                <Text style={styles.locationText}>
-                    {exam.room} - {exam.building}
-                </Text>
+                <Text style={styles.locationText}>{exam.room} • {exam.building}</Text>
+                {exam.hasConflict && <Text style={styles.conflictTag}>CAKISMA</Text>}
             </View>
 
             <View style={styles.countdownContainer}>
-                <View style={styles.countdownItem}>
-                    <View style={styles.countdownBox}>
-                        <Text style={styles.countdownNumber}>{formatNumber(countdown.days)}</Text>
+                {[
+                    ['GUN', countdown.days],
+                    ['SAAT', countdown.hours],
+                    ['DK', countdown.minutes],
+                    ['SN', countdown.seconds],
+                ].map(([label, value]) => (
+                    <View key={String(label)} style={styles.countdownItem}>
+                        <View style={styles.countdownBox}>
+                            <Text style={styles.countdownNumber}>{formatNumber(Number(value))}</Text>
+                        </View>
+                        <Text style={styles.countdownLabel}>{label}</Text>
                     </View>
-                    <Text style={styles.countdownLabel}>GÜN</Text>
-                </View>
-                <View style={styles.countdownItem}>
-                    <View style={styles.countdownBox}>
-                        <Text style={styles.countdownNumber}>{formatNumber(countdown.hours)}</Text>
-                    </View>
-                    <Text style={styles.countdownLabel}>SAAT</Text>
-                </View>
-                <View style={styles.countdownItem}>
-                    <View style={styles.countdownBox}>
-                        <Text style={styles.countdownNumber}>{formatNumber(countdown.minutes)}</Text>
-                    </View>
-                    <Text style={styles.countdownLabel}>DAKİKA</Text>
-                </View>
-                <View style={styles.countdownItem}>
-                    <View style={styles.countdownBox}>
-                        <Text style={styles.countdownNumber}>{formatNumber(countdown.seconds)}</Text>
-                    </View>
-                    <Text style={styles.countdownLabel}>SANİYE</Text>
-                </View>
+                ))}
             </View>
         </TouchableOpacity>
     );
@@ -95,32 +74,40 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         marginBottom: spacing.sm,
     },
+    titleSection: {
+        flex: 1,
+        marginRight: spacing.md,
+    },
     title: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
         color: colors.textPrimary,
-        flex: 1,
     },
-    seeAllButton: {
-        marginLeft: spacing.sm,
-    },
-    seeAllText: {
+    subtitle: {
+        marginTop: spacing.xs,
         fontSize: fontSize.sm,
+        color: colors.textSecondary,
+    },
+    examType: {
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.bold,
         color: colors.accent,
-        fontWeight: fontWeight.medium,
     },
     locationRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: spacing.lg,
-    },
-    locationIcon: {
-        fontSize: 14,
-        marginRight: spacing.xs,
     },
     locationText: {
         fontSize: fontSize.sm,
         color: colors.textSecondary,
+        flex: 1,
+    },
+    conflictTag: {
+        fontSize: fontSize.xs,
+        color: colors.error,
+        fontWeight: fontWeight.bold,
     },
     countdownContainer: {
         flexDirection: 'row',
@@ -135,7 +122,6 @@ const styles = StyleSheet.create({
         backgroundColor: colors.backgroundSubtle,
         borderRadius: borderRadius.md,
         paddingVertical: spacing.md,
-        paddingHorizontal: spacing.sm,
         width: '100%',
         alignItems: 'center',
         borderWidth: 1,

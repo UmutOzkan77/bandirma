@@ -1,21 +1,40 @@
 /**
- * CalendarScreen - Aylık takvim modal
+ * CalendarScreen - Aylık takvim modal (Supabase entegrasyonlu)
  */
-import React, { useState, useMemo } from 'react';
-import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../theme';
-import { getEventDates } from '../mockData';
+import { Event } from '../types';
+import { fetchEventDates } from '../services/eventService';
 import CalendarGrid from '../components/CalendarGrid';
 
 interface CalendarScreenProps {
     onClose: () => void;
     onDateSelect: (date: string) => void;
+    participatedEvents: Set<string>;
 }
 
-export default function CalendarScreen({ onClose, onDateSelect }: CalendarScreenProps) {
+export default function CalendarScreen({ onClose, onDateSelect, participatedEvents }: CalendarScreenProps) {
     const [currentDate, setCurrentDate] = useState(new Date(2024, 4, 1));
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
-    const eventDates = useMemo(() => getEventDates(), []);
+    const [eventDates, setEventDates] = useState<Map<string, Event[]>>(new Map());
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadEventDates();
+    }, []);
+
+    const loadEventDates = async () => {
+        setLoading(true);
+        try {
+            const dates = await fetchEventDates();
+            setEventDates(dates);
+        } catch (error) {
+            console.error('Calendar data load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleDateSelect = (date: string) => {
         setSelectedDate(date);
@@ -30,16 +49,23 @@ export default function CalendarScreen({ onClose, onDateSelect }: CalendarScreen
                     <Text style={styles.closeIcon}>✕</Text>
                 </TouchableOpacity>
             </View>
-            <View style={styles.calendarContainer}>
-                <CalendarGrid
-                    currentDate={currentDate}
-                    events={eventDates}
-                    selectedDate={selectedDate}
-                    onDateSelect={handleDateSelect}
-                    onPreviousMonth={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
-                    onNextMonth={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
-                />
-            </View>
+            {loading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+            ) : (
+                <View style={styles.calendarContainer}>
+                    <CalendarGrid
+                        currentDate={currentDate}
+                        events={eventDates}
+                        participatedEvents={participatedEvents}
+                        selectedDate={selectedDate}
+                        onDateSelect={handleDateSelect}
+                        onPreviousMonth={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
+                        onNextMonth={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1))}
+                    />
+                </View>
+            )}
         </View>
     );
 }
@@ -51,4 +77,5 @@ const styles = StyleSheet.create({
     closeButton: { width: 40, height: 40, borderRadius: borderRadius.full, backgroundColor: colors.textSecondary, justifyContent: 'center', alignItems: 'center' },
     closeIcon: { fontSize: fontSize.lg, color: colors.textWhite, fontWeight: fontWeight.bold },
     calendarContainer: { flex: 1, justifyContent: 'center', paddingBottom: 100 },
+    loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

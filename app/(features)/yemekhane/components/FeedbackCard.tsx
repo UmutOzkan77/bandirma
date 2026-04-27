@@ -1,11 +1,13 @@
 /**
  * FeedbackCard Component
  * Öğrenci yorum kartı - kategori, yorum, like/dislike
+ * Beğeni/beğenmeme oyları Supabase'e kaydedilir
  */
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { Feedback } from '../mockData';
+import { voteFeedback } from '../api';
 
 interface FeedbackCardProps {
     feedback: Feedback;
@@ -16,19 +18,32 @@ export default function FeedbackCard({ feedback }: FeedbackCardProps) {
     const [dislikes, setDislikes] = useState(feedback.dislikes);
     const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null);
 
-    const handleLike = () => {
+    const handleLike = async () => {
         if (userVote === null) {
             setLikes(likes + 1);
             setUserVote('like');
+            // Supabase'e gönder
+            try {
+                await voteFeedback(feedback.id, 'like');
+            } catch (err) {
+                console.log('⚠️ Beğeni Supabase\'e gönderilemedi');
+            }
         }
     };
 
-    const handleDislike = () => {
+    const handleDislike = async () => {
         if (userVote === null) {
             setDislikes(dislikes + 1);
             setUserVote('dislike');
+            // Supabase'e gönder
+            try {
+                await voteFeedback(feedback.id, 'dislike');
+            } catch (err) {
+                console.log('⚠️ Beğenmeme Supabase\'e gönderilemedi');
+            }
         }
     };
+
 
     const categoryColor = feedback.mealTime === 'lunch' ? colors.primaryAccent : colors.primaryDark;
 

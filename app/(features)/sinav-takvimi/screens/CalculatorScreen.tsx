@@ -5,7 +5,7 @@
 import React, { useState, useMemo } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { calculateRequiredFinal } from '../mockData';
+import { calculateRequiredFinal } from '../utils';
 import GradeInput from '../components/GradeInput';
 
 interface GradeItem {

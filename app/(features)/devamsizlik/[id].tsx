@@ -1,114 +1,109 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, type DimensionValue } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-
-const { width } = Dimensions.get('window');
-
-// Mock data for the specific course in the image
-// In a real app, this would be fetched based on the 'id'
-const COURSE_DETAILS = {
-    id: '5', // Veritabanı Yönetimi from previous list
-    name: 'Veri Tabanı Yönetimi',
-    code: 'BIL-301',
-    instructor: 'Dr. Öğr. Üyesi Ahmet Yılmaz',
-    totalHours: 10,
-    usedHours: 4,
-    remainingHours: 6,
-    absences: [
-        { id: '1', date: '12 Mart 2025', day: 'Çarşamba', status: 'DEVAMSIZ' },
-        { id: '2', date: '5 Mart 2025', day: 'Çarşamba', status: 'DEVAMSIZ' },
-        { id: '3', date: '26 Şubat 2025', day: 'Çarşamba', status: 'DEVAMSIZ' },
-        { id: '4', date: '19 Şubat 2025', day: 'Çarşamba', status: 'DEVAMSIZ' },
-    ]
-};
+import { useAcademic } from '../../../contexts/AcademicContext';
 
 export default function AbsenceDetailsScreen() {
     const params = useLocalSearchParams();
     const router = useRouter();
+    const { getOfferingById, getAbsenceEvents, getAbsenceCard } = useAcademic();
 
-    // Merge static mock data with dynamic params from navigation
-    const course = {
-        ...COURSE_DETAILS,
-        name: params.name as string || COURSE_DETAILS.name,
-        instructor: params.instructor as string || COURSE_DETAILS.instructor,
-        // Parse numbers safely
-        totalHours: params.totalHours ? Number(params.totalHours) : COURSE_DETAILS.totalHours,
-        usedHours: params.usedHours ? Number(params.usedHours) : COURSE_DETAILS.usedHours,
-        remainingHours: params.remainingHours ? (params.remainingHours === '-' ? '-' : Number(params.remainingHours)) : COURSE_DETAILS.remainingHours,
+    const courseId = String(params.id || '');
+    const card = getAbsenceCard(courseId);
+    const offering = getOfferingById(courseId);
+    const absences = getAbsenceEvents(courseId);
+
+    const formatDate = (dateStr: string) => {
+        const months = [
+            'Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
+            'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik',
+        ];
+        const date = new Date(dateStr + 'T12:00:00');
+        return String(date.getDate()) + ' ' + months[date.getMonth()] + ' ' + String(date.getFullYear());
     };
 
     return (
         <View style={styles.container}>
             <StatusBar barStyle="light-content" />
-
-            {/* Custom Header */}
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
                     <Ionicons name="chevron-back" size={28} color="white" />
                 </TouchableOpacity>
-                <View>
-                    <Text style={styles.headerTitle}>Devamsızlık Detayları</Text>
-                    <Text style={styles.headerSubtitle}>{course.name}</Text>
+                <View style={{ flex: 1 }}>
+                    <Text style={styles.headerTitle}>Devamsizlik Detaylari</Text>
+                    <Text style={styles.headerSubtitle} numberOfLines={1}>{offering?.course.courseName ?? String(params.name || '')}</Text>
                 </View>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Course Title Section */}
                 <View style={styles.titleSection}>
-                    <Text style={styles.courseTitle}>{course.name}</Text>
-                    <Text style={styles.courseSubtitle}>{`Ders Kodu: ${course.code} • ${course.instructor}`}</Text>
+                    <Text style={styles.courseTitle}>{offering?.course.courseName ?? String(params.name || '')}</Text>
+                    <Text style={styles.courseSubtitle}>
+                        Ders Kodu: {offering?.course.courseCode ?? String(params.code || '')}
+                        {' • '}
+                        {offering?.instructorName ?? String(params.instructor || '')}
+                    </Text>
                 </View>
 
-                <Text style={styles.sectionHeader}>Geçmiş Devamsızlık Tarihleri</Text>
+                <Text style={styles.sectionHeader}>Local Devamsizlik Kayitlari</Text>
 
-                {/* Timeline Section */}
-                <View style={styles.timelineContainer}>
-                    {/* Vertical Line */}
-                    <View style={styles.timelineLine} />
+                {absences.length === 0 ? (
+                    <View style={styles.emptyState}>
+                        <Ionicons name="checkmark-circle" size={48} color="#2E7D32" />
+                        <Text style={styles.emptyTitle}>Kayit bulunmuyor</Text>
+                        <Text style={styles.emptySubtitle}>Bu ders icin local devamsizlik eklenmemis.</Text>
+                    </View>
+                ) : (
+                    <View style={styles.timelineContainer}>
+                        <View style={styles.timelineLine} />
+                        {absences.map((absence) => (
+                            <View key={absence.id} style={styles.timelineItem}>
+                                <View style={styles.indicatorContainer}>
+                                    <View style={styles.outerCircle}>
+                                        <View style={styles.innerCircle} />
+                                    </View>
+                                </View>
 
-                    {course.absences.map((absence, index) => (
-                        <View key={absence.id} style={styles.timelineItem}>
-                            {/* Circle Indicator */}
-                            <View style={styles.indicatorContainer}>
-                                <View style={styles.outerCircle}>
-                                    <View style={styles.innerCircle} />
+                                <View style={styles.cardContainer}>
+                                    <Text style={styles.dateText}>{formatDate(absence.date)}</Text>
+                                    <Text style={styles.dayText}>{absence.dayLabel}</Text>
+                                    <View style={styles.statusBadge}>
+                                        <Text style={styles.statusText}>DEVAMSIZ</Text>
+                                    </View>
                                 </View>
                             </View>
+                        ))}
+                    </View>
+                )}
 
-                            {/* Card Content */}
-                            <View style={styles.cardContainer}>
-                                <Text style={styles.dateText}>{absence.date}</Text>
-                                <Text style={styles.dayText}>{absence.day}</Text>
-                                <View style={styles.statusBadge}>
-                                    <Text style={styles.statusText}>{absence.status}</Text>
-                                </View>
-                            </View>
-                        </View>
-                    ))}
-
-                    {/* Bottom Padding for scroll */}
-                    <View style={{ height: 120 }} />
-                </View>
+                <View style={{ height: 160 }} />
             </ScrollView>
 
-            {/* Bottom Summary Card */}
             <View style={styles.bottomCardContainer}>
                 <View style={styles.bottomCard}>
                     <View style={styles.bottomCardHeader}>
-                        <Text style={styles.bottomCardTitle}>Toplam Devamsızlık: <Text style={{ color: '#D32F2F', fontWeight: 'bold' }}>{course.usedHours} / {course.totalHours}</Text></Text>
-
-                        {/* Circular Progress Placeholder - simple version */}
+                        <Text style={styles.bottomCardTitle}>
+                            Toplam Devamsizlik: <Text style={{ color: '#D32F2F', fontWeight: 'bold' }}>{card?.usedHours ?? 0} / {card?.totalHours ?? 0}</Text>
+                        </Text>
                         <View style={styles.percentageCircle}>
-                            <Text style={styles.percentageText}>%{Math.round((course.usedHours / course.totalHours) * 100)}</Text>
+                            <Text style={styles.percentageText}>
+                                %{card && card.totalHours > 0 ? Math.round((card.usedHours / card.totalHours) * 100) : 0}
+                            </Text>
                         </View>
                     </View>
 
-                    <Text style={styles.bottomCardSubtitle}>Kalan hak: <Text style={{ fontWeight: 'bold', color: '#0F172A' }}>{course.remainingHours} saat</Text>. Sınıra yaklaşıyorsunuz.</Text>
+                    <Text style={styles.bottomCardSubtitle}>
+                        Kalan hak: <Text style={{ fontWeight: 'bold', color: '#0F172A' }}>{typeof card?.remainingHours === 'number' ? card.remainingHours + ' saat' : card?.remainingHours ?? '-'}</Text>
+                    </Text>
 
-                    {/* Linear Progress Bar */}
                     <View style={styles.progressBarBackground}>
-                        <View style={[styles.progressBarFill, { width: `${(course.usedHours / course.totalHours) * 100}%` }]} />
+                        <View
+                            style={[
+                                styles.progressBarFill,
+                                { width: `${card && card.totalHours > 0 ? Math.min((card.usedHours / card.totalHours) * 100, 100) : 0}%` as DimensionValue },
+                            ]}
+                        />
                     </View>
                 </View>
             </View>
@@ -164,144 +159,135 @@ const styles = StyleSheet.create({
         color: '#0F172A',
         marginBottom: 16,
     },
+    emptyState: {
+        alignItems: 'center',
+        paddingVertical: 40,
+    },
+    emptyTitle: {
+        marginTop: 12,
+        color: '#2E7D32',
+        fontWeight: 'bold',
+        fontSize: 16,
+    },
+    emptySubtitle: {
+        color: '#64748B',
+        marginTop: 4,
+    },
     timelineContainer: {
-        position: 'relative',
-        paddingLeft: 10, // Space for indicators
+        paddingLeft: 10,
     },
     timelineLine: {
         position: 'absolute',
-        left: 21, // Center of circle
-        top: 20,
+        left: 17,
+        top: 0,
         bottom: 0,
         width: 2,
-        backgroundColor: '#CBD5E1', // Light grey line
-        zIndex: -1,
+        backgroundColor: '#CBD5E1',
     },
     timelineItem: {
         flexDirection: 'row',
-        marginBottom: 24,
-        alignItems: 'flex-start',
+        marginBottom: 20,
     },
     indicatorContainer: {
-        width: 42,
+        width: 34,
         alignItems: 'center',
-        marginRight: 16,
-        paddingTop: 10, // Align with card top
     },
     outerCircle: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: '#F43F5E', // Red
-        justifyContent: 'center',
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        backgroundColor: '#BFDBFE',
         alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 4,
     },
     innerCircle: {
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: 'white',
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+        backgroundColor: '#1D4ED8',
     },
     cardContainer: {
         flex: 1,
         backgroundColor: 'white',
         borderRadius: 16,
         padding: 16,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.05,
-        shadowRadius: 3.84,
-        elevation: 2,
     },
     dateText: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 15,
+        fontWeight: '700',
         color: '#0F172A',
-        marginBottom: 2,
     },
     dayText: {
-        fontSize: 14,
+        fontSize: 13,
         color: '#64748B',
-        marginBottom: 12,
+        marginTop: 4,
+        marginBottom: 8,
     },
     statusBadge: {
-        backgroundColor: '#FFF1F2', // Light red bg
-        paddingVertical: 6,
-        paddingHorizontal: 16,
-        borderRadius: 20,
         alignSelf: 'flex-start',
-        borderWidth: 1,
-        borderColor: '#FECDD3',
+        backgroundColor: '#FEE2E2',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 6,
     },
     statusText: {
-        color: '#E11D48', // Red text
-        fontWeight: 'bold',
-        fontSize: 12,
-        textTransform: 'uppercase',
+        fontSize: 11,
+        color: '#B91C1C',
+        fontWeight: '700',
     },
     bottomCardContainer: {
         position: 'absolute',
-        bottom: 20,
         left: 20,
         right: 20,
+        bottom: 20,
     },
     bottomCard: {
         backgroundColor: 'white',
-        borderRadius: 24,
-        padding: 20,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 4,
-        },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 10,
+        borderRadius: 18,
+        padding: 18,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.12,
+        shadowRadius: 16,
+        elevation: 8,
     },
     bottomCardHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     bottomCardTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#1D3557',
-    },
-    bottomCardSubtitle: {
-        fontSize: 13,
-        color: '#64748B',
-        marginBottom: 16,
+        fontSize: 15,
+        color: '#0F172A',
     },
     percentageCircle: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-        backgroundColor: '#F1F5F9',
-        justifyContent: 'center',
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#EFF6FF',
         alignItems: 'center',
-        borderWidth: 2,
-        borderColor: '#E2E8F0', // Simplified circle
+        justifyContent: 'center',
     },
     percentageText: {
-        fontSize: 12,
-        fontWeight: 'bold',
-        color: '#0F172A',
+        color: '#1D4ED8',
+        fontWeight: '700',
+    },
+    bottomCardSubtitle: {
+        fontSize: 14,
+        color: '#475569',
+        marginBottom: 10,
     },
     progressBarBackground: {
         height: 8,
-        backgroundColor: '#F1F5F9',
-        borderRadius: 4,
-        width: '100%',
+        borderRadius: 999,
+        backgroundColor: '#E2E8F0',
         overflow: 'hidden',
     },
     progressBarFill: {
         height: '100%',
-        backgroundColor: '#F43F5E', // Red for used hours
-        borderRadius: 4,
+        backgroundColor: '#1D4ED8',
+        borderRadius: 999,
     },
 });

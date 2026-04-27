@@ -1,21 +1,11 @@
-/**
- * Ders Programı Ana Ekranı
- * Bandırma Onyedi Eylül Üniversitesi - Ders Programı Modülü
- */
-
-import React, { useState, useMemo } from 'react';
-import { View, ScrollView, Text, StyleSheet } from 'react-native';
+import React, { useMemo, useState } from 'react';
+import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, fontWeight } from './theme';
 import { Course } from './types';
-import {
-    allCourses,
-    lunchBreak,
-    generateWeekDays,
-    getMonthName,
-} from './mockData';
-
-// Components
+import { generateWeekDays, getMonthName, lunchBreak } from './mockData';
+import { useAcademic } from '../../../contexts/AcademicContext';
+import type { SelectableOffering } from '../../../lib/domain';
 import Header from './components/Header';
 import DaySelector from './components/DaySelector';
 import CourseCard from './components/CourseCard';
@@ -24,140 +14,131 @@ import FloatingActionButton from './components/FloatingActionButton';
 import AddCourseModal from './components/AddCourseModal';
 
 export default function DersProgramiScreen() {
-    // Selected date state - default to today
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [courses, setCourses] = useState<Course[]>(allCourses);
+    const {
+        loading,
+        timetableEntries,
+        examList,
+        searchAvailableOfferings,
+        addLocalOffering,
+        removeOffering,
+    } = useAcademic();
 
-    // Generate week days for the selector
     const weekDays = useMemo(() => generateWeekDays(selectedDate), [selectedDate]);
-
-    // Get month name for header
     const monthYear = useMemo(() => getMonthName(selectedDate), [selectedDate]);
-
-    // Get day name for the selected date
-    const dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+    const dayNames = ['Pazar', 'Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi'];
     const selectedDayName = dayNames[selectedDate.getDay()].toUpperCase();
-
-    // Get courses for selected day
     const selectedDayOfWeek = selectedDate.getDay() === 0 ? 6 : selectedDate.getDay() - 1;
-    const coursesForDay = useMemo(() => {
-        return courses.filter(course => course.dayOfWeek === selectedDayOfWeek);
-    }, [courses, selectedDayOfWeek]);
 
-    // Separate morning and afternoon courses
-    const morningCourses = coursesForDay.filter(c => {
-        const hour = parseInt(c.startTime.split(':')[0]);
-        return hour < 12;
-    });
+    const courses = useMemo<Course[]>(() => {
+        return timetableEntries.map((entry) => {
+            const hasConflict = examList.some((exam) => exam.offeringId === entry.offeringId && exam.hasConflict);
+            return {
+                id: `${entry.offeringId}-${entry.startTime}`,
+                offeringId: entry.offeringId,
+                code: entry.courseCode,
+                name: entry.courseName,
+                instructor: entry.instructor,
+                startTime: entry.startTime,
+                endTime: entry.endTime,
+                room: entry.room,
+                building: entry.building,
+                dayOfWeek: entry.dayOfWeek,
+                isOnline: entry.isOnline,
+                hasConflict,
+                canRemove: true,
+            };
+        });
+    }, [examList, timetableEntries]);
 
-    const afternoonCourses = coursesForDay.filter(c => {
-        const hour = parseInt(c.startTime.split(':')[0]);
-        return hour >= 12;
-    });
+    const coursesForDay = useMemo(
+        () => courses.filter((course) => course.dayOfWeek === selectedDayOfWeek),
+        [courses, selectedDayOfWeek]
+    );
 
-    // Current active course (for demo, first course of the day)
-    const activeTimeSlot = '08:45';
+    const morningCourses = coursesForDay.filter((course) => Number(course.startTime.split(':')[0]) < 12);
+    const afternoonCourses = coursesForDay.filter((course) => Number(course.startTime.split(':')[0]) >= 12);
 
-    const handleDaySelect = (date: Date) => {
-        setSelectedDate(date);
+    const activeTimeSlot = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
+
+    const handleSaveCourse = async (offering: SelectableOffering) => {
+        await addLocalOffering(offering);
     };
 
-
-
-    const handleAddCourse = () => {
-        setIsModalVisible(true);
-    };
-
-    const handleSaveCourse = (newCourse: {
-        name: string;
-        instructor: string;
-        room: string;
-        selectedDays: boolean[];
-        startTime: string;
-        endTime: string;
-    }) => {
-        // Create new course and add to list
-        const course: Course = {
-            id: String(courses.length + 1),
-            name: newCourse.name.toUpperCase(),
-            instructor: newCourse.instructor,
-            startTime: newCourse.startTime,
-            endTime: newCourse.endTime,
-            room: newCourse.room,
-            dayOfWeek: selectedDayOfWeek,
-        };
-        setCourses([...courses, course]);
+    const handleRemoveCourse = (offeringId: string) => {
+        Alert.alert(
+            'Dersi localden kaldir',
+            'Bu islem yalnizca bu cihazdaki ders programi, sinav takvimi ve devamsizliga yansir.',
+            [
+                { text: 'Vazgec', style: 'cancel' },
+                {
+                    text: 'Kaldir',
+                    style: 'destructive',
+                    onPress: () => {
+                        void removeOffering(offeringId);
+                    },
+                },
+            ]
+        );
     };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            {/* Header with month/year */}
             <Header monthYear={monthYear} />
 
-            {/* Day Selector */}
-            <DaySelector
-                days={weekDays}
-                onDaySelect={handleDaySelect}
-            />
+            <DaySelector days={weekDays} onDaySelect={setSelectedDate} />
 
-            {/* Day Name Label */}
             <View style={styles.dayLabelContainer}>
                 <Text style={styles.dayLabel}>{selectedDayName}</Text>
             </View>
 
-            {/* Course Timeline */}
-            <ScrollView
-                style={styles.timeline}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.timelineContent}
-            >
-                {coursesForDay.length === 0 ? (
+            <ScrollView style={styles.timeline} showsVerticalScrollIndicator={false} contentContainerStyle={styles.timelineContent}>
+                {loading ? (
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyIcon}>⏳</Text>
+                        <Text style={styles.emptyTitle}>Program yukleniyor</Text>
+                        <Text style={styles.emptySubtitle}>Aktif donem ve local override verileri hazirlaniyor.</Text>
+                    </View>
+                ) : coursesForDay.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Text style={styles.emptyIcon}>📚</Text>
-                        <Text style={styles.emptyTitle}>Bu gün için ders yok</Text>
-                        <Text style={styles.emptySubtitle}>
-                            Yeni ders eklemek için + butonuna tıklayın
-                        </Text>
+                        <Text style={styles.emptyTitle}>Bu gun icin ders yok</Text>
+                        <Text style={styles.emptySubtitle}>Buluttaki ders acilislarindan local olarak ekleme yapabilirsiniz.</Text>
                     </View>
                 ) : (
                     <>
-                        {/* Morning Courses */}
                         {morningCourses.map((course) => (
                             <CourseCard
                                 key={course.id}
                                 course={course}
-                                isActive={course.startTime === activeTimeSlot}
+                                isActive={activeTimeSlot >= course.startTime && activeTimeSlot <= course.endTime}
+                                onRemove={handleRemoveCourse}
                             />
                         ))}
 
-                        {/* Lunch Break (if there are afternoon courses) */}
                         {morningCourses.length > 0 && afternoonCourses.length > 0 && (
-                            <LunchBreak
-                                startTime={lunchBreak.startTime}
-                                endTime={lunchBreak.endTime}
-                            />
+                            <LunchBreak startTime={lunchBreak.startTime} endTime={lunchBreak.endTime} />
                         )}
 
-                        {/* Afternoon Courses */}
                         {afternoonCourses.map((course) => (
                             <CourseCard
                                 key={course.id}
                                 course={course}
-                                isActive={false}
+                                isActive={activeTimeSlot >= course.startTime && activeTimeSlot <= course.endTime}
+                                onRemove={handleRemoveCourse}
                             />
                         ))}
                     </>
                 )}
             </ScrollView>
 
-            {/* Floating Action Button */}
-            <FloatingActionButton onPress={handleAddCourse} />
+            <FloatingActionButton onPress={() => setIsModalVisible(true)} />
 
-            {/* Add Course Modal */}
             <AddCourseModal
                 visible={isModalVisible}
                 onClose={() => setIsModalVisible(false)}
+                onSearch={searchAvailableOfferings}
                 onSave={handleSaveCourse}
             />
         </SafeAreaView>
@@ -184,7 +165,7 @@ const styles = StyleSheet.create({
     },
     timelineContent: {
         paddingHorizontal: spacing.lg,
-        paddingBottom: 100, // Space for FAB
+        paddingBottom: 100,
     },
     emptyState: {
         alignItems: 'center',
@@ -205,5 +186,6 @@ const styles = StyleSheet.create({
         fontSize: fontSize.md,
         color: colors.textSecondary,
         textAlign: 'center',
+        lineHeight: 22,
     },
 });

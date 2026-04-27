@@ -1,45 +1,34 @@
-/**
- * CourseCard Bileşeni
- * Ders kartı - timeline ile entegre
- */
-
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, fontSize, fontWeight, spacing, borderRadius, shadows } from '../theme';
 import { Course } from '../types';
 
 interface CourseCardProps {
     course: Course;
     isActive?: boolean;
+    onRemove?: (offeringId: string) => void;
 }
 
-export default function CourseCard({ course, isActive = false }: CourseCardProps) {
+export default function CourseCard({ course, isActive = false, onRemove }: CourseCardProps) {
     return (
         <View style={styles.container}>
-            {/* Timeline Dot */}
             <View style={styles.timelineSection}>
-                <View style={[
-                    styles.timelineDot,
-                    course.hasConflict
-                        ? styles.timelineDotConflict
-                        : isActive
-                            ? styles.timelineDotActive
-                            : styles.timelineDotInactive,
-                ]} />
+                <View
+                    style={[
+                        styles.timelineDot,
+                        course.hasConflict
+                            ? styles.timelineDotConflict
+                            : isActive
+                                ? styles.timelineDotActive
+                                : styles.timelineDotInactive,
+                    ]}
+                />
                 <View style={styles.timelineLine} />
             </View>
 
-            {/* Card Content */}
-            <View style={[
-                styles.card,
-                course.hasConflict && styles.cardConflict,
-            ]}>
-                {/* Course Name with Conflict Warning */}
+            <View style={[styles.card, course.hasConflict && styles.cardConflict]}>
                 <View style={styles.courseNameRow}>
-                    <Text style={[
-                        styles.courseName,
-                        course.hasConflict && styles.courseNameConflict,
-                    ]}>{course.name}</Text>
+                    <Text style={[styles.courseName, course.hasConflict && styles.courseNameConflict]}>{course.name}</Text>
                     {course.hasConflict && (
                         <View style={styles.warningTriangle}>
                             <Text style={styles.warningExclamation}>!</Text>
@@ -47,34 +36,22 @@ export default function CourseCard({ course, isActive = false }: CourseCardProps
                     )}
                 </View>
 
-                {/* Instructor */}
                 <Text style={styles.instructor}>{course.instructor}</Text>
 
-                {/* Bottom Row - Time and Room */}
                 <View style={styles.bottomRow}>
-                    {/* Time */}
-                    <View style={[
-                        styles.timeContainer,
-                        isActive && styles.timeContainerActive,
-                    ]}>
-                        <Text style={[
-                            styles.time,
-                            isActive && styles.timeActive,
-                        ]}>
+                    <View style={[styles.timeContainer, isActive && styles.timeContainerActive]}>
+                        <Text style={[styles.time, isActive && styles.timeActive]}>
                             {course.startTime} - {course.endTime}
                         </Text>
                     </View>
 
-                    {/* Room - Sağ Alt Köşe */}
                     <View style={styles.roomContainer}>
-                        {/* Online ise sadece badge göster, değilse konum ikonu ve room */}
                         {course.isOnline ? (
                             <View style={styles.onlineBadge}>
-                                <Text style={styles.onlineText}>UZAKTAN EĞİTİM</Text>
+                                <Text style={styles.onlineText}>UZAKTAN EGITIM</Text>
                             </View>
                         ) : (
                             <>
-                                {/* Konum Pin İkonu - Açık Mavi */}
                                 <View style={styles.locationPinContainer}>
                                     <View style={styles.locationPin}>
                                         <View style={styles.locationPinInner} />
@@ -86,6 +63,15 @@ export default function CourseCard({ course, isActive = false }: CourseCardProps
                         )}
                     </View>
                 </View>
+
+                {course.canRemove && onRemove && (
+                    <View style={styles.footerRow}>
+                        <Text style={styles.codeText}>{course.code}</Text>
+                        <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(course.offeringId)}>
+                            <Text style={styles.removeText}>Localden Kaldir</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
         </View>
     );
@@ -113,7 +99,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.timelineGray,
     },
     timelineDotConflict: {
-        backgroundColor: '#B81414', // Çakışma kırmızısı
+        backgroundColor: '#B81414',
     },
     timelineLine: {
         flex: 1,
@@ -132,7 +118,7 @@ const styles = StyleSheet.create({
         ...shadows.card,
     },
     cardConflict: {
-        borderColor: '#B81414', // Çakışma kırmızısı
+        borderColor: '#B81414',
         borderWidth: 1.5,
         backgroundColor: colors.conflictBackground,
     },
@@ -167,7 +153,7 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
     },
     courseNameConflict: {
-        color: '#B81414', // Çakışma kırmızısı
+        color: '#B81414',
     },
     instructor: {
         fontSize: fontSize.sm,
@@ -226,29 +212,53 @@ const styles = StyleSheet.create({
     locationPinTip: {
         width: 0,
         height: 0,
-        borderLeftWidth: 4,
-        borderRightWidth: 4,
-        borderTopWidth: 6,
+        borderLeftWidth: 3,
+        borderRightWidth: 3,
+        borderTopWidth: 5,
         borderLeftColor: 'transparent',
         borderRightColor: 'transparent',
         borderTopColor: colors.accent,
-        marginTop: -2,
+        marginTop: -1,
     },
     room: {
         fontSize: fontSize.sm,
-        color: colors.textSecondary, // Gri renk
-        fontWeight: fontWeight.medium,
+        color: colors.accent,
+        fontWeight: fontWeight.bold,
     },
     onlineBadge: {
-        marginLeft: spacing.sm,
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 2,
-        backgroundColor: colors.accent,
+        backgroundColor: colors.onlineBadgeBackground,
+        paddingVertical: 4,
+        paddingHorizontal: 8,
         borderRadius: borderRadius.sm,
     },
     onlineText: {
+        fontSize: 10,
+        color: colors.onlineText,
+        fontWeight: fontWeight.bold,
+    },
+    footerRow: {
+        marginTop: spacing.md,
+        paddingTop: spacing.md,
+        borderTopWidth: 1,
+        borderTopColor: colors.border,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    codeText: {
         fontSize: fontSize.xs,
-        color: colors.textLight,
-        fontWeight: fontWeight.medium,
+        color: colors.textSecondary,
+        fontWeight: fontWeight.bold,
+    },
+    removeButton: {
+        borderRadius: borderRadius.sm,
+        backgroundColor: '#FEE2E2',
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+    },
+    removeText: {
+        fontSize: fontSize.xs,
+        color: '#B91C1C',
+        fontWeight: fontWeight.bold,
     },
 });

@@ -3,96 +3,166 @@ import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-nati
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DigitalIDModal from '../components/DigitalIDModal';
-
-const STUDENT_DATA = {
-    name: 'Ahmet Yılmaz',
-    id: 'BAN-123456',
-    role: 'ÖĞRENCİ',
-};
+import { useAuth } from '../contexts/AuthContext';
 
 export default function ProfileScreen() {
     const [isIDVisible, setIsIDVisible] = useState(false);
+    const { profile } = useAuth();
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.header}>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+                <View style={styles.heroCard}>
                     <View style={styles.avatar}>
-                        <Ionicons name="person" size={48} color="#0066CC" />
+                        <Ionicons name="person" size={44} color="#1D4ED8" />
                     </View>
-                    <Text style={styles.title}>{STUDENT_DATA.name}</Text>
-                    <Text style={styles.subtitle}>{STUDENT_DATA.role}</Text>
+                    <Text style={styles.name}>{profile?.fullName ?? 'Bandirma Ogrencisi'}</Text>
+                    <Text style={styles.subtitle}>{profile?.schoolEmail ?? 'E-posta yok'}</Text>
+                    <Text style={styles.meta}>
+                        {profile?.departmentName ?? 'Bolum bilgisi yok'}
+                        {profile?.classLevel ? ` • ${profile.classLevel}. Sinif` : ''}
+                    </Text>
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity
-                        style={styles.actionButton}
-                        onPress={() => setIsIDVisible(true)}
-                    >
-                        <View style={styles.actionIconContainer}>
-                            <Ionicons name="qr-code" size={24} color="#0066CC" />
+                    <TouchableOpacity style={styles.row} onPress={() => setIsIDVisible(true)}>
+                        <View style={styles.rowIcon}>
+                            <Ionicons name="qr-code-outline" size={22} color="#1D4ED8" />
                         </View>
-                        <View style={styles.actionTextContainer}>
-                            <Text style={styles.actionTitle}>Dijital Kimliğim</Text>
-                            <Text style={styles.actionSubtitle}>QR kod ile hızlı geçiş</Text>
+                        <View style={styles.rowContent}>
+                            <Text style={styles.rowTitle}>Dijital Kimlik</Text>
+                            <Text style={styles.rowSubtitle}>QR ile kampus girisi</Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
+                        <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.actionButton}>
-                        <View style={styles.actionIconContainer}>
-                            <Ionicons name="school-outline" size={24} color="#0066CC" />
+                    <View style={styles.divider} />
+
+                    <View style={styles.row}>
+                        <View style={styles.rowIcon}>
+                            <Ionicons name="school-outline" size={22} color="#1D4ED8" />
                         </View>
-                        <View style={styles.actionTextContainer}>
-                            <Text style={styles.actionTitle}>Öğrenci Bilgileri</Text>
-                            <Text style={styles.actionSubtitle}>Fakülte, Bölüm, Sınıf</Text>
+                        <View style={styles.rowContent}>
+                            <Text style={styles.rowTitle}>Akademik Profil</Text>
+                            <Text style={styles.rowSubtitle}>
+                                {profile?.facultyName ?? 'Fakulte yok'}
+                            </Text>
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#94A3B8" />
-                    </TouchableOpacity>
+                    </View>
+
+                    <View style={styles.divider} />
+
+                    <View style={styles.row}>
+                        <View style={styles.rowIcon}>
+                            <Ionicons name="call-outline" size={22} color="#1D4ED8" />
+                        </View>
+                        <View style={styles.rowContent}>
+                            <Text style={styles.rowTitle}>Telefon</Text>
+                            <Text style={styles.rowSubtitle}>{profile?.phone ?? 'Telefon tanimli degil'}</Text>
+                        </View>
+                    </View>
                 </View>
             </ScrollView>
 
             <DigitalIDModal
                 visible={isIDVisible}
                 onClose={() => setIsIDVisible(false)}
-                studentName={STUDENT_DATA.name}
-                studentID={STUDENT_DATA.id}
-                role={STUDENT_DATA.role}
+                studentName={profile?.fullName ?? 'Bandirma Ogrencisi'}
+                studentID={profile?.studentNumber ?? profile?.id ?? 'N/A'}
+                role="OGRENCI"
             />
         </SafeAreaView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#F8FAFC' },
-    scrollContent: { padding: 20 },
-    header: {
+    container: {
+        flex: 1,
+        backgroundColor: '#F8FAFC',
+    },
+    scrollContent: {
+        padding: 20,
+        paddingBottom: 40,
+    },
+    heroCard: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 28,
+        padding: 24,
         alignItems: 'center',
-        marginBottom: 32,
-        marginTop: 20,
+        marginBottom: 20,
+        shadowColor: '#0F172A',
+        shadowOpacity: 0.08,
+        shadowRadius: 18,
+        shadowOffset: { width: 0, height: 10 },
+        elevation: 6,
     },
     avatar: {
-        width: 100, height: 100, borderRadius: 50,
-        backgroundColor: '#EBF5FF', justifyContent: 'center', alignItems: 'center', marginBottom: 16,
-        borderWidth: 4, borderColor: '#FFFFFF',
+        width: 96,
+        height: 96,
+        borderRadius: 32,
+        backgroundColor: '#DBEAFE',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
     },
-    title: { fontSize: 24, fontWeight: '700', color: '#1E293B', marginBottom: 4 },
-    subtitle: { fontSize: 14, color: '#64748B', fontWeight: '500' },
+    name: {
+        fontSize: 24,
+        fontWeight: '800',
+        color: '#0F172A',
+        textAlign: 'center',
+    },
+    subtitle: {
+        marginTop: 6,
+        fontSize: 14,
+        color: '#475569',
+    },
+    meta: {
+        marginTop: 10,
+        fontSize: 13,
+        color: '#64748B',
+        textAlign: 'center',
+    },
     section: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        padding: 8,
+        borderRadius: 24,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        shadowColor: '#0F172A',
+        shadowOpacity: 0.06,
+        shadowRadius: 14,
+        shadowOffset: { width: 0, height: 8 },
+        elevation: 4,
     },
-    actionButton: {
+    row: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        padding: 14,
     },
-    actionIconContainer: {
-        width: 48, height: 48, borderRadius: 12,
-        backgroundColor: '#EBF5FF', justifyContent: 'center', alignItems: 'center', marginRight: 16,
+    rowIcon: {
+        width: 46,
+        height: 46,
+        borderRadius: 16,
+        backgroundColor: '#EFF6FF',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginRight: 14,
     },
-    actionTextContainer: { flex: 1 },
-    actionTitle: { fontSize: 16, fontWeight: '600', color: '#1E293B', marginBottom: 2 },
-    actionSubtitle: { fontSize: 13, color: '#64748B' },
+    rowContent: {
+        flex: 1,
+    },
+    rowTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#0F172A',
+    },
+    rowSubtitle: {
+        marginTop: 4,
+        fontSize: 13,
+        color: '#64748B',
+    },
+    divider: {
+        height: 1,
+        backgroundColor: '#E2E8F0',
+        marginHorizontal: 14,
+    },
 });

@@ -1,9 +1,11 @@
 import { Tabs } from 'expo-router';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, Dimensions } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-
-const SCREEN_WIDTH = Dimensions.get('window').width;
+import { AuthProvider } from '../contexts/AuthContext';
+import { AcademicProvider } from '../contexts/AcademicContext';
+import { useAuth } from '../contexts/AuthContext';
+import AuthOverlay from '../components/AuthOverlay';
 
 const TAB_CONFIG: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; iconOutline: keyof typeof Ionicons.glyphMap }> = {
     index: { label: 'Ana Sayfa', icon: 'home', iconOutline: 'home-outline' },
@@ -88,20 +90,44 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
     );
 }
 
+function AppShell() {
+    const { isLoading } = useAuth();
+
+    if (isLoading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#0066CC" />
+                <Text style={styles.loadingText}>Oturum hazırlanıyor...</Text>
+            </View>
+        );
+    }
+
+    return (
+        <>
+            <Tabs
+                tabBar={(props) => <CustomTabBar {...props} />}
+                screenOptions={{
+                    headerShown: false,
+                }}
+            >
+                <Tabs.Screen name="index" />
+                <Tabs.Screen name="explore" />
+                <Tabs.Screen name="scan" />
+                <Tabs.Screen name="profile" />
+                <Tabs.Screen name="settings" />
+            </Tabs>
+            <AuthOverlay />
+        </>
+    );
+}
+
 export default function RootLayout() {
     return (
-        <Tabs
-            tabBar={(props) => <CustomTabBar {...props} />}
-            screenOptions={{
-                headerShown: false,
-            }}
-        >
-            <Tabs.Screen name="index" />
-            <Tabs.Screen name="explore" />
-            <Tabs.Screen name="scan" />
-            <Tabs.Screen name="profile" />
-            <Tabs.Screen name="settings" />
-        </Tabs>
+        <AuthProvider>
+            <AcademicProvider>
+                <AppShell />
+            </AcademicProvider>
+        </AuthProvider>
     );
 }
 
@@ -111,7 +137,6 @@ const styles = StyleSheet.create({
         bottom: 0,
         left: 0,
         right: 0,
-        width: SCREEN_WIDTH,
         alignItems: 'center',
         backgroundColor: 'transparent',
     },
@@ -185,5 +210,16 @@ const styles = StyleSheet.create({
         color: '#94A3B8',
         marginTop: 4,
         textAlign: 'center',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#F8FAFC',
+    },
+    loadingText: {
+        marginTop: 12,
+        fontSize: 14,
+        color: '#64748B',
     },
 });

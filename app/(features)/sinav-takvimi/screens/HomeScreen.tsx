@@ -1,80 +1,84 @@
-/**
- * HomeScreen - Ana Sayfa
- * Sınav haftası uyarısı, sıradaki sınav, bugünkü dersler
- */
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { currentStudent, upcomingExams, todayLessons, campusNews } from '../mockData';
 import ExamAlertBanner from '../components/ExamAlertBanner';
 import ExamCard from '../components/ExamCard';
+import { useAcademic } from '../../../../contexts/AcademicContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 interface HomeScreenProps {
     onNavigateToCalendar: () => void;
 }
 
+const campusNews = [
+    { id: '1', title: 'Yemekhane Nisan menu guncellendi', date: 'Bugun' },
+    { id: '2', title: 'Yeni sinav saloni duyurusu yayinlandi', date: 'Dun' },
+];
+
 export default function HomeScreen({ onNavigateToCalendar }: HomeScreenProps) {
-    const nextExam = upcomingExams[0];
+    const { profile } = useAuth();
+    const { nextExam, todayTimetable } = useAcademic();
 
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            {/* Header */}
             <View style={styles.header}>
                 <View style={styles.profileSection}>
                     <View style={styles.avatar}>
                         <Text style={styles.avatarText}>
-                            {currentStudent.name.split(' ').map(n => n[0]).join('')}
+                            {(profile?.fullName ?? 'B O').split(' ').map((item) => item[0]).join('').slice(0, 2)}
                         </Text>
                     </View>
                     <View style={styles.welcomeText}>
-                        <Text style={styles.greeting}>Hoş geldin,</Text>
-                        <Text style={styles.userName}>{currentStudent.name}</Text>
+                        <Text style={styles.greeting}>Hos geldin,</Text>
+                        <Text style={styles.userName}>{profile?.fullName ?? 'Bandirma Ogrencisi'}</Text>
                     </View>
                 </View>
-                <TouchableOpacity style={styles.notificationButton}>
-                    <Text style={styles.notificationIcon}>🔔</Text>
-                </TouchableOpacity>
             </View>
 
-            {/* Exam Alert Banner */}
             <ExamAlertBanner onPress={onNavigateToCalendar} />
 
-            {/* Next Exam Section */}
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Sıradaki Sınav</Text>
+                <Text style={styles.sectionTitle}>Siradaki Sinav</Text>
                 <TouchableOpacity onPress={onNavigateToCalendar}>
-                    <Text style={styles.seeAllLink}>Tümünü Gör</Text>
+                    <Text style={styles.seeAllLink}>Tumunu Gor</Text>
                 </TouchableOpacity>
             </View>
-            <ExamCard exam={nextExam} showFullDetails onPress={onNavigateToCalendar} />
 
-            {/* Today's Lessons */}
+            {nextExam ? (
+                <ExamCard exam={nextExam} showFullDetails onPress={onNavigateToCalendar} />
+            ) : (
+                <View style={styles.placeholderCard}>
+                    <Text style={styles.placeholderText}>Yayinlanmis sinav bulunmuyor.</Text>
+                </View>
+            )}
+
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Bugünkü Dersler</Text>
+                <Text style={styles.sectionTitle}>Bugunku Dersler</Text>
             </View>
             <View style={styles.lessonsContainer}>
-                {todayLessons.map((lesson) => (
-                    <View key={lesson.id} style={styles.lessonCard}>
-                        <View style={styles.lessonTime}>
-                            <Text style={styles.lessonTimeText}>{lesson.time}</Text>
+                {todayTimetable.length > 0 ? (
+                    todayTimetable.map((lesson) => (
+                        <View key={lesson.offeringId + '-' + lesson.startTime} style={styles.lessonCard}>
+                            <View style={styles.lessonTime}>
+                                <Text style={styles.lessonTimeText}>{lesson.startTime}</Text>
+                            </View>
+                            <View style={styles.lessonInfo}>
+                                <Text style={styles.lessonName}>{lesson.courseName}</Text>
+                                <Text style={styles.lessonRoom}>{lesson.room}</Text>
+                            </View>
                         </View>
-                        <View style={styles.lessonInfo}>
-                            <Text style={styles.lessonName}>{lesson.courseName}</Text>
-                            <Text style={styles.lessonRoom}>📍 {lesson.room}</Text>
-                        </View>
+                    ))
+                ) : (
+                    <View style={styles.placeholderCard}>
+                        <Text style={styles.placeholderText}>Bugun icin ders bulunmuyor.</Text>
                     </View>
-                ))}
+                )}
             </View>
 
-            {/* Campus News */}
             <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Kampüs Haberleri</Text>
+                <Text style={styles.sectionTitle}>Kampus Haberleri</Text>
             </View>
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.newsContainer}
-            >
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.newsContainer}>
                 {campusNews.map((news) => (
                     <TouchableOpacity key={news.id} style={styles.newsCard}>
                         <View style={styles.newsImagePlaceholder}>
@@ -86,7 +90,6 @@ export default function HomeScreen({ onNavigateToCalendar }: HomeScreenProps) {
                 ))}
             </ScrollView>
 
-            {/* Bottom Spacing */}
             <View style={styles.bottomSpacing} />
         </ScrollView>
     );
@@ -121,7 +124,7 @@ const styles = StyleSheet.create({
     avatarText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.primary,
+        color: colors.textInverse,
     },
     welcomeText: {
         justifyContent: 'center',
@@ -134,19 +137,6 @@ const styles = StyleSheet.create({
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
         color: colors.textPrimary,
-    },
-    notificationButton: {
-        width: 44,
-        height: 44,
-        borderRadius: 22,
-        backgroundColor: colors.backgroundCard,
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-    notificationIcon: {
-        fontSize: 20,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -202,6 +192,18 @@ const styles = StyleSheet.create({
         marginBottom: spacing.xs,
     },
     lessonRoom: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+    },
+    placeholderCard: {
+        marginHorizontal: spacing.lg,
+        backgroundColor: colors.backgroundCard,
+        borderRadius: borderRadius.md,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    placeholderText: {
         fontSize: fontSize.sm,
         color: colors.textSecondary,
     },

@@ -42,15 +42,63 @@ export default function EventMiniCard({ event, community, onDetailsPress }: Even
 }
 
 const styles = StyleSheet.create({
-    container: { flexDirection: 'row', backgroundColor: colors.cardLight, borderRadius: borderRadius.lg, marginHorizontal: spacing.lg, marginBottom: spacing.md, padding: spacing.md, ...shadows.card },
-    image: { width: 80, height: 100, borderRadius: borderRadius.sm, backgroundColor: colors.border },
-    content: { flex: 1, marginLeft: spacing.md, justifyContent: 'space-between' },
-    title: { fontSize: fontSize.lg, fontWeight: fontWeight.bold, color: colors.textPrimary, marginBottom: spacing.xs },
-    detailsContainer: { gap: spacing.xs },
-    detailItem: { flexDirection: 'row', alignItems: 'center' },
-    detailIcon: { fontSize: 12, marginRight: spacing.xs },
-    detailText: { fontSize: fontSize.sm, color: colors.accent, flex: 1 },
-    detailsButton: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.sm },
-    detailsButtonText: { fontSize: fontSize.md, color: colors.accent, fontWeight: fontWeight.medium },
-    arrowIcon: { fontSize: fontSize.lg, color: colors.accent, marginLeft: spacing.xs },
+    container: {
+        flexDirection: 'row',
+        backgroundColor: colors.cardLight,
+        borderRadius: 16,
+        marginHorizontal: 18,
+        marginBottom: 16,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: colors.border,
+        ...shadows.card
+    },
+    image: {
+        width: 80,
+        height: 80,
+        borderRadius: 12,
+        backgroundColor: colors.border
+    },
+    content: {
+        flex: 1,
+        marginLeft: 16,
+        justifyContent: 'center'
+    },
+    title: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: colors.textPrimary,
+        marginBottom: 6
+    },
+    detailsContainer: {
+        gap: 4
+    },
+    detailItem: {
+        flexDirection: 'row',
+        alignItems: 'center'
+    },
+    detailIcon: {
+        fontSize: 12,
+        marginRight: 6
+    },
+    detailText: {
+        fontSize: 12,
+        color: colors.textSecondary,
+        fontWeight: '500'
+    },
+    detailsButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginTop: 8
+    },
+    detailsButtonText: {
+        fontSize: 13,
+        color: colors.primary,
+        fontWeight: '600'
+    },
+    arrowIcon: {
+        fontSize: 16,
+        color: colors.primary,
+        marginLeft: 4
+    },
 });

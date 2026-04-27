@@ -37,4 +37,13 @@ export interface Notification {
     isRead: boolean;
 }
 
-export type ScreenType = 'feed' | 'calendar' | 'dailyProgram' | 'notifications' | 'communityDetail';
+export interface Comment {
+    id: string;
+    eventId: string;
+    userId: string;
+    userName: string;
+    content: string;
+    createdAt: Date;
+}
+
+export type ScreenType = 'feed' | 'calendar' | 'dailyProgram' | 'communityDetail' | 'eventDetail';

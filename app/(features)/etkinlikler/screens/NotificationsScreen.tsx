@@ -1,10 +1,11 @@
 /**
- * NotificationsScreen - Bildirimler listesi
+ * NotificationsScreen - Bildirimler listesi (Supabase entegrasyonlu)
  */
-import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../theme';
-import { notifications } from '../mockData';
+import { Notification } from '../types';
+import { fetchNotifications } from '../services/eventService';
 import NotificationCard from '../components/NotificationCard';
 
 interface NotificationsScreenProps {
@@ -13,7 +14,24 @@ interface NotificationsScreenProps {
 }
 
 export default function NotificationsScreen({ onClose, onBack }: NotificationsScreenProps) {
-    const recentNotifications = notifications.slice(0, 10);
+    const [notifications, setNotifications] = useState<Notification[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadNotifications();
+    }, []);
+
+    const loadNotifications = async () => {
+        setLoading(true);
+        try {
+            const data = await fetchNotifications();
+            setNotifications(data);
+        } catch (error) {
+            console.error('Notifications load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -26,18 +44,24 @@ export default function NotificationsScreen({ onClose, onBack }: NotificationsSc
                     <Text style={styles.closeIcon}>✕</Text>
                 </TouchableOpacity>
             </View>
-            <FlatList
-                data={recentNotifications}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => <NotificationCard notification={item} />}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Henüz bildiriminiz bulunmuyor.</Text>
-                    </View>
-                }
-            />
+            {loading ? (
+                <View style={styles.emptyContainer}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                </View>
+            ) : (
+                <FlatList
+                    data={notifications}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => <NotificationCard notification={item} />}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyText}>Henüz bildiriminiz bulunmuyor.</Text>
+                        </View>
+                    }
+                />
+            )}
         </View>
     );
 }

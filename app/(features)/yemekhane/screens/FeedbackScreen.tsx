@@ -2,7 +2,7 @@
  * FeedbackScreen
  * Öğrenci Geri Bildirimleri ekranı - Tasarım 5
  * Yorum kartları, filtreleme ve yeni yorum ekleme
- * Yorumlar localStorage ile kalıcı olarak kaydedilir
+ * Yorumlar Supabase ile kalıcı olarak kaydedilir
  */
 import React, { useState, useEffect } from 'react';
 import {
@@ -15,31 +15,16 @@ import {
     TextInput,
     KeyboardAvoidingView,
     Platform,
-    Alert
+    Alert,
+    ActivityIndicator
 } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { feedbackData, Feedback } from '../mockData';
+import { fetchFeedback, addFeedback } from '../api';
 import FeedbackCard from '../components/FeedbackCard';
 
 type SortOption = 'helpful' | 'recent' | 'positive' | 'negative';
 type CategoryOption = 'ANA YEMEK' | 'ÇORBA' | 'TATLI' | 'YAN ÜRÜN' | 'İÇECEK' | 'GENEL';
-
-const STORAGE_KEY = 'yemekhane_comments';
-
-// Platform-agnostic storage helper
-const storage = {
-    getItem: (key: string): string | null => {
-        if (typeof window !== 'undefined' && window.localStorage) {
-            return window.localStorage.getItem(key);
-        }
-        return null;
-    },
-    setItem: (key: string, value: string): void => {
-        if (typeof window !== 'undefined' && window.localStorage) {
-            window.localStorage.setItem(key, value);
-        }
-    }
-};
 
 interface FeedbackScreenProps {
     onGoBack?: () => void;
@@ -48,12 +33,15 @@ interface FeedbackScreenProps {
 export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
     const [sortBy, setSortBy] = useState<SortOption>('helpful');
     const [showSortMenu, setShowSortMenu] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [dataSource, setDataSource] = useState<'supabase' | 'mock'>('mock');
 
     // Yorum ekleme state'leri
     const [showAddModal, setShowAddModal] = useState(false);
     const [newComment, setNewComment] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<CategoryOption>('GENEL');
     const [mealName, setMealName] = useState('');
+    const [isSaving, setIsSaving] = useState(false);
 
     // Yorumlar listesi (local state)
     const [comments, setComments] = useState<Feedback[]>(feedbackData);
@@ -71,69 +59,115 @@ export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
 
     const currentSortLabel = sortOptions.find(opt => opt.key === sortBy)?.label || 'Sırala';
 
-    // Yorumları localStorage'dan yükle
+    // Yorumları Supabase'den yükle
     useEffect(() => {
         loadComments();
     }, []);
 
-    const loadComments = () => {
+    const loadComments = async () => {
         try {
-            const savedComments = storage.getItem(STORAGE_KEY);
-            if (savedComments) {
-                const parsedComments = JSON.parse(savedComments);
-                // Kayıtlı yorumları varsayılan yorumlarla birleştir
-                setComments([...parsedComments, ...feedbackData]);
+            const data = await fetchFeedback();
+            if (data && data.length > 0) {
+                const mapped: Feedback[] = data.map((item: any) => ({
+                    id: item.id,
+                    userId: item.student_id || 'anonymous',
+                    mealTime: item.meal_time || 'lunch',
+                    category: item.category,
+                    mealName: item.meal_name,
+                    comment: item.comment,
+                    likes: item.likes || 0,
+                    dislikes: item.dislikes || 0,
+                    timeAgo: getTimeAgo(item.created_at),
+                }));
+                setComments(mapped);
+                setDataSource('supabase');
+                console.log('✅ Yorumlar Supabase\'den yüklendi');
+            } else {
+                console.log('ℹ️ Supabase\'de yorum yok, mock data kullanılıyor');
             }
         } catch (error) {
-            console.error('Yorumlar yüklenirken hata:', error);
+            console.log('⚠️ Yorumlar yüklenemedi, mock data kullanılıyor');
+        } finally {
+            setIsLoading(false);
         }
     };
 
-    // Yorumları kaydet
-    const saveComments = (newComments: Feedback[]) => {
-        try {
-            // Sadece kullanıcının eklediği yorumları kaydet (new- ile başlayanlar)
-            const userComments = newComments.filter(c => c.id.startsWith('new-'));
-            storage.setItem(STORAGE_KEY, JSON.stringify(userComments));
-        } catch (error) {
-            console.error('Yorumlar kaydedilirken hata:', error);
-        }
+    // Zaman farkını hesapla
+    const getTimeAgo = (dateStr: string): string => {
+        const now = new Date();
+        const date = new Date(dateStr);
+        const diffMs = now.getTime() - date.getTime();
+        const diffMin = Math.floor(diffMs / 60000);
+        if (diffMin < 1) return 'Az önce';
+        if (diffMin < 60) return `${diffMin} dk önce`;
+        const diffHour = Math.floor(diffMin / 60);
+        if (diffHour < 24) return `${diffHour} saat önce`;
+        const diffDay = Math.floor(diffHour / 24);
+        return `${diffDay} gün önce`;
     };
 
     // Yorum ekleme fonksiyonu
-    const handleAddComment = () => {
+    const handleAddComment = async () => {
         if (!newComment.trim()) {
             Alert.alert('Uyarı', 'Lütfen bir yorum yazın.');
             return;
         }
 
-        const newFeedback: Feedback = {
-            id: `new-${Date.now()}`,
-            userId: 'currentUser',
-            mealTime: 'lunch',
-            category: selectedCategory,
-            mealName: mealName || 'Genel Değerlendirme',
-            comment: newComment.trim(),
-            likes: 0,
-            dislikes: 0,
-            timeAgo: 'Az önce',
-        };
+        setIsSaving(true);
 
-        // Yeni yorumu en başa ekle
-        const updatedComments = [newFeedback, ...comments];
-        setComments(updatedComments);
+        try {
+            // Supabase'e kaydet
+            const result = await addFeedback({
+                meal_time: 'lunch',
+                category: selectedCategory,
+                meal_name: mealName || 'Genel Değerlendirme',
+                comment: newComment.trim(),
+            });
 
-        // localStorage'a kaydet
-        saveComments(updatedComments);
-
-        // Formu temizle ve modalı kapat
-        setNewComment('');
-        setMealName('');
-        setSelectedCategory('GENEL');
-        setShowAddModal(false);
-
-        Alert.alert('Başarılı', 'Yorumunuz kaydedildi! 🎉');
+            if (result) {
+                // Supabase'den dönen veriyi listeye ekle
+                const newFeedback: Feedback = {
+                    id: result.id,
+                    userId: 'currentUser',
+                    mealTime: 'lunch',
+                    category: selectedCategory,
+                    mealName: mealName || 'Genel Değerlendirme',
+                    comment: newComment.trim(),
+                    likes: 0,
+                    dislikes: 0,
+                    timeAgo: 'Az önce',
+                };
+                setComments(prev => [newFeedback, ...prev]);
+                Alert.alert('Başarılı', 'Yorumunuz Supabase\'e kaydedildi! 🎉');
+            } else {
+                // Fallback: local olarak ekle
+                const localFeedback: Feedback = {
+                    id: `local-${Date.now()}`,
+                    userId: 'currentUser',
+                    mealTime: 'lunch',
+                    category: selectedCategory,
+                    mealName: mealName || 'Genel Değerlendirme',
+                    comment: newComment.trim(),
+                    likes: 0,
+                    dislikes: 0,
+                    timeAgo: 'Az önce',
+                };
+                setComments(prev => [localFeedback, ...prev]);
+                Alert.alert('Bilgi', 'Yorum yerel olarak kaydedildi (Supabase bağlantısı yok).');
+            }
+        } catch (error) {
+            console.error('Yorum kaydetme hatası:', error);
+            Alert.alert('Hata', 'Yorum kaydedilemedi.');
+        } finally {
+            setIsSaving(false);
+            // Formu temizle ve modalı kapat
+            setNewComment('');
+            setMealName('');
+            setSelectedCategory('GENEL');
+            setShowAddModal(false);
+        }
     };
+
 
     return (
         <View style={styles.container}>

@@ -9,6 +9,7 @@ import { Event } from '../types';
 interface CalendarGridProps {
     currentDate: Date;
     events: Map<string, Event[]>;
+    participatedEvents: Set<string>;
     selectedDate: string | null;
     onDateSelect: (date: string) => void;
     onPreviousMonth: () => void;
@@ -18,7 +19,7 @@ interface CalendarGridProps {
 const DAYS_OF_WEEK = ['PZT', 'SAL', 'ÇAR', 'PER', 'CUM', 'CMT', 'PAZ'];
 const MONTHS_TR = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
 
-export default function CalendarGrid({ currentDate, events, selectedDate, onDateSelect, onPreviousMonth, onNextMonth }: CalendarGridProps) {
+export default function CalendarGrid({ currentDate, events, participatedEvents, selectedDate, onDateSelect, onPreviousMonth, onNextMonth }: CalendarGridProps) {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDayOfMonth = new Date(year, month, 1);
@@ -64,7 +65,8 @@ export default function CalendarGrid({ currentDate, events, selectedDate, onDate
                 {calendarDays.map((day, index) => {
                     if (day === null) return <View key={`empty-${index}`} style={styles.dayCell} />;
                     const dateStr = formatDate(day);
-                    const dayEvents = events.get(dateStr) || [];
+                    const allDayEvents = events.get(dateStr) || [];
+                    const dayEvents = allDayEvents.filter(e => participatedEvents.has(e.id));
                     const isSelected = selectedDate === dateStr;
                     return (
                         <TouchableOpacity key={`day-${day}`} style={styles.dayCell} onPress={() => onDateSelect(dateStr)} activeOpacity={0.7}>

@@ -30,6 +30,8 @@ export const colors = {
     shadow: 'rgba(0, 0, 0, 0.08)',
     timelineGray: '#CBD5E1',
     roomIcon: '#2DD4BF',          // Teal renk - konum ikonu
+    onlineBadgeBackground: '#E0F2FE',
+    onlineText: '#0369A1',
 };
 
 export const spacing = {

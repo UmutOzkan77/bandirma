@@ -3,15 +3,19 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
-    "web": "expo start --web"
+    "start": "sh ./scripts/run-node20.sh ./node_modules/expo/bin/cli start",
+    "android": "sh ./scripts/run-node20.sh ./node_modules/expo/bin/cli start --android",
+    "ios": "sh ./scripts/run-node20.sh ./node_modules/expo/bin/cli start --ios",
+    "web": "sh ./scripts/run-node20.sh ./node_modules/expo/bin/cli start --web",
+    "typecheck": "sh ./scripts/run-node20.sh ./node_modules/typescript/bin/tsc --noEmit",
+    "export:web": "sh ./scripts/run-node20.sh ./node_modules/expo/bin/cli export --platform web",
+    "db:import-students": "sh ./scripts/run-node20.sh ./scripts/import-students.mjs"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@supabase/supabase-js": "^2.99.1",
     "expo": "~54.0.33",
     "expo-constants": "~18.0.13",
     "expo-linking": "~8.0.11",
@@ -28,5 +32,8 @@
     "@types/react": "~19.1.0",
     "typescript": "~5.9.2"
   },
-  "private": true
+  "private": true,
+  "engines": {
+    "node": ">=18 <21"
+  }
 }

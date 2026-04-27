@@ -1,11 +1,12 @@
 /**
- * CommunityDetailScreen - Topluluk detay sayfası
+ * CommunityDetailScreen - Topluluk detay sayfası (Supabase entegrasyonlu)
  */
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../theme';
 import { Community, Event } from '../types';
-import { getEventsByCommunityId, getCommunityById, formatDateTurkish } from '../mockData';
+import { fetchCommunityById, fetchEventsByCommunity } from '../services/eventService';
+import { formatDateTurkish } from '../mockData';
 import EventMiniCard from '../components/EventMiniCard';
 
 interface CommunityDetailScreenProps {
@@ -21,8 +22,37 @@ export default function CommunityDetailScreen({
     onFollowToggle,
     onClose
 }: CommunityDetailScreenProps) {
-    const community = getCommunityById(communityId);
-    const communityEvents = getEventsByCommunityId(communityId);
+    const [community, setCommunity] = useState<Community | null>(null);
+    const [communityEvents, setCommunityEvents] = useState<Event[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        loadCommunityData();
+    }, [communityId]);
+
+    const loadCommunityData = async () => {
+        setLoading(true);
+        try {
+            const [communityData, eventsData] = await Promise.all([
+                fetchCommunityById(communityId),
+                fetchEventsByCommunity(communityId),
+            ]);
+            setCommunity(communityData);
+            setCommunityEvents(eventsData);
+        } catch (error) {
+            console.error('Community data load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (loading) {
+        return (
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
+    }
 
     if (!community) return null;
 
@@ -147,12 +177,12 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
     },
     verifiedBadge: {
-        fontSize: 20,
+        fontSize: 18,
         color: colors.primary,
         marginLeft: spacing.xs
     },
     description: {
-        fontSize: fontSize.md,
+        fontSize: 14,
         color: colors.textSecondary,
         textAlign: 'center',
         lineHeight: 22,
@@ -161,38 +191,41 @@ const styles = StyleSheet.create({
     },
     statsContainer: {
         flexDirection: 'row',
-        gap: spacing.xxl,
+        gap: 32,
         marginBottom: spacing.lg
     },
     stat: {
         alignItems: 'center'
     },
     statValue: {
-        fontSize: fontSize.xxl,
-        fontWeight: fontWeight.bold,
+        fontSize: 20,
+        fontWeight: '800',
         color: colors.textPrimary
     },
     statLabel: {
-        fontSize: fontSize.sm,
+        fontSize: 12,
         color: colors.textSecondary,
-        marginTop: spacing.xs
+        marginTop: 2
     },
     followButton: {
         backgroundColor: colors.primary,
-        paddingHorizontal: spacing.xxl,
-        paddingVertical: spacing.md,
-        borderRadius: borderRadius.full,
-        minWidth: 200,
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 14,
+        minWidth: 180,
         alignItems: 'center',
+        ...shadows.card,
     },
     followingButton: {
-        backgroundColor: colors.backgroundLight,
+        backgroundColor: '#F1F5F9',
         borderWidth: 1,
         borderColor: colors.border,
+        elevation: 0,
+        shadowOpacity: 0,
     },
     followButtonText: {
-        fontSize: fontSize.lg,
-        fontWeight: fontWeight.semibold,
+        fontSize: 15,
+        fontWeight: '700',
         color: '#FFFFFF'
     },
     followingButtonText: {

@@ -75,7 +75,6 @@ export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteS
                     ]}
                     onPress={() => handleVote('like')}
                     activeOpacity={0.7}
-                    disabled={userVote !== null}
                 >
                     <Text style={[
                         styles.voteIcon,
@@ -95,7 +94,6 @@ export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteS
                     ]}
                     onPress={() => handleVote('dislike')}
                     activeOpacity={0.7}
-                    disabled={userVote !== null}
                 >
                     <Text style={[
                         styles.voteIcon,

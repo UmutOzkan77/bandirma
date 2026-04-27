@@ -1,0 +1,10 @@
+node_modules
+.expo
+dist
+web-build
+.DS_Store
+*.tsbuildinfo
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+geliştirilen özellikler

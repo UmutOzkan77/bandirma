@@ -37,3 +37,6 @@ yarn-error.*
 /ios
 /android
 node_modules
+.vercel
+supabase/.temp/
+geliştirilen özellikler/

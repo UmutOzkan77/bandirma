@@ -1,11 +1,7 @@
-/**
- * ExamListItem Component
- * Sınav listesi görünümü için tekil sınav öğesi
- */
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { Exam } from '../mockData';
+import type { Exam } from '../utils';
 
 interface ExamListItemProps {
     exam: Exam;
@@ -13,38 +9,15 @@ interface ExamListItemProps {
 }
 
 export default function ExamListItem({ exam, onPress }: ExamListItemProps) {
-    // Tarihi formatla: "10 Şubat 2026"
-    const formatDate = (dateString: string) => {
-        const date = new Date(dateString);
-        const months = [
-            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-        ];
-        return `${date.getDate()} ${months[date.getMonth()]}`;
-    };
-
-    // Gün adını al: "Pazartesi"
-    const getDayName = (dateString: string) => {
-        const date = new Date(dateString);
-        const days = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
-        return days[date.getDay()];
-    };
-
     return (
-        <TouchableOpacity
-            style={styles.container}
-            onPress={() => onPress(exam)}
-            activeOpacity={0.7}
-        >
-            {/* Sol Taraf: Tarih Kutusu */}
+        <TouchableOpacity style={styles.container} onPress={() => onPress(exam)} activeOpacity={0.75}>
             <View style={styles.dateBox}>
-                <Text style={styles.dayNumber}>{new Date(exam.date).getDate()}</Text>
+                <Text style={styles.dayNumber}>{new Date(exam.date + 'T12:00:00').getDate()}</Text>
                 <Text style={styles.monthName}>
-                    {new Date(exam.date).toLocaleString('tr-TR', { month: 'short' }).toUpperCase()}
+                    {new Date(exam.date + 'T12:00:00').toLocaleString('tr-TR', { month: 'short' }).toUpperCase()}
                 </Text>
             </View>
 
-            {/* Orta Kısım: Sınav Bilgileri */}
             <View style={styles.details}>
                 <View style={styles.headerRow}>
                     <Text style={styles.courseName} numberOfLines={1}>{exam.courseName}</Text>
@@ -56,18 +29,14 @@ export default function ExamListItem({ exam, onPress }: ExamListItemProps) {
                 </View>
 
                 <Text style={styles.courseCode}>{exam.courseCode}</Text>
-
                 <View style={styles.infoRow}>
-                    <Text style={styles.infoText}>🕒 {exam.startTime} - {exam.endTime}</Text>
+                    <Text style={styles.infoText}>{exam.startTime} - {exam.endTime}</Text>
                     <Text style={styles.separator}>•</Text>
-                    <Text style={styles.infoText}>📍 {exam.room}</Text>
+                    <Text style={styles.infoText}>{exam.room}</Text>
                 </View>
             </View>
 
-            {/* Sağ Taraf: Ok ikonu */}
-            <View style={styles.arrowContainer}>
-                <Text style={styles.arrow}>›</Text>
-            </View>
+            <Text style={styles.arrow}>›</Text>
         </TouchableOpacity>
     );
 }
@@ -90,8 +59,8 @@ const styles = StyleSheet.create({
         padding: spacing.sm,
         alignItems: 'center',
         justifyContent: 'center',
-        width: 50,
-        height: 50,
+        width: 52,
+        height: 52,
         marginRight: spacing.md,
     },
     dayNumber: {
@@ -149,9 +118,6 @@ const styles = StyleSheet.create({
         marginHorizontal: spacing.xs,
         color: colors.textMuted,
         fontSize: fontSize.xs,
-    },
-    arrowContainer: {
-        paddingLeft: spacing.sm,
     },
     arrow: {
         fontSize: 20,

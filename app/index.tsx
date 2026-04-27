@@ -1,573 +1,466 @@
-/**
- * Ana Sayfa - Bandırma Onyedi Eylül Üniversitesi
- * Tasarım mockup'ına göre oluşturulmuş ana ekran
- */
-import React, { useRef, useEffect } from 'react';
+import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
     Animated,
     Platform,
-    Dimensions,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    useWindowDimensions,
+    View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import DigitalIDModal from '../components/DigitalIDModal';
-
-const { width: SCREEN_WIDTH } = Dimensions.get('window');
-
-// ─── Demo Data ──────────────────────────────────────────────────
-const STUDENT = {
-    name: 'Ahmet Yılmaz',
-    id: 'BAN-123456',
-    role: 'ÖĞRENCİ',
-};
-
-const ANNOUNCEMENT = {
-    label: 'DUYURU',
-    text: 'Sınav Takvimi Yayınlandı!',
-};
-
-const DAILY_MENU = {
-    density: 'Orta Yoğun',
-    timeRange: '12:00 - 14:00',
-    items: [
-        { icon: '🍲', name: 'Domates Çorbası', category: 'soup' },
-        { icon: '🍗', name: 'Bezelyeli Tavuk', category: 'main' },
-        { icon: '🍚', name: 'Pirinç Pilavı', category: 'side' },
-    ],
-};
-
-const DAILY_COURSES = {
-    day: 'Çarşamba',
-    items: [
-        { name: 'Yazılım Mühendisliği', room: 'A-101', time: '09:00', active: false },
-        { name: 'Algoritma Analizi', room: 'B-204', time: '11:00', active: true },
-        { name: 'Veri Tabanı Sistemleri', room: 'C-305', time: '13:00', active: false },
-    ],
-};
+import { useAcademic } from '../contexts/AcademicContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const QUICK_ACTIONS = [
-    { id: 'etkinlikler', icon: 'calendar-outline' as const, label: 'Etkinlikler', badge: '2 Yeni', route: '/(features)/etkinlikler' },
-    { id: 'sinav-takvimi', icon: 'time-outline' as const, label: 'Sınav Takvimi', badge: null, route: '/(features)/sinav-takvimi' },
-    { id: 'devamsizlik', icon: 'bar-chart-outline' as const, label: 'Devamsızlık', badge: null, route: '/(features)/devamsizlik' },
-    { id: 'ders-programi', icon: 'grid-outline' as const, label: 'Ders Programı', badge: null, route: '/(features)/ders-programi' },
+    { id: 'etkinlikler', icon: 'calendar-outline' as const, label: 'Etkinlikler', route: '/(features)/etkinlikler' },
+    { id: 'sinav-takvimi', icon: 'time-outline' as const, label: 'Sınav Takvimi', route: '/(features)/sinav-takvimi' },
+    { id: 'devamsizlik', icon: 'bar-chart-outline' as const, label: 'Devamsızlık', route: '/(features)/devamsizlik' },
+    { id: 'ders-programi', icon: 'grid-outline' as const, label: 'Ders Programı', route: '/(features)/ders-programi' },
 ];
 
-// ─── Shadow helper (works on iOS, Android & Web) ────────────────
 const cardShadow = Platform.select({
     ios: {
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
+        shadowColor: '#0F172A',
+        shadowOffset: { width: 0, height: 10 },
         shadowOpacity: 0.08,
         shadowRadius: 16,
     },
     android: {
-        elevation: 4,
+        elevation: 5,
     },
     web: {
-        boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
+        boxShadow: '0 10px 24px rgba(15,23,42,0.08)',
     },
     default: {},
 }) as any;
 
-// ─── Animated Card Component ────────────────────────────────────
-function AnimatedCard({ children, delay = 0, style }: { children: React.ReactNode; delay?: number; style?: any }) {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(24)).current;
+function AnimatedCard({
+    children,
+    delay = 0,
+}: {
+    children: React.ReactNode;
+    delay?: number;
+}) {
+    const opacity = useRef(new Animated.Value(0)).current;
+    const translateY = useRef(new Animated.Value(20)).current;
 
     useEffect(() => {
         Animated.parallel([
-            Animated.timing(fadeAnim, {
+            Animated.timing(opacity, {
                 toValue: 1,
-                duration: 500,
+                duration: 420,
                 delay,
                 useNativeDriver: true,
             }),
-            Animated.timing(slideAnim, {
+            Animated.timing(translateY, {
                 toValue: 0,
-                duration: 500,
+                duration: 420,
                 delay,
                 useNativeDriver: true,
             }),
         ]).start();
-    }, []);
+    }, [delay, opacity, translateY]);
 
     return (
-        <Animated.View style={[style, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+        <Animated.View style={{ opacity, transform: [{ translateY }] }}>
             {children}
         </Animated.View>
     );
 }
 
-// ─── Main Screen ────────────────────────────────────────────────
+function getTurkishDay(date = new Date()) {
+    return ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'][date.getDay()];
+}
+
 export default function HomeScreen() {
     const router = useRouter();
-    const [isIDVisible, setIsIDVisible] = React.useState(false);
+    const { width } = useWindowDimensions();
+    const { profile } = useAuth();
+    const { nextExam, todayTimetable, todaysMenu, loading } = useAcademic();
+    const [isIDVisible, setIsIDVisible] = useState(false);
+    const contentWidth = Math.min(width, 720);
+    const horizontalPadding = width < 380 ? 14 : 20;
+    const gridGap = 14;
+    const quickCardWidth = contentWidth - horizontalPadding * 2 < 420
+        ? '100%'
+        : (contentWidth - horizontalPadding * 2 - gridGap) / 2;
+
+    const activeTime = useMemo(() => {
+        const now = new Date();
+        return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    }, []);
+
+    const announcement = nextExam
+        ? `${nextExam.courseCode} ${nextExam.examType.toUpperCase()} sınavı ${nextExam.date} ${nextExam.startTime}`
+        : 'Güncel sınav duyurusu bulunmuyor.';
+
+    const menuItems = todaysMenu?.items.slice(0, 4) ?? [];
+    const menuBadge = todaysMenu ? 'Önbellek Hazır' : 'Menü Bekleniyor';
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
             <ScrollView
-                style={styles.scrollView}
-                contentContainerStyle={styles.scrollContent}
+                contentContainerStyle={[
+                    styles.scrollContent,
+                    { paddingHorizontal: horizontalPadding },
+                ]}
                 showsVerticalScrollIndicator={false}
             >
-                {/* ── Header ──────────────────────────────── */}
-                <AnimatedCard delay={0} style={styles.header}>
-                    {/* Sol taraf: Profil fotoğrafı + İsim */}
-                    <View style={styles.headerLeft}>
-                        <TouchableOpacity
-                            style={styles.avatarContainer}
-                            activeOpacity={0.7}
-                            onPress={() => setIsIDVisible(true)}
-                        >
-                            <Ionicons name="person" size={22} color="#fff" />
-                        </TouchableOpacity>
-                        <View style={styles.headerTextContainer}>
-                            <Text style={styles.roleLabel}>{STUDENT.role}</Text>
-                            <Text style={styles.studentName}>{STUDENT.name}</Text>
+                <View style={[styles.contentShell, { maxWidth: contentWidth }]}>
+                <AnimatedCard>
+                    <View style={styles.header}>
+                        <View style={styles.headerLeft}>
+                            <TouchableOpacity style={styles.avatar} activeOpacity={0.8} onPress={() => setIsIDVisible(true)}>
+                                <Ionicons name="person" size={22} color="#FFFFFF" />
+                            </TouchableOpacity>
+                            <View>
+                                <Text style={styles.eyebrow}>ÖĞRENCİ</Text>
+                                <Text style={styles.studentName}>{profile?.fullName ?? 'Bandırma Öğrencisi'}</Text>
+                            </View>
                         </View>
+
+                        <TouchableOpacity style={styles.iconButton} onPress={() => router.push('/(features)/sinav-takvimi')}>
+                            <Ionicons name="notifications-outline" size={22} color="#0F172A" />
+                        </TouchableOpacity>
                     </View>
-                    {/* Sağ taraf: Bildirim butonu */}
-                    <TouchableOpacity
-                        style={styles.notificationButton}
-                        activeOpacity={0.7}
-                        onPress={() => { }}
-                    >
-                        <Ionicons name="notifications-outline" size={24} color="#1E293B" />
-                        <View style={styles.notificationBadge} />
-                    </TouchableOpacity>
                 </AnimatedCard>
 
-                {/* ── Announcement Banner ─────────────────── */}
-                <AnimatedCard delay={100}>
+                <AnimatedCard delay={80}>
                     <TouchableOpacity
                         style={styles.announcementBanner}
                         activeOpacity={0.85}
                         onPress={() => router.push('/(features)/sinav-takvimi')}
                     >
-                        <View style={styles.announcementLeft}>
-                            <View style={styles.megaphoneIcon}>
-                                <Ionicons name="megaphone" size={18} color="#0066CC" />
-                            </View>
-                            <View>
-                                <Text style={styles.announcementLabel}>{ANNOUNCEMENT.label}</Text>
-                                <Text style={styles.announcementText}>{ANNOUNCEMENT.text}</Text>
-                            </View>
+                        <View style={styles.announcementIcon}>
+                            <Ionicons name="megaphone-outline" size={18} color="#1D4ED8" />
                         </View>
-                        <Ionicons name="chevron-forward" size={20} color="#64748B" />
+                        <View style={styles.announcementContent}>
+                            <Text style={styles.announcementLabel}>DUYURU</Text>
+                            <Text style={styles.announcementText}>{announcement}</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={18} color="#64748B" />
                     </TouchableOpacity>
                 </AnimatedCard>
 
-                {/* ── Günün Menüsü ────────────────────────── */}
-                <AnimatedCard delay={200}>
+                <AnimatedCard delay={160}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Günün Menüsü</Text>
-                        <View style={styles.densityBadge}>
-                            <Text style={styles.densityText}>{DAILY_MENU.density}</Text>
+                        <View style={styles.badge}>
+                            <Text style={styles.badgeText}>{menuBadge}</Text>
                         </View>
                     </View>
+
                     <View style={styles.card}>
-                        {DAILY_MENU.items.map((item, index) => (
-                            <View key={index} style={index === 0 ? styles.menuItemFirst : styles.menuItem}>
-                                <View style={styles.menuItemLeft}>
-                                    <Text style={styles.menuItemIcon}>{item.icon}</Text>
-                                    <Text style={styles.menuItemName}>{item.name}</Text>
+                        {menuItems.length > 0 ? (
+                            menuItems.map((item) => (
+                                <View key={item.id} style={styles.listRow}>
+                                    <View>
+                                        <Text style={styles.listRowTitle}>{item.itemName}</Text>
+                                        <Text style={styles.listRowMeta}>{item.itemType ?? 'günün yemeği'}</Text>
+                                    </View>
+                                    <Text style={styles.listRowValue}>{item.calories ? `${item.calories} kcal` : ''}</Text>
                                 </View>
-                                {index === 0 && (
-                                    <Text style={styles.menuTimeRange}>{DAILY_MENU.timeRange}</Text>
-                                )}
-                            </View>
-                        ))}
-                        <TouchableOpacity
-                            style={styles.cardButton}
-                            activeOpacity={0.7}
-                            onPress={() => router.push('/(features)/yemekhane')}
-                        >
-                            <Text style={styles.cardButtonText}>Tüm Menüyü Gör {'>'}</Text>
+                            ))
+                        ) : (
+                            <Text style={styles.emptyText}>Bugün için menü verisi bulunamadı.</Text>
+                        )}
+
+                        <TouchableOpacity style={styles.cardButton} onPress={() => router.push('/(features)/yemekhane')}>
+                            <Text style={styles.cardButtonText}>Tüm menüyü aç</Text>
                         </TouchableOpacity>
                     </View>
                 </AnimatedCard>
 
-                {/* ── Günün Dersleri ──────────────────────── */}
-                <AnimatedCard delay={300}>
+                <AnimatedCard delay={240}>
                     <View style={styles.sectionHeader}>
-                        <Text style={styles.sectionTitle}>Günün Dersleri</Text>
-                        <Text style={styles.dayLabel}>{DAILY_COURSES.day}</Text>
+                        <Text style={styles.sectionTitle}>Bugünün Dersleri</Text>
+                        <Text style={styles.sectionMeta}>{getTurkishDay()}</Text>
                     </View>
+
                     <View style={styles.card}>
-                        {DAILY_COURSES.items.map((course, index) => (
-                            <View
-                                key={index}
-                                style={[
-                                    styles.courseItem,
-                                    course.active && styles.courseItemActive,
-                                    index === DAILY_COURSES.items.length - 1 && { borderBottomWidth: 0 }
-                                ]}
-                            >
-                                <View>
-                                    <Text style={[
-                                        styles.courseName,
-                                        course.active && styles.courseNameActive,
-                                    ]}>
-                                        {course.name}
-                                    </Text>
-                                    <Text style={[
-                                        styles.courseRoom,
-                                        course.active && styles.courseRoomActive,
-                                    ]}>
-                                        {course.room}
-                                    </Text>
-                                </View>
-                                <Text style={[
-                                    styles.courseTime,
-                                    course.active && styles.courseTimeActive,
-                                ]}>
-                                    {course.time}
-                                </Text>
-                            </View>
-                        ))}
-                        <TouchableOpacity
-                            style={styles.cardButton}
-                            activeOpacity={0.7}
-                            onPress={() => router.push('/(features)/ders-programi')}
-                        >
-                            <Text style={styles.cardButtonText}>Haftalık Programı Gör {'>'}</Text>
+                        {todayTimetable.length > 0 ? (
+                            todayTimetable.map((course) => {
+                                const isActive = activeTime >= course.startTime && activeTime <= course.endTime;
+                                return (
+                                    <View key={`${course.offeringId}-${course.startTime}`} style={[styles.lessonRow, isActive && styles.lessonRowActive]}>
+                                        <View>
+                                            <Text style={[styles.lessonTitle, isActive && styles.lessonTitleActive]}>{course.courseName}</Text>
+                                            <Text style={[styles.lessonMeta, isActive && styles.lessonMetaActive]}>
+                                                {course.room} {course.building ? `• ${course.building}` : ''}
+                                            </Text>
+                                        </View>
+                                        <Text style={[styles.lessonTime, isActive && styles.lessonTimeActive]}>
+                                            {course.startTime}
+                                        </Text>
+                                    </View>
+                                );
+                            })
+                        ) : (
+                            <Text style={styles.emptyText}>
+                                {loading ? 'Dersler yükleniyor...' : 'Bugün için aktif ders bulunmuyor.'}
+                            </Text>
+                        )}
+
+                        <TouchableOpacity style={styles.cardButton} onPress={() => router.push('/(features)/ders-programi')}>
+                            <Text style={styles.cardButtonText}>Haftalık programa git</Text>
                         </TouchableOpacity>
                     </View>
                 </AnimatedCard>
 
-                {/* ── Diğer İşlemler ──────────────────────── */}
-                <AnimatedCard delay={400}>
-                    <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>Diğer İşlemler</Text>
-                    <View style={styles.quickActionsGrid}>
+                <AnimatedCard delay={320}>
+                    <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
+                    <View style={[styles.quickGrid, { gap: gridGap }]}>
                         {QUICK_ACTIONS.map((action) => (
                             <TouchableOpacity
                                 key={action.id}
-                                style={styles.quickActionCard}
-                                activeOpacity={0.7}
+                                style={[styles.quickCard, { width: quickCardWidth }]}
                                 onPress={() => router.push(action.route as any)}
                             >
-                                {action.badge && (
-                                    <View style={styles.quickActionBadge}>
-                                        <Text style={styles.quickActionBadgeText}>{action.badge}</Text>
-                                    </View>
-                                )}
-                                <View style={styles.quickActionIconContainer}>
-                                    <Ionicons name={action.icon} size={24} color="#0066CC" />
+                                <View style={styles.quickIcon}>
+                                    <Ionicons name={action.icon} size={24} color="#1D4ED8" />
                                 </View>
-                                <Text style={styles.quickActionLabel}>{action.label}</Text>
+                                <Text style={styles.quickLabel}>{action.label}</Text>
                             </TouchableOpacity>
                         ))}
                     </View>
                 </AnimatedCard>
-
-                {/* Bottom space */}
-                <View style={{ height: 24 }} />
+                </View>
             </ScrollView>
 
             <DigitalIDModal
                 visible={isIDVisible}
                 onClose={() => setIsIDVisible(false)}
-                studentName={STUDENT.name}
-                studentID={STUDENT.id}
-                role={STUDENT.role}
+                studentName={profile?.fullName ?? 'Bandırma Öğrencisi'}
+                studentID={profile?.studentNumber ?? profile?.id ?? 'N/A'}
+                role="ÖĞRENCİ"
             />
         </SafeAreaView>
     );
 }
 
-// ─── Styles ─────────────────────────────────────────────────────
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
         backgroundColor: '#F8FAFC',
     },
-    scrollView: {
-        flex: 1,
-    },
     scrollContent: {
-        paddingHorizontal: 20,
-        paddingTop: 16,
+        paddingTop: 18,
         paddingBottom: 120,
+        alignItems: 'center',
     },
-
-    // Header
+    contentShell: {
+        width: '100%',
+    },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
-        paddingVertical: 8,
+        marginBottom: 18,
     },
     headerLeft: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 12,
     },
-    headerTextContainer: {
-        justifyContent: 'center',
-    },
-    avatarContainer: {
-        width: 46,
-        height: 46,
-        borderRadius: 23,
-        backgroundColor: '#0066CC',
-        justifyContent: 'center',
+    avatar: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        backgroundColor: '#1D4ED8',
         alignItems: 'center',
+        justifyContent: 'center',
     },
-    notificationButton: {
+    eyebrow: {
+        fontSize: 11,
+        fontWeight: '700',
+        letterSpacing: 1,
+        color: '#64748B',
+    },
+    studentName: {
+        fontSize: 21,
+        fontWeight: '800',
+        color: '#0F172A',
+    },
+    iconButton: {
         width: 44,
         height: 44,
         borderRadius: 22,
-        backgroundColor: '#F1F5F9',
-        justifyContent: 'center',
+        backgroundColor: '#E2E8F0',
         alignItems: 'center',
-        position: 'relative',
+        justifyContent: 'center',
     },
-    notificationBadge: {
-        position: 'absolute',
-        top: 10,
-        right: 12,
-        width: 10,
-        height: 10,
-        borderRadius: 5,
-        backgroundColor: '#EF4444',
-        borderWidth: 2,
-        borderColor: '#F1F5F9',
-    },
-    roleLabel: {
-        fontSize: 11,
-        fontWeight: '600',
-        color: '#64748B',
-        letterSpacing: 1,
-        marginBottom: 2,
-    },
-    studentName: {
-        fontSize: 20,
-        fontWeight: '700',
-        color: '#1E293B',
-    },
-
-    // Announcement
     announcementBanner: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        backgroundColor: '#EBF5FF',
-        borderRadius: 16,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        marginBottom: 24,
-        borderWidth: 1,
-        borderColor: '#BFDBFE',
-    },
-    announcementLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
         gap: 12,
-        flex: 1,
-    },
-    megaphoneIcon: {
-        width: 36,
-        height: 36,
-        borderRadius: 18,
         backgroundColor: '#DBEAFE',
-        justifyContent: 'center',
+        borderRadius: 18,
+        padding: 16,
+        marginBottom: 24,
+    },
+    announcementIcon: {
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        backgroundColor: '#EFF6FF',
         alignItems: 'center',
+        justifyContent: 'center',
+    },
+    announcementContent: {
+        flex: 1,
     },
     announcementLabel: {
         fontSize: 10,
-        fontWeight: '700',
-        color: '#0066CC',
-        letterSpacing: 0.5,
-        marginBottom: 1,
+        fontWeight: '800',
+        letterSpacing: 1,
+        color: '#1D4ED8',
+        marginBottom: 4,
     },
     announcementText: {
         fontSize: 14,
+        color: '#0F172A',
         fontWeight: '600',
-        color: '#1E293B',
     },
-
-    // Section Headers
     sectionHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 4,
+        marginBottom: 10,
     },
     sectionTitle: {
         fontSize: 20,
-        fontWeight: '700',
-        color: '#0066CC',
+        fontWeight: '800',
+        color: '#0F172A',
+        marginBottom: 10,
     },
-    dayLabel: {
-        fontSize: 14,
-        color: '#64748B',
-        fontWeight: '500',
-    },
-    densityBadge: {
-        backgroundColor: '#FEF3C7',
-        borderRadius: 12,
-        paddingHorizontal: 12,
-        paddingVertical: 4,
-    },
-    densityText: {
-        fontSize: 12,
+    sectionMeta: {
+        fontSize: 13,
         fontWeight: '600',
-        color: '#D97706',
+        color: '#64748B',
     },
-
-    // Card – with cross-platform shadow
+    badge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 999,
+        backgroundColor: '#DCFCE7',
+    },
+    badgeText: {
+        fontSize: 12,
+        fontWeight: '700',
+        color: '#166534',
+    },
     card: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        paddingHorizontal: 18,
-        paddingBottom: 18,
-        paddingTop: 18,
+        borderRadius: 20,
+        padding: 18,
         marginBottom: 24,
-        borderWidth: 1,
-        borderColor: '#F1F5F9',
         ...cardShadow,
     },
-
-    // Menu items
-    menuTimeRange: {
-        fontSize: 12,
-        color: '#64748B',
-        fontWeight: '500',
-        textAlign: 'right',
-    },
-    menuItemFirst: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingVertical: 6,
-    },
-    menuItemLeft: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-    },
-    menuItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingVertical: 6,
-        gap: 12,
-    },
-    menuItemIcon: {
-        fontSize: 22,
-    },
-    menuItemName: {
-        fontSize: 15,
-        fontWeight: '500',
-        color: '#1E293B',
-    },
-
-    // Course items
-    courseItem: {
+    listRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        paddingVertical: 12,
-        paddingHorizontal: 8,
+        paddingVertical: 10,
         borderBottomWidth: 1,
         borderBottomColor: '#E2E8F0',
     },
-    courseItemActive: {
-        backgroundColor: '#F8FAFC',
-        borderRadius: 8,
-    },
-    courseName: {
+    listRowTitle: {
         fontSize: 15,
-        fontWeight: '500',
-        color: '#1E293B',
-        marginBottom: 2,
-    },
-    courseNameActive: {
-        color: '#0066CC',
         fontWeight: '700',
+        color: '#0F172A',
     },
-    courseRoom: {
+    listRowMeta: {
+        marginTop: 4,
         fontSize: 12,
-        color: '#94A3B8',
-        fontWeight: '500',
-    },
-    courseRoomActive: {
-        color: '#3B82F6',
-    },
-    courseTime: {
-        fontSize: 16,
-        fontWeight: '600',
         color: '#64748B',
+        textTransform: 'capitalize',
     },
-    courseTimeActive: {
-        color: '#0066CC',
-        fontWeight: '800',
-        fontSize: 18,
+    listRowValue: {
+        fontSize: 12,
+        color: '#334155',
+        fontWeight: '600',
     },
-
-    // Card Button
     cardButton: {
-        backgroundColor: '#EBF5FF',
-        borderRadius: 12,
-        paddingVertical: 12,
+        marginTop: 16,
+        backgroundColor: '#EFF6FF',
+        borderRadius: 14,
+        paddingVertical: 13,
         alignItems: 'center',
-        marginTop: 12,
     },
     cardButtonText: {
         fontSize: 14,
-        fontWeight: '600',
-        color: '#0066CC',
+        fontWeight: '800',
+        color: '#1D4ED8',
     },
-
-    // Quick Actions
-    quickActionsGrid: {
+    lessonRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 10,
+        borderRadius: 14,
+        marginBottom: 8,
+    },
+    lessonRowActive: {
+        backgroundColor: '#EFF6FF',
+    },
+    lessonTitle: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#0F172A',
+    },
+    lessonTitleActive: {
+        color: '#1D4ED8',
+    },
+    lessonMeta: {
+        marginTop: 4,
+        fontSize: 12,
+        color: '#64748B',
+    },
+    lessonMetaActive: {
+        color: '#2563EB',
+    },
+    lessonTime: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#334155',
+    },
+    lessonTimeActive: {
+        color: '#1D4ED8',
+    },
+    emptyText: {
+        fontSize: 14,
+        color: '#64748B',
+        lineHeight: 20,
+    },
+    quickGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
-        rowGap: 12,
     },
-    quickActionCard: {
-        width: '48%',
+    quickCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
+        borderRadius: 20,
         padding: 18,
-        position: 'relative',
-        borderWidth: 1,
-        borderColor: '#F1F5F9',
         ...cardShadow,
     },
-    quickActionBadge: {
-        position: 'absolute',
-        top: 12,
-        right: 12,
-        backgroundColor: '#EBF5FF',
-        borderRadius: 8,
-        paddingHorizontal: 8,
-        paddingVertical: 3,
-    },
-    quickActionBadgeText: {
-        fontSize: 10,
-        fontWeight: '600',
-        color: '#0066CC',
-    },
-    quickActionIconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        backgroundColor: '#EBF5FF',
-        justifyContent: 'center',
+    quickIcon: {
+        width: 46,
+        height: 46,
+        borderRadius: 16,
+        backgroundColor: '#DBEAFE',
         alignItems: 'center',
-        marginBottom: 12,
+        justifyContent: 'center',
+        marginBottom: 14,
     },
-    quickActionLabel: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#1E293B',
+    quickLabel: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#0F172A',
     },
 });

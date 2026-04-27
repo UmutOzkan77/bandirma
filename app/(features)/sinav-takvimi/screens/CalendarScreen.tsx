@@ -1,82 +1,69 @@
-/**
- * CalendarScreen - Sınav Takvimi
- * Haftalık sınav takvimi görünümü
- */
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Text, FlatList } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
-import { upcomingExams, getWeekDays, Exam } from '../mockData';
+import { Feather } from '@expo/vector-icons';
 import WeeklyCalendar from '../components/WeeklyCalendar';
 import ExamDetailModal from '../components/ExamDetailModal';
 import ExamListItem from '../components/ExamListItem';
-
-import { Feather } from '@expo/vector-icons';
+import { useAcademic } from '../../../../contexts/AcademicContext';
+import type { Exam } from '../utils';
+import { formatDate, getWeekDays, getWeekStart } from '../utils';
 
 interface CalendarScreenProps {
     onNavigateToCalculator?: () => void;
 }
 
 export default function CalendarScreen({ onNavigateToCalculator }: CalendarScreenProps) {
+    const { examList } = useAcademic();
     const [viewMode, setViewMode] = useState<'calendar' | 'list'>('calendar');
-    const [selectedDate, setSelectedDate] = useState<string>('2026-02-10');
+    const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().slice(0, 10));
     const [selectedExam, setSelectedExam] = useState<Exam | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [weekOffset, setWeekOffset] = useState(0);
     const [showMenu, setShowMenu] = useState(false);
 
-    // Haftanın günlerini hesapla
-    const getWeekStart = () => {
-        const today = new Date('2026-02-09'); // Mock starting date (Monday)
-        today.setDate(today.getDate() + (weekOffset * 7));
-        return today;
-    };
+    useEffect(() => {
+        if (examList.length > 0) {
+            setSelectedDate((current) => current || examList[0].date);
+        }
+    }, [examList]);
 
-    const weekDays = getWeekDays(getWeekStart());
+    const weekStart = useMemo(() => {
+        const base = getWeekStart();
+        base.setDate(base.getDate() + weekOffset * 7);
+        return base;
+    }, [weekOffset]);
 
-    // Hafta label'ı
-    const getWeekLabel = () => {
+    const weekDays = useMemo(() => getWeekDays(weekStart), [weekStart]);
+
+    const weekLabel = useMemo(() => {
         const startDay = weekDays[0];
-        const endDay = weekDays[4]; // Cuma
-        const months = [
-            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
-        ];
-        const startDate = new Date(startDay.date);
-        const endDate = new Date(endDay.date);
-        return `${startDate.getDate()} - ${endDate.getDate()} ${months[startDate.getMonth()]} ${startDate.getFullYear()}`;
-    };
+        const endDay = weekDays[4] ?? weekDays[weekDays.length - 1];
+        return formatDate(startDay.date) + ' - ' + formatDate(endDay.date);
+    }, [weekDays]);
+
+    const filteredExams = useMemo(() => {
+        if (viewMode === 'calendar') {
+            const visibleDates = new Set(weekDays.map((day) => day.date));
+            return examList.filter((exam) => visibleDates.has(exam.date));
+        }
+        return examList;
+    }, [examList, viewMode, weekDays]);
 
     const handleExamPress = (exam: Exam) => {
         setSelectedExam(exam);
         setModalVisible(true);
     };
 
-    const handleCloseModal = () => {
-        setModalVisible(false);
-        setSelectedExam(null);
-    };
-
-    const handleNavigateToCalculator = () => {
-        handleCloseModal();
-        if (onNavigateToCalculator) {
-            onNavigateToCalculator();
-        }
-    };
-
     return (
         <View style={styles.container}>
-            {/* Header with Menu */}
             <View style={styles.header}>
                 <View style={{ flex: 1 }} />
-                <TouchableOpacity
-                    style={styles.menuButton}
-                    onPress={() => setShowMenu(!showMenu)}
-                >
+                <TouchableOpacity style={styles.menuButton} onPress={() => setShowMenu(!showMenu)}>
                     <Feather name="more-horizontal" size={24} color={colors.textPrimary} />
                 </TouchableOpacity>
             </View>
 
-            {/* Dropdown Menu */}
             {showMenu && (
                 <View style={styles.dropdownMenu}>
                     <TouchableOpacity
@@ -87,7 +74,7 @@ export default function CalendarScreen({ onNavigateToCalculator }: CalendarScree
                         }}
                     >
                         <Feather name="calendar" size={18} color={viewMode === 'calendar' ? colors.accent : colors.textPrimary} />
-                        <Text style={[styles.menuItemText, viewMode === 'calendar' && styles.menuItemTextActive]}>Takvim Görünümü</Text>
+                        <Text style={[styles.menuItemText, viewMode === 'calendar' && styles.menuItemTextActive]}>Takvim Gorunumu</Text>
                     </TouchableOpacity>
                     <View style={styles.menuDivider} />
                     <TouchableOpacity
@@ -98,7 +85,7 @@ export default function CalendarScreen({ onNavigateToCalculator }: CalendarScree
                         }}
                     >
                         <Feather name="list" size={18} color={viewMode === 'list' ? colors.accent : colors.textPrimary} />
-                        <Text style={[styles.menuItemText, viewMode === 'list' && styles.menuItemTextActive]}>Liste Görünümü</Text>
+                        <Text style={[styles.menuItemText, viewMode === 'list' && styles.menuItemTextActive]}>Liste Gorunumu</Text>
                     </TouchableOpacity>
                 </View>
             )}
@@ -106,34 +93,33 @@ export default function CalendarScreen({ onNavigateToCalculator }: CalendarScree
             {viewMode === 'calendar' ? (
                 <WeeklyCalendar
                     weekDays={weekDays}
-                    exams={upcomingExams}
+                    exams={filteredExams}
                     selectedDate={selectedDate}
                     onDayPress={setSelectedDate}
                     onExamPress={handleExamPress}
-                    onPreviousWeek={() => setWeekOffset(prev => prev - 1)}
-                    onNextWeek={() => setWeekOffset(prev => prev + 1)}
-                    weekLabel={getWeekLabel()}
+                    onPreviousWeek={() => setWeekOffset((prev) => prev - 1)}
+                    onNextWeek={() => setWeekOffset((prev) => prev + 1)}
+                    weekLabel={weekLabel}
                 />
             ) : (
                 <FlatList
-                    data={upcomingExams}
+                    data={filteredExams}
                     keyExtractor={(item) => item.id}
-                    renderItem={({ item }) => (
-                        <ExamListItem
-                            exam={item}
-                            onPress={handleExamPress}
-                        />
-                    )}
+                    renderItem={({ item }) => <ExamListItem exam={item} onPress={handleExamPress} />}
                     contentContainerStyle={styles.listContainer}
                     showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={<Text style={styles.emptyText}>Aktif sinav takvimi bulunmuyor.</Text>}
                 />
             )}
 
             <ExamDetailModal
                 visible={modalVisible}
                 exam={selectedExam}
-                onClose={handleCloseModal}
-                onNavigateToCalculator={handleNavigateToCalculator}
+                onClose={() => {
+                    setModalVisible(false);
+                    setSelectedExam(null);
+                }}
+                onNavigateToCalculator={onNavigateToCalculator}
             />
         </View>
     );
@@ -165,11 +151,8 @@ const styles = StyleSheet.create({
         backgroundColor: colors.backgroundCard,
         borderRadius: borderRadius.md,
         padding: spacing.xs,
-        shadowColor: "#000",
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
         elevation: 5,
@@ -201,5 +184,9 @@ const styles = StyleSheet.create({
     },
     listContainer: {
         padding: spacing.md,
+    },
+    emptyText: {
+        padding: spacing.lg,
+        color: colors.textSecondary,
     },
 });

@@ -1,200 +1,144 @@
-/**
- * AddCourseModal Bileşeni
- * Yeni ders ekleme modalı
- */
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
+    ActivityIndicator,
     Modal,
-    TouchableOpacity,
-    TextInput,
     ScrollView,
-    KeyboardAvoidingView,
-    Platform,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { colors, fontSize, fontWeight, spacing, borderRadius, shadows } from '../theme';
+import type { SelectableOffering } from '../../../../lib/domain';
 
 interface AddCourseModalProps {
     visible: boolean;
     onClose: () => void;
-    onSave: (course: {
-        name: string;
-        instructor: string;
-        room: string;
-        selectedDays: boolean[];
-        startTime: string;
-        endTime: string;
-    }) => void;
+    onSearch: (query: string) => Promise<SelectableOffering[]>;
+    onSave: (offering: SelectableOffering) => Promise<void> | void;
 }
 
-const dayLabels = ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'];
+export default function AddCourseModal({ visible, onClose, onSearch, onSave }: AddCourseModalProps) {
+    const [query, setQuery] = useState('');
+    const [results, setResults] = useState<SelectableOffering[]>([]);
+    const [selectedOfferingId, setSelectedOfferingId] = useState<string | null>(null);
+    const [isSearching, setIsSearching] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
 
-export default function AddCourseModal({ visible, onClose, onSave }: AddCourseModalProps) {
-    const [name, setName] = useState('');
-    const [instructor, setInstructor] = useState('');
-    const [room, setRoom] = useState('');
-    const [selectedDays, setSelectedDays] = useState([false, false, false, false, false, false, false]);
-    const [startTime, setStartTime] = useState('09:00 AM');
-    const [endTime, setEndTime] = useState('10:30 AM');
+    useEffect(() => {
+        if (!visible) {
+            setQuery('');
+            setResults([]);
+            setSelectedOfferingId(null);
+            return;
+        }
 
-    const toggleDay = (index: number) => {
-        const newDays = [...selectedDays];
-        newDays[index] = !newDays[index];
-        setSelectedDays(newDays);
-    };
+        if (query.trim().length < 2) {
+            setResults([]);
+            setSelectedOfferingId(null);
+            return;
+        }
 
-    const handleSave = () => {
-        onSave({
-            name,
-            instructor,
-            room,
-            selectedDays,
-            startTime,
-            endTime,
-        });
-        // Reset form
-        setName('');
-        setInstructor('');
-        setRoom('');
-        setSelectedDays([false, false, false, false, false, false, false]);
-        setStartTime('09:00 AM');
-        setEndTime('10:30 AM');
+        const timer = setTimeout(() => {
+            void (async () => {
+                setIsSearching(true);
+                const nextResults = await onSearch(query);
+                setResults(nextResults);
+                setSelectedOfferingId(nextResults[0]?.id ?? null);
+                setIsSearching(false);
+            })();
+        }, 250);
+
+        return () => clearTimeout(timer);
+    }, [visible, query, onSearch]);
+
+    const handleSave = async () => {
+        const offering = results.find((item) => item.id === selectedOfferingId);
+        if (!offering) {
+            return;
+        }
+
+        setIsSaving(true);
+        await onSave(offering);
+        setIsSaving(false);
         onClose();
     };
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            presentationStyle="pageSheet"
-            onRequestClose={onClose}
-        >
-            <KeyboardAvoidingView
-                style={styles.container}
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            >
-                {/* Header */}
+        <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+            <View style={styles.container}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={onClose}>
-                        <Text style={styles.closeButton}>✕</Text>
+                        <Text style={styles.cancelText}>Iptal</Text>
                     </TouchableOpacity>
-                    <Text style={styles.title}>Yeni Ders Ekle</Text>
-                    <TouchableOpacity onPress={onClose}>
-                        <Text style={styles.cancelButton}>İptal</Text>
+                    <Text style={styles.title}>Buluttan Ders Ekle</Text>
+                    <TouchableOpacity onPress={handleSave} disabled={!selectedOfferingId || isSaving}>
+                        <Text style={[styles.saveText, (!selectedOfferingId || isSaving) && styles.saveTextDisabled]}>
+                            {isSaving ? 'Kaydediliyor' : 'Kaydet'}
+                        </Text>
                     </TouchableOpacity>
                 </View>
 
-                <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                    {/* Genel Bilgiler Section */}
-                    <Text style={styles.sectionTitle}>Genel Bilgiler</Text>
+                <View style={styles.infoCard}>
+                    <Text style={styles.infoTitle}>Local override</Text>
+                    <Text style={styles.infoText}>
+                        Eklenen veya kaldirilan dersler sadece bu cihazdaki ders programi, sinav takvimi ve devamsizligi etkiler.
+                    </Text>
+                </View>
 
-                    {/* Ders Adı */}
-                    <Text style={styles.label}>Ders Adı</Text>
-                    <View style={styles.inputContainer}>
-                        <TextInput
-                            style={styles.input}
-                            value={name}
-                            onChangeText={setName}
-                            placeholder="ör: İleri Matematik"
-                            placeholderTextColor={colors.textMuted}
-                        />
-                    </View>
+                <View style={styles.searchBox}>
+                    <TextInput
+                        style={styles.input}
+                        value={query}
+                        onChangeText={setQuery}
+                        placeholder="Ders kodu veya ders adi yazin"
+                        placeholderTextColor={colors.textMuted}
+                        autoCapitalize="characters"
+                    />
+                </View>
 
-                    {/* Öğretmen */}
-                    <Text style={styles.label}>Öğretmen</Text>
-                    <View style={styles.inputContainer}>
-                        <TextInput
-                            style={styles.input}
-                            value={instructor}
-                            onChangeText={setInstructor}
-                            placeholder="ör: Dr. Richards"
-                            placeholderTextColor={colors.textMuted}
-                        />
-                        <Text style={[styles.inputIcon, { color: colors.accent }]}>👤</Text>
-                    </View>
-
-                    {/* Sınıf/Oda */}
-                    <Text style={styles.label}>Sınıf/Oda</Text>
-                    <View style={styles.inputContainer}>
-                        <TextInput
-                            style={styles.input}
-                            value={room}
-                            onChangeText={setRoom}
-                            placeholder="ör: Fen Laboratuvarı 4B"
-                            placeholderTextColor={colors.textMuted}
-                        />
-                        <Text style={[styles.inputIcon, { color: colors.roomIcon }]}>📍</Text>
-                    </View>
-
-                    {/* Program Section */}
-                    <Text style={styles.sectionTitle}>Program</Text>
-
-                    {/* Haftanın Günleri */}
-                    <Text style={styles.label}>Haftanın Günleri</Text>
-                    <View style={styles.daysContainer}>
-                        {dayLabels.map((day, index) => (
-                            <TouchableOpacity
-                                key={index}
-                                style={[
-                                    styles.dayButton,
-                                    selectedDays[index] && styles.dayButtonSelected,
-                                ]}
-                                onPress={() => toggleDay(index)}
-                            >
-                                <Text
-                                    style={[
-                                        styles.dayText,
-                                        selectedDays[index] && styles.dayTextSelected,
-                                    ]}
+                <ScrollView style={styles.results} contentContainerStyle={styles.resultsContent}>
+                    {isSearching ? (
+                        <View style={styles.stateBox}>
+                            <ActivityIndicator color={colors.accent} />
+                            <Text style={styles.stateText}>Dersler araniyor...</Text>
+                        </View>
+                    ) : query.trim().length < 2 ? (
+                        <View style={styles.stateBox}>
+                            <Text style={styles.stateText}>Arama icin en az 2 karakter girin.</Text>
+                        </View>
+                    ) : results.length === 0 ? (
+                        <View style={styles.stateBox}>
+                            <Text style={styles.stateText}>Eslesen aktif ders acilisi bulunamadi.</Text>
+                        </View>
+                    ) : (
+                        results.map((offering) => {
+                            const selected = selectedOfferingId === offering.id;
+                            return (
+                                <TouchableOpacity
+                                    key={offering.id}
+                                    style={[styles.resultCard, selected && styles.resultCardSelected]}
+                                    onPress={() => setSelectedOfferingId(offering.id)}
                                 >
-                                    {day}
-                                </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Time Pickers */}
-                    <View style={styles.timeRow}>
-                        <View style={styles.timeColumn}>
-                            <Text style={styles.label}>Başlangıç Saati</Text>
-                            <View style={styles.timeInputContainer}>
-                                <TextInput
-                                    style={styles.timeInput}
-                                    value={startTime}
-                                    onChangeText={setStartTime}
-                                    placeholder="09:00 AM"
-                                    placeholderTextColor={colors.textMuted}
-                                />
-                                <Text style={[styles.timeIcon, { color: colors.accent }]}>🕐</Text>
-                            </View>
-                        </View>
-                        <View style={styles.timeColumn}>
-                            <Text style={styles.label}>Bitiş Saati</Text>
-                            <View style={styles.timeInputContainer}>
-                                <TextInput
-                                    style={styles.timeInput}
-                                    value={endTime}
-                                    onChangeText={setEndTime}
-                                    placeholder="10:30 AM"
-                                    placeholderTextColor={colors.textMuted}
-                                />
-                                <Text style={[styles.timeIcon, { color: colors.accent }]}>🕐</Text>
-                            </View>
-                        </View>
-                    </View>
+                                    <View style={styles.resultHeader}>
+                                        <Text style={styles.resultCode}>{offering.course.courseCode}</Text>
+                                        <Text style={styles.resultSection}>
+                                            Sinif {offering.classLevel}
+                                            {offering.section ? ` • Sube ${offering.section}` : ''}
+                                        </Text>
+                                    </View>
+                                    <Text style={styles.resultTitle}>{offering.course.courseName}</Text>
+                                    <Text style={styles.resultMeta}>
+                                        {offering.instructorName ?? 'Ogretim gorevlisi'}
+                                        {offering.scheduleSlots[0]?.room ? ` • ${offering.scheduleSlots[0].room}` : ''}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })
+                    )}
                 </ScrollView>
-
-                {/* Save Button */}
-                <View style={styles.footer}>
-                    <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                        <Text style={styles.saveIcon}>💾</Text>
-                        <Text style={styles.saveButtonText}>Dersi Kaydet</Text>
-                    </TouchableOpacity>
-                </View>
-            </KeyboardAvoidingView>
+            </View>
         </Modal>
     );
 }
@@ -203,141 +147,117 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+        paddingTop: spacing.xl,
     },
     header: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingHorizontal: spacing.xl,
-        paddingVertical: spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        marginBottom: spacing.lg,
     },
-    closeButton: {
-        fontSize: fontSize.xl,
+    cancelText: {
+        fontSize: fontSize.md,
         color: colors.textSecondary,
+        fontWeight: fontWeight.medium,
     },
     title: {
         fontSize: fontSize.xl,
         fontWeight: fontWeight.bold,
         color: colors.textPrimary,
     },
-    cancelButton: {
+    saveText: {
         fontSize: fontSize.md,
         color: colors.accent,
-        fontWeight: fontWeight.medium,
+        fontWeight: fontWeight.bold,
     },
-    content: {
-        flex: 1,
-        paddingHorizontal: spacing.xl,
-        paddingTop: spacing.lg,
+    saveTextDisabled: {
+        opacity: 0.4,
     },
-    sectionTitle: {
-        fontSize: fontSize.xxl,
+    infoCard: {
+        marginHorizontal: spacing.xl,
+        marginBottom: spacing.lg,
+        borderRadius: borderRadius.lg,
+        padding: spacing.lg,
+        backgroundColor: '#EFF6FF',
+    },
+    infoTitle: {
+        fontSize: fontSize.md,
         fontWeight: fontWeight.bold,
         color: colors.textPrimary,
-        marginBottom: spacing.lg,
-        marginTop: spacing.md,
+        marginBottom: spacing.xs,
     },
-    label: {
-        fontSize: fontSize.md,
+    infoText: {
+        fontSize: fontSize.sm,
         color: colors.textSecondary,
-        marginBottom: spacing.sm,
+        lineHeight: 20,
     },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: borderRadius.md,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
-        marginBottom: spacing.lg,
-        backgroundColor: colors.cardBackground,
+    searchBox: {
+        marginHorizontal: spacing.xl,
+        marginBottom: spacing.md,
     },
     input: {
-        flex: 1,
-        fontSize: fontSize.md,
-        color: colors.textPrimary,
-    },
-    inputIcon: {
-        fontSize: fontSize.lg,
-        marginLeft: spacing.sm,
-    },
-    daysContainer: {
-        flexDirection: 'row',
-        gap: spacing.sm,
-        marginBottom: spacing.xl,
-    },
-    dayButton: {
-        width: 40,
-        height: 40,
-        borderRadius: borderRadius.full,
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.border,
-        backgroundColor: colors.cardBackground,
-    },
-    dayButtonSelected: {
-        backgroundColor: colors.primary,
-        borderColor: colors.primary,
-    },
-    dayText: {
-        fontSize: fontSize.md,
-        fontWeight: fontWeight.medium,
-        color: colors.textSecondary,
-    },
-    dayTextSelected: {
-        color: colors.textLight,
-    },
-    timeRow: {
-        flexDirection: 'row',
-        gap: spacing.lg,
-    },
-    timeColumn: {
-        flex: 1,
-    },
-    timeInputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderColor: colors.border,
         borderRadius: borderRadius.md,
+        borderWidth: 1,
+        borderColor: colors.border,
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
         backgroundColor: colors.cardBackground,
-    },
-    timeInput: {
-        flex: 1,
         fontSize: fontSize.md,
         color: colors.textPrimary,
     },
-    timeIcon: {
-        fontSize: fontSize.lg,
-        marginLeft: spacing.sm,
+    results: {
+        flex: 1,
     },
-    footer: {
+    resultsContent: {
         paddingHorizontal: spacing.xl,
-        paddingVertical: spacing.xl,
-        paddingBottom: spacing.xxxl,
+        paddingBottom: spacing.xxl,
     },
-    saveButton: {
-        flexDirection: 'row',
-        justifyContent: 'center',
+    stateBox: {
+        paddingVertical: spacing.xxl,
         alignItems: 'center',
-        backgroundColor: colors.primary,
-        paddingVertical: spacing.lg,
+        gap: spacing.md,
+    },
+    stateText: {
+        fontSize: fontSize.md,
+        color: colors.textSecondary,
+        textAlign: 'center',
+    },
+    resultCard: {
         borderRadius: borderRadius.lg,
-        ...shadows.fab,
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: spacing.lg,
+        backgroundColor: colors.cardBackground,
+        marginBottom: spacing.md,
+        ...shadows.card,
     },
-    saveIcon: {
-        fontSize: fontSize.lg,
-        marginRight: spacing.sm,
+    resultCardSelected: {
+        borderColor: colors.primary,
+        backgroundColor: '#EFF6FF',
     },
-    saveButtonText: {
+    resultHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: spacing.sm,
+    },
+    resultCode: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.bold,
+        color: colors.accent,
+    },
+    resultSection: {
+        fontSize: fontSize.xs,
+        color: colors.textSecondary,
+    },
+    resultTitle: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.textLight,
+        color: colors.textPrimary,
+        marginBottom: spacing.xs,
+    },
+    resultMeta: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
     },
 });

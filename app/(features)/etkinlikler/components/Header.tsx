@@ -16,16 +16,6 @@ export default function Header({ onNotificationsPress, onCalendarPress, unreadCo
         <View style={styles.container}>
             <Text style={styles.title}>TOPLULUK ETKİNLİKLERİ</Text>
             <View style={styles.iconContainer}>
-                <TouchableOpacity style={styles.iconButton} onPress={onNotificationsPress} activeOpacity={0.7}>
-                    <View style={styles.iconCircle}>
-                        <Text style={styles.iconText}>🔔</Text>
-                    </View>
-                    {unreadCount > 0 && (
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{unreadCount > 9 ? '9+' : unreadCount}</Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
                 <TouchableOpacity style={styles.iconButton} onPress={onCalendarPress} activeOpacity={0.7}>
                     <View style={styles.iconCircle}>
                         <Text style={styles.iconText}>📅</Text>
