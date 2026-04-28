@@ -4,7 +4,7 @@
  * Memnuniyet haritası (takvim görünümü) ve ayın favorisi
  * Gün detaylarını gösteren modal eklendi
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { calendarData, monthlyFavorite, turkishMonths, weeklyMenuData, DailyMenu } from '../mockData';
@@ -195,14 +195,14 @@ export default function StatisticsScreen({ onGoBack }: StatisticsScreenProps) {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.backgroundLight,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xl,
+        paddingTop: spacing.lg,
         paddingBottom: spacing.md,
     },
     backButton: {
@@ -210,25 +210,33 @@ const styles = StyleSheet.create({
         height: 40,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: colors.cardWhite,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     backIcon: {
         fontSize: 24,
-        color: colors.textLight,
+        color: colors.textDark,
     },
     headerTitle: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.semibold,
-        color: colors.textLight,
+        color: colors.textDark,
     },
     moreButton: {
         width: 40,
         height: 40,
         alignItems: 'center',
         justifyContent: 'center',
+        backgroundColor: colors.cardWhite,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     moreIcon: {
         fontSize: 24,
-        color: colors.textLight,
+        color: colors.textDark,
     },
     content: {
         flex: 1,
@@ -240,7 +248,7 @@ const styles = StyleSheet.create({
     title: {
         fontSize: fontSize.title,
         fontWeight: fontWeight.bold,
-        color: colors.textLight,
+        color: colors.textDark,
         marginBottom: spacing.xs,
     },
     subtitle: {
@@ -248,26 +256,29 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
     },
     favoriteSection: {
-        backgroundColor: colors.backgroundDark,
+        backgroundColor: colors.cardWhite,
         marginHorizontal: spacing.lg,
         borderRadius: borderRadius.xl,
         overflow: 'hidden',
         borderWidth: 1,
-        borderColor: `${colors.textSecondary}30`,
+        borderColor: colors.border,
+        ...shadows.card,
     },
     favoriteHeader: {
         padding: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
     },
     favoriteLabel: {
         fontSize: fontSize.xs,
         fontWeight: fontWeight.semibold,
-        color: colors.warning,
+        color: colors.primaryAccent,
         letterSpacing: 1,
     },
     favoriteContent: {
         flexDirection: 'row',
         padding: spacing.md,
-        paddingTop: 0,
+        paddingTop: spacing.md,
     },
     favoriteInfo: {
         flex: 1,
@@ -275,7 +286,7 @@ const styles = StyleSheet.create({
     favoriteDate: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
-        color: colors.textLight,
+        color: colors.textDark,
         marginBottom: spacing.xs,
     },
     favoriteMeals: {
@@ -285,7 +296,7 @@ const styles = StyleSheet.create({
     },
     favoriteProgress: {
         height: 6,
-        backgroundColor: `${colors.textSecondary}30`,
+        backgroundColor: colors.border,
         borderRadius: borderRadius.full,
         marginBottom: spacing.xs,
         width: '80%',
@@ -311,7 +322,7 @@ const styles = StyleSheet.create({
     // Modal Styles
     modalOverlay: {
         flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        backgroundColor: 'rgba(10, 24, 46, 0.35)',
         justifyContent: 'flex-end',
     },
     modalContent: {
@@ -353,6 +364,8 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.lg,
         padding: spacing.lg,
         marginBottom: spacing.xl,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     ratingLabel: {
         fontSize: fontSize.sm,

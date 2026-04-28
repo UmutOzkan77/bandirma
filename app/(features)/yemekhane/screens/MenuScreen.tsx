@@ -97,13 +97,7 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.headerIconButton} onPress={onNavigateToStatistics}>
-                    <Text style={styles.headerIcon}>☰</Text>
-                </TouchableOpacity>
                 <Text style={styles.headerTitle}>Kampüs Yemekhanesi</Text>
-                <TouchableOpacity style={styles.headerAvatar}>
-                    <Text style={styles.headerAvatarText}>AE</Text>
-                </TouchableOpacity>
             </View>
 
             <DaySelector days={menuData} selectedDayId={selectedDayId} onDaySelect={setSelectedDayId} />
@@ -116,8 +110,13 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                 />
 
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Günün Menüsü</Text>
-                    <Text style={styles.sectionMeta}>Toplam {totalCalories} kcal</Text>
+                    <View style={styles.sectionHeaderLeft}>
+                        <Text style={styles.sectionTitle}>Günün Menüsü</Text>
+                        <Text style={styles.sectionMeta}>Toplam {totalCalories} kcal</Text>
+                    </View>
+                    <TouchableOpacity style={styles.sectionHeaderButton} onPress={onNavigateToStatistics}>
+                        <Text style={styles.sectionHeaderIcon}>{'>'}</Text>
+                    </TouchableOpacity>
                 </View>
 
                 <View style={styles.menuCards}>
@@ -176,33 +175,6 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.bold,
         color: colors.textDark,
     },
-    headerIconButton: {
-        width: 40,
-        height: 40,
-        borderRadius: borderRadius.full,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.cardWhite,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-    headerIcon: {
-        fontSize: 18,
-        color: colors.textDark,
-    },
-    headerAvatar: {
-        width: 40,
-        height: 40,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.primaryDark,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    headerAvatarText: {
-        color: colors.textLight,
-        fontSize: fontSize.sm,
-        fontWeight: fontWeight.bold,
-    },
     content: {
         paddingBottom: spacing.xxxl,
     },
@@ -231,11 +203,15 @@ const styles = StyleSheet.create({
     },
     sectionHeader: {
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between',
-        alignItems: 'baseline',
         paddingHorizontal: spacing.lg,
         marginBottom: spacing.md,
         marginTop: spacing.sm,
+    },
+    sectionHeaderLeft: {
+        flex: 1,
+        paddingRight: spacing.md,
     },
     sectionTitle: {
         fontSize: fontSize.lg,
@@ -245,6 +221,21 @@ const styles = StyleSheet.create({
     sectionMeta: {
         fontSize: fontSize.sm,
         color: colors.textSecondary,
+        marginTop: spacing.xs,
+    },
+    sectionHeaderButton: {
+        width: 36,
+        height: 36,
+        borderRadius: borderRadius.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.cardWhite,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    sectionHeaderIcon: {
+        fontSize: 16,
+        color: colors.textDark,
     },
     menuCards: {
         paddingHorizontal: spacing.lg,

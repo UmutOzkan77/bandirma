@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
-import { DailyMenu, turkishMonths } from '../mockData';
+import { DailyMenu } from '../mockData';
 
 interface DaySelectorProps {
     days: DailyMenu[];
@@ -14,27 +14,12 @@ interface DaySelectorProps {
 }
 
 export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySelectorProps) {
-    const formatLabel = (day: DailyMenu) => {
-        let dateObj: Date | null = null;
-        if (day.date.includes('.')) {
-            const [dd, mm, yyyy] = day.date.split('.').map((part) => Number(part));
-            if (!Number.isNaN(dd) && !Number.isNaN(mm) && !Number.isNaN(yyyy)) {
-                dateObj = new Date(yyyy, mm - 1, dd);
-            }
-        } else {
-            const parsed = new Date(`${day.date}T12:00:00`);
-            if (!Number.isNaN(parsed.getTime())) {
-                dateObj = parsed;
-            }
-        }
-
-        if (!dateObj) {
-            return `${day.dayNumber} ${day.dayName}`;
-        }
-
-        const monthName = turkishMonths[dateObj.getMonth()] || '';
-        return `${dateObj.getDate()} ${monthName} ${day.dayName}`.trim();
-    };
+    const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
+    const fallbackDay = days[0] || null;
+    const weekdayDays = weekdayOrder.map((name) => ({
+        name,
+        day: days.find((day) => day.dayName === name) || fallbackDay,
+    }));
 
     return (
         <ScrollView
@@ -42,17 +27,17 @@ export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySel
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.container}
         >
-            {days.map((day) => {
-                const isSelected = day.id === selectedDayId;
+            {weekdayDays.map(({ name, day }) => {
+                const isSelected = day?.id === selectedDayId;
                 return (
                     <TouchableOpacity
-                        key={day.id}
+                        key={day?.id ?? `weekday-${name}`}
                         style={[styles.dayItem, isSelected && styles.dayItemSelected]}
-                        onPress={() => onDaySelect(day.id)}
+                        onPress={() => day && onDaySelect(day.id)}
                         activeOpacity={0.7}
                     >
                         <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
-                            {formatLabel(day)}
+                            {name}
                         </Text>
                     </TouchableOpacity>
                 );
