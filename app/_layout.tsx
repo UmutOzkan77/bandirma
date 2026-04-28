@@ -115,6 +115,7 @@ function AppShell() {
                 <Tabs.Screen name="scan" />
                 <Tabs.Screen name="profile" />
                 <Tabs.Screen name="settings" />
+                <Tabs.Screen name="(features)" options={{ href: null }} />
             </Tabs>
             <AuthOverlay />
         </>

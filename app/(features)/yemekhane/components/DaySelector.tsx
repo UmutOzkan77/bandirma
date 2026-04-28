@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
-import { DailyMenu } from '../mockData';
+import { DailyMenu, turkishMonths } from '../mockData';
 
 interface DaySelectorProps {
     days: DailyMenu[];
@@ -14,6 +14,28 @@ interface DaySelectorProps {
 }
 
 export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySelectorProps) {
+    const formatLabel = (day: DailyMenu) => {
+        let dateObj: Date | null = null;
+        if (day.date.includes('.')) {
+            const [dd, mm, yyyy] = day.date.split('.').map((part) => Number(part));
+            if (!Number.isNaN(dd) && !Number.isNaN(mm) && !Number.isNaN(yyyy)) {
+                dateObj = new Date(yyyy, mm - 1, dd);
+            }
+        } else {
+            const parsed = new Date(`${day.date}T12:00:00`);
+            if (!Number.isNaN(parsed.getTime())) {
+                dateObj = parsed;
+            }
+        }
+
+        if (!dateObj) {
+            return `${day.dayNumber} ${day.dayName}`;
+        }
+
+        const monthName = turkishMonths[dateObj.getMonth()] || '';
+        return `${dateObj.getDate()} ${monthName} ${day.dayName}`.trim();
+    };
+
     return (
         <ScrollView
             horizontal
@@ -29,11 +51,8 @@ export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySel
                         onPress={() => onDaySelect(day.id)}
                         activeOpacity={0.7}
                     >
-                        <Text style={[styles.dayShort, isSelected && styles.dayShortSelected]}>
-                            {day.dayShort}
-                        </Text>
-                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>
-                            {day.dayNumber}
+                        <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
+                            {formatLabel(day)}
                         </Text>
                     </TouchableOpacity>
                 );
@@ -50,34 +69,23 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
     dayItem: {
-        width: 56,
-        height: 72,
-        borderRadius: borderRadius.lg,
-        backgroundColor: 'transparent',
-        alignItems: 'center',
-        justifyContent: 'center',
+        paddingHorizontal: spacing.lg,
         paddingVertical: spacing.sm,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.cardWhite,
+        borderWidth: 1,
+        borderColor: colors.border,
     },
     dayItemSelected: {
-        backgroundColor: colors.primaryAccent,
+        backgroundColor: colors.primaryDark,
+        borderColor: colors.primaryDark,
     },
-    dayShort: {
+    dayLabel: {
         fontSize: fontSize.sm,
         fontWeight: fontWeight.medium,
+        color: colors.textSecondary,
+    },
+    dayLabelSelected: {
         color: colors.textLight,
-        opacity: 0.7,
-        marginBottom: spacing.xs,
-    },
-    dayShortSelected: {
-        opacity: 1,
-        color: colors.textDark,
-    },
-    dayNumber: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
-        color: colors.textLight,
-    },
-    dayNumberSelected: {
-        color: colors.textDark,
     },
 });

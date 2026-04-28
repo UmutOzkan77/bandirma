@@ -10,7 +10,7 @@ import { DensityLevel } from '../mockData';
 interface DensityIndicatorProps {
     level: DensityLevel;
     percentFull?: number;
-    lastUpdated?: string;
+    waitTime?: string;
 }
 
 const getDensityInfo = (level: DensityLevel) => {
@@ -36,36 +36,27 @@ const getDensityInfo = (level: DensityLevel) => {
     }
 };
 
-export default function DensityIndicator({ level, percentFull, lastUpdated }: DensityIndicatorProps) {
+export default function DensityIndicator({ level, percentFull, waitTime }: DensityIndicatorProps) {
     const { label, color, icon } = getDensityInfo(level);
+    const percentLabel = `${percentFull ?? 0}%`;
 
     return (
         <View style={styles.container}>
-            <View style={styles.content}>
-                <Text style={styles.label}>Şu an yemekhane:</Text>
-                <View style={styles.statusContainer}>
+            <View style={styles.left}>
+                <Text style={styles.title}>ANLIK DOLULUK</Text>
+                <View style={styles.statusRow}>
                     <View style={[styles.dot, { backgroundColor: color }]} />
                     <Text style={[styles.status, { color }]}>{label}</Text>
                     <Text style={styles.icon}>{icon}</Text>
                 </View>
+                <Text style={styles.waitText}>{waitTime || 'Bekleme süresi ~5 dk'}</Text>
+            </View>
 
-                {percentFull !== undefined && (
-                    <View style={styles.progressContainer}>
-                        <View style={styles.progressBar}>
-                            <View
-                                style={[
-                                    styles.progressFill,
-                                    { width: `${percentFull}%`, backgroundColor: color }
-                                ]}
-                            />
-                        </View>
-                        <Text style={styles.percentText}>%{percentFull} dolu</Text>
-                    </View>
-                )}
-
-                {lastUpdated && (
-                    <Text style={styles.lastUpdated}>Son güncelleme: {lastUpdated}</Text>
-                )}
+            <View style={styles.right}>
+                <View style={[styles.ring, { borderColor: `${color}30` }]}> 
+                    <View style={[styles.ringFill, { borderColor: color }]} />
+                    <Text style={[styles.percentText, { color }]}>{percentLabel}</Text>
+                </View>
             </View>
         </View>
     );
@@ -80,16 +71,26 @@ const styles = StyleSheet.create({
         padding: spacing.lg,
         borderWidth: 1,
         borderColor: colors.border,
-    },
-    content: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
     },
-    label: {
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        marginBottom: spacing.sm,
+    left: {
+        flex: 1,
+        paddingRight: spacing.md,
     },
-    statusContainer: {
+    right: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    title: {
+        fontSize: fontSize.xs,
+        color: colors.textSecondary,
+        letterSpacing: 0.8,
+        marginBottom: spacing.sm,
+        fontWeight: fontWeight.semibold,
+    },
+    statusRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: spacing.sm,
@@ -100,37 +101,38 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.full,
     },
     status: {
-        fontSize: fontSize.lg,
-        fontWeight: fontWeight.bold,
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
     },
     icon: {
-        fontSize: 20,
-    },
-    progressContainer: {
-        width: '100%',
-        marginTop: spacing.md,
-        alignItems: 'center',
-    },
-    progressBar: {
-        width: '100%',
-        height: 6,
-        backgroundColor: colors.border,
-        borderRadius: borderRadius.full,
-        overflow: 'hidden',
-        marginBottom: spacing.xs,
-    },
-    progressFill: {
-        height: '100%',
-        borderRadius: borderRadius.full,
+        fontSize: 18,
     },
     percentText: {
-        fontSize: fontSize.xs,
-        color: colors.textSecondary,
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.bold,
     },
-    lastUpdated: {
-        fontSize: fontSize.xs,
+    waitText: {
+        fontSize: fontSize.sm,
         color: colors.textSecondary,
         marginTop: spacing.sm,
-        fontStyle: 'italic',
+    },
+    ring: {
+        width: 58,
+        height: 58,
+        borderRadius: borderRadius.full,
+        borderWidth: 6,
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'relative',
+    },
+    ringFill: {
+        position: 'absolute',
+        top: 6,
+        bottom: 6,
+        left: 6,
+        right: 6,
+        borderRadius: borderRadius.full,
+        borderWidth: 4,
+        borderColor: colors.primaryAccent,
     },
 });

@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
 import { Meal, MealType } from '../mockData';
 
 interface MealCardProps {
@@ -51,34 +51,35 @@ export default function MealCard({ meal }: MealCardProps) {
     return (
         <View style={styles.container}>
             {/* İkon alanı */}
-            <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
+            <View style={[styles.iconContainer, { backgroundColor: `${color}1A` }]}>
                 <Text style={styles.icon}>{icon}</Text>
             </View>
 
             {/* İçerik alanı */}
             <View style={styles.content}>
                 <Text style={styles.name}>{meal.name}</Text>
-                <Text style={styles.calories}>{meal.calories} kcal</Text>
+                {meal.badges && meal.badges.length > 0 && (
+                    <View style={styles.badgeContainer}>
+                        {meal.badges.map((badge, index) => {
+                            const badgeStyle = getBadgeStyle(badge);
+                            return (
+                                <View
+                                    key={index}
+                                    style={[styles.badge, { backgroundColor: badgeStyle.backgroundColor }]}
+                                >
+                                    <Text style={[styles.badgeText, { color: badgeStyle.color }]}>
+                                        {badge}
+                                    </Text>
+                                </View>
+                            );
+                        })}
+                    </View>
+                )}
             </View>
 
-            {/* Badge'ler */}
-            {meal.badges && meal.badges.length > 0 && (
-                <View style={styles.badgeContainer}>
-                    {meal.badges.map((badge, index) => {
-                        const badgeStyle = getBadgeStyle(badge);
-                        return (
-                            <View
-                                key={index}
-                                style={[styles.badge, { backgroundColor: badgeStyle.backgroundColor }]}
-                            >
-                                <Text style={[styles.badgeText, { color: badgeStyle.color }]}>
-                                    {badge}
-                                </Text>
-                            </View>
-                        );
-                    })}
-                </View>
-            )}
+            <View style={styles.caloriePill}>
+                <Text style={styles.calorieText}>{meal.calories} kcal</Text>
+            </View>
         </View>
     );
 }
@@ -90,12 +91,14 @@ const styles = StyleSheet.create({
         backgroundColor: colors.cardWhite,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.lg,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
+        borderRadius: borderRadius.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginBottom: spacing.sm,
     },
     iconContainer: {
-        width: 44,
-        height: 44,
+        width: 48,
+        height: 48,
         borderRadius: borderRadius.md,
         alignItems: 'center',
         justifyContent: 'center',
@@ -108,15 +111,10 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     name: {
-        fontSize: fontSize.lg,
+        fontSize: fontSize.md,
         fontWeight: fontWeight.semibold,
         color: colors.textDark,
         marginBottom: spacing.xs,
-    },
-    calories: {
-        fontSize: fontSize.sm,
-        color: colors.primaryAccent,
-        fontWeight: fontWeight.medium,
     },
     badgeContainer: {
         flexDirection: 'row',
@@ -130,5 +128,19 @@ const styles = StyleSheet.create({
     badgeText: {
         fontSize: fontSize.xs,
         fontWeight: fontWeight.semibold,
+    },
+    caloriePill: {
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.xs,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.backgroundLight,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginLeft: spacing.sm,
+    },
+    calorieText: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.medium,
+        color: colors.textSecondary,
     },
 });
