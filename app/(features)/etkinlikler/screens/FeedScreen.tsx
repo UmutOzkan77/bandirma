@@ -1,94 +1,105 @@
-/**
- * FeedScreen - Ana etkinlik akışı (Supabase entegrasyonlu)
- */
-import React, { useEffect, useRef, useState } from 'react';
-import { View, FlatList, StyleSheet, ActivityIndicator, Text } from 'react-native';
-import { colors, spacing } from '../theme';
-import { Community, Event, Notification } from '../types';
-import { fetchEvents, fetchCommunities, fetchNotifications, fetchCommunityById } from '../services/eventService';
-import Header from '../components/Header';
-import EventCard from '../components/EventCard';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import {
+    View,
+    FlatList,
+    StyleSheet,
+    ActivityIndicator,
+    Text,
+    TouchableOpacity,
+    Image,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
+import { Community, Event } from '../types';
+import { fetchEvents, fetchCommunities } from '../services/eventService';
+import { formatDateTurkish } from '../mockData';
 
 interface FeedScreenProps {
     onNotificationsPress: () => void;
     onCalendarPress: () => void;
     onCommunityPress?: (communityId: string) => void;
-    onEventPress?: (event: Event) => void;
+    onEventPress?: (event: Event, community: Community) => void;
     followedCommunities?: Set<string>;
     highlightedEventId?: string;
 }
 
+function eventDateValue(event: Event): number {
+    return new Date(`${event.date}T${event.time || '00:00'}`).getTime();
+}
+
 export default function FeedScreen({
-    onNotificationsPress,
     onCalendarPress,
     onCommunityPress,
     onEventPress,
     followedCommunities = new Set(),
-    highlightedEventId
+    highlightedEventId,
 }: FeedScreenProps) {
     const [events, setEvents] = useState<Event[]>([]);
     const [communities, setCommunities] = useState<Map<string, Community>>(new Map());
-    const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
-    const flatListRef = useRef<FlatList>(null);
+    const flatListRef = useRef<FlatList<Event>>(null);
 
     useEffect(() => {
-        loadData();
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                const [eventsData, communitiesData] = await Promise.all([
+                    fetchEvents(),
+                    fetchCommunities(),
+                ]);
+                setEvents(eventsData);
+                const map = new Map<string, Community>();
+                communitiesData.forEach(item => map.set(item.id, item));
+                setCommunities(map);
+            } catch (error) {
+                console.error('Feed data load error:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        void loadData();
     }, []);
 
-    const loadData = async () => {
-        setLoading(true);
-        try {
-            const [eventsData, communitiesData, notificationsData] = await Promise.all([
-                fetchEvents(),
-                fetchCommunities(),
-                fetchNotifications(),
-            ]);
-            setEvents(eventsData);
-            const communityMap = new Map<string, Community>();
-            communitiesData.forEach(c => communityMap.set(c.id, c));
-            setCommunities(communityMap);
-            setUnreadCount(notificationsData.filter(n => !n.isRead).length);
-        } catch (error) {
-            console.error('Feed data load error:', error);
-        } finally {
-            setLoading(false);
-        }
-    };
+    const sortedEvents = useMemo(() => {
+        return [...events].sort((a, b) => {
+            const aFollowed = followedCommunities.has(a.communityId);
+            const bFollowed = followedCommunities.has(b.communityId);
+            if (aFollowed !== bFollowed) return aFollowed ? -1 : 1;
+            return eventDateValue(a) - eventDateValue(b);
+        });
+    }, [events, followedCommunities]);
 
-    // Sort events: followed communities first, then by creation time
-    const sortedEvents = [...events].sort((a, b) => {
-        const aIsFollowed = followedCommunities.has(a.communityId);
-        const bIsFollowed = followedCommunities.has(b.communityId);
-        if (aIsFollowed && !bIsFollowed) return -1;
-        if (!aIsFollowed && bIsFollowed) return 1;
-        return b.createdAt.getTime() - a.createdAt.getTime();
-    });
-
-    // Scroll to highlighted event when it changes
     useEffect(() => {
-        if (highlightedEventId && flatListRef.current) {
-            const index = sortedEvents.findIndex(e => e.id === highlightedEventId);
-            if (index !== -1) {
-                setTimeout(() => {
-                    flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.5 });
-                }, 300);
-            }
-        }
-    }, [highlightedEventId]);
+        if (!highlightedEventId || !flatListRef.current) return;
+        const index = sortedEvents.findIndex(e => e.id === highlightedEventId);
+        if (index === -1) return;
+        setTimeout(() => {
+            flatListRef.current?.scrollToIndex({ index, animated: true, viewPosition: 0.2 });
+        }, 250);
+    }, [highlightedEventId, sortedEvents]);
 
     if (loading) {
         return (
             <View style={[styles.container, styles.centered]}>
                 <ActivityIndicator size="large" color={colors.primary} />
-                <Text style={styles.loadingText}>Yükleniyor...</Text>
+                <Text style={styles.loadingText}>Etkinlikler yükleniyor</Text>
             </View>
         );
     }
 
     return (
         <View style={styles.container}>
-            <Header onNotificationsPress={onNotificationsPress} onCalendarPress={onCalendarPress} unreadCount={unreadCount} />
+            <View style={styles.header}>
+                <View>
+                    <Text style={styles.headerLabel}>TOPLULUK ETKİNLİKLERİ</Text>
+                    <Text style={styles.headerTitle}>Etkinlik Akışı</Text>
+                </View>
+                <TouchableOpacity style={styles.calendarButton} onPress={onCalendarPress} activeOpacity={0.75}>
+                    <Ionicons name="calendar-outline" size={19} color={colors.primary} />
+                </TouchableOpacity>
+            </View>
+
             <FlatList
                 ref={flatListRef}
                 data={sortedEvents}
@@ -96,10 +107,47 @@ export default function FeedScreen({
                 renderItem={({ item }) => {
                     const community = communities.get(item.communityId);
                     if (!community) return null;
-                    return <EventCard event={item} community={community} onCommunityPress={onCommunityPress} onEventPress={onEventPress} />;
+
+                    return (
+                        <TouchableOpacity style={styles.card} activeOpacity={0.86} onPress={() => onEventPress?.(item, community)}>
+                            <Image source={{ uri: item.image }} style={styles.eventImage} resizeMode="cover" />
+
+                            <View style={styles.content}>
+                                <View style={styles.communityRow}>
+                                    <TouchableOpacity onPress={() => onCommunityPress?.(community.id)} activeOpacity={0.7}>
+                                        <Text style={styles.communityName}>{community.name}</Text>
+                                    </TouchableOpacity>
+                                </View>
+
+                                <Text style={styles.eventTitle}>{item.title}</Text>
+                                <Text style={styles.eventDescription} numberOfLines={2}>{item.description}</Text>
+
+                                <View style={styles.metaBar}>
+                                    <View style={styles.metaItem}>
+                                        <Ionicons name="calendar-outline" size={13} color={colors.primary} />
+                                        <Text style={styles.metaItemText}>{formatDateTurkish(item.date)}</Text>
+                                    </View>
+                                    <View style={styles.metaItem}>
+                                        <Ionicons name="time-outline" size={13} color={colors.primary} />
+                                        <Text style={styles.metaItemText}>{item.time}</Text>
+                                    </View>
+                                    <View style={styles.metaItem}>
+                                        <Ionicons name="location-outline" size={13} color={colors.primary} />
+                                        <Text style={styles.metaItemText} numberOfLines={1}>{item.location}</Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </TouchableOpacity>
+                    );
                 }}
-                contentContainerStyle={styles.listContent}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.listContent}
+                ListEmptyComponent={
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyTitle}>Etkinlik bulunamadı</Text>
+                        <Text style={styles.emptySubtitle}>Daha sonra tekrar kontrol edebilirsiniz.</Text>
+                    </View>
+                }
                 onScrollToIndexFailed={(info) => {
                     setTimeout(() => {
                         flatListRef.current?.scrollToOffset({ offset: info.averageItemLength * info.index, animated: true });
@@ -111,8 +159,127 @@ export default function FeedScreen({
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.backgroundLight },
-    centered: { justifyContent: 'center', alignItems: 'center' },
-    loadingText: { marginTop: spacing.md, color: colors.textSecondary },
-    listContent: { paddingTop: spacing.md, paddingBottom: spacing.xxl },
+    container: {
+        flex: 1,
+        backgroundColor: colors.backgroundLight,
+    },
+    centered: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loadingText: {
+        marginTop: spacing.md,
+        color: colors.textSecondary,
+        fontSize: fontSize.md,
+    },
+    header: {
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.lg,
+        paddingBottom: spacing.md,
+        backgroundColor: colors.backgroundLight,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
+    headerLabel: {
+        fontSize: fontSize.xs,
+        fontWeight: fontWeight.medium,
+        color: colors.textSecondary,
+        letterSpacing: 1,
+        marginBottom: spacing.xs,
+    },
+    headerTitle: {
+        fontSize: 28,
+        fontWeight: fontWeight.bold,
+        color: '#000000',
+    },
+    calendarButton: {
+        width: 42,
+        height: 42,
+        borderRadius: borderRadius.full,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.cardLight,
+    },
+    listContent: {
+        paddingHorizontal: spacing.lg,
+        paddingBottom: 90,
+    },
+    card: {
+        marginBottom: spacing.md,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: borderRadius.lg,
+        backgroundColor: colors.cardLight,
+        overflow: 'hidden',
+        ...shadows.card,
+    },
+    eventImage: {
+        width: '100%',
+        height: 108,
+        backgroundColor: colors.border,
+    },
+    content: {
+        padding: spacing.lg,
+    },
+    communityRow: {
+        marginBottom: spacing.md,
+    },
+    communityName: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.semibold,
+        color: colors.primary,
+    },
+    eventTitle: {
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.bold,
+        color: colors.textPrimary,
+        marginBottom: 2,
+    },
+    eventDescription: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        lineHeight: 15,
+        marginBottom: spacing.lg,
+    },
+    metaBar: {
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        gap: 2,
+        paddingTop: 0,
+        marginTop: -2,
+    },
+    metaItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'flex-start',
+        width: '100%',
+        minHeight: 18,
+    },
+    metaItemText: {
+        marginLeft: 4,
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        fontWeight: fontWeight.semibold,
+        textAlign: 'left',
+    },
+    emptyState: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingTop: 80,
+    },
+    emptyTitle: {
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.bold,
+        color: colors.textPrimary,
+        marginBottom: spacing.sm,
+    },
+    emptySubtitle: {
+        fontSize: fontSize.md,
+        color: colors.textSecondary,
+        textAlign: 'center',
+        lineHeight: 22,
+    },
 });
