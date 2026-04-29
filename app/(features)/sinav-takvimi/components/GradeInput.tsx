@@ -1,55 +1,73 @@
 /**
  * GradeInput Component
- * Not hesaplama için input satırları
+ * Resimdeki tasarıma uygun - Beyaz kart, mavi sol border, başlık + x butonu, PUAN ve AĞIRLIK inputları
  */
 import React from 'react';
-import { View, Text, StyleSheet, TextInput } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
+import { Feather } from '@expo/vector-icons';
 
 interface GradeInputProps {
     label: string;
-    icon: string;
     score: string;
     weight: string;
     onScoreChange: (value: string) => void;
     onWeightChange: (value: string) => void;
+    onLabelChange?: (value: string) => void;
+    onRemove?: () => void;
+    showRemove?: boolean;
 }
 
 export default function GradeInput({
     label,
-    icon,
     score,
     weight,
     onScoreChange,
     onWeightChange,
+    onLabelChange,
+    onRemove,
+    showRemove = true,
 }: GradeInputProps) {
     return (
-        <View style={styles.container}>
-            <View style={styles.labelContainer}>
-                <Text style={styles.icon}>{icon}</Text>
-                <Text style={styles.label}>{label}</Text>
+        <View style={styles.card}>
+            {/* Top Row: Title + Close */}
+            <View style={styles.headerRow}>
+                <TextInput
+                    style={styles.labelInput}
+                    value={label}
+                    onChangeText={onLabelChange}
+                    placeholder="Değerlendirme adı"
+                    placeholderTextColor={colors.textMuted}
+                />
+                {showRemove && onRemove && (
+                    <TouchableOpacity onPress={onRemove} style={styles.closeButton}>
+                        <Feather name="x" size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
+                )}
             </View>
-            <View style={styles.inputsContainer}>
+
+            {/* Bottom Row: POINT + WEIGHT */}
+            <View style={styles.inputsRow}>
                 <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Puan</Text>
+                    <Text style={styles.inputLabel}>PUAN</Text>
                     <TextInput
                         style={styles.input}
                         value={score}
                         onChangeText={onScoreChange}
                         keyboardType="numeric"
-                        placeholder="0"
+                        placeholder="0-100"
                         placeholderTextColor={colors.textMuted}
                         maxLength={3}
                     />
                 </View>
                 <View style={styles.inputGroup}>
-                    <Text style={styles.inputLabel}>Ağırlık (%)</Text>
+                    <Text style={styles.inputLabel}>AĞIRLIK (%)</Text>
                     <TextInput
                         style={styles.input}
                         value={weight}
                         onChangeText={onWeightChange}
                         keyboardType="numeric"
-                        placeholder="0"
+                        placeholder="40"
                         placeholderTextColor={colors.textMuted}
                         maxLength={3}
                     />
@@ -60,51 +78,61 @@ export default function GradeInput({
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: borderRadius.lg,
+        borderLeftWidth: 4,
+        borderLeftColor: '#3B82F6',
+        padding: spacing.xl,
         marginBottom: spacing.lg,
-        paddingVertical: spacing.sm,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        ...shadows.card,
     },
-    labelContainer: {
+    headerRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: spacing.lg,
+    },
+    labelInput: {
+        flex: 1,
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.bold,
+        color: '#0F2C59',
+        padding: 0,
+    },
+    closeButton: {
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+        backgroundColor: '#F1F5F9',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    inputsRow: {
+        flexDirection: 'row',
+        gap: spacing.lg,
+    },
+    inputGroup: {
         flex: 1,
     },
-    icon: {
-        fontSize: 18,
-        marginRight: spacing.sm,
+    inputLabel: {
+        fontSize: 10,
+        fontWeight: fontWeight.bold,
+        color: colors.textMuted,
+        letterSpacing: 0.8,
+        marginBottom: spacing.sm,
     },
-    label: {
+    input: {
+        backgroundColor: '#F8FAFC',
+        borderRadius: borderRadius.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md + 2,
         fontSize: fontSize.md,
         color: colors.textPrimary,
         fontWeight: fontWeight.semibold,
-    },
-    inputsContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.md,
-    },
-    inputGroup: {
-        alignItems: 'center',
-    },
-    inputLabel: {
-        fontSize: fontSize.xs,
-        color: colors.textSecondary,
-        marginBottom: spacing.xs,
-    },
-    input: {
-        backgroundColor: colors.backgroundInput,
-        borderRadius: borderRadius.md,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
-        fontSize: fontSize.lg,
-        color: colors.textPrimary,
-        fontWeight: fontWeight.bold,
-        textAlign: 'center',
-        minWidth: 60,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: '#E2E8F0',
     },
 });

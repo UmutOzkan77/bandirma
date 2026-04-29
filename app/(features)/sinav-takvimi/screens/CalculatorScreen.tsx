@@ -1,51 +1,53 @@
 /**
  * CalculatorScreen - Puan Hesaplama
- * Not hesaplama ve final puanı hesaplayıcı
+ * Resimdeki tasarıma birebir uygun Grade Calculator
  */
 import React, { useState, useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert, Modal } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, TextInput, Modal } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { calculateRequiredFinal } from '../utils';
 import GradeInput from '../components/GradeInput';
+import { Feather } from '@expo/vector-icons';
 
 interface GradeItem {
     id: string;
     label: string;
-    icon: string;
     score: string;
     weight: string;
 }
 
-export default function CalculatorScreen() {
-    const [grades, setGrades] = useState<GradeItem[]>([
-        { id: '1', label: 'Vize Notu', icon: '📝', score: '', weight: '40' },
-    ]);
-    const [targetGrade, setTargetGrade] = useState(90);
-    const [showResult, setShowResult] = useState(false);
-    const [resultMessage, setResultMessage] = useState('');
+interface CalculatorScreenProps {
+    onNavigateBack?: () => void;
+}
 
-    const updateGrade = (id: string, field: 'score' | 'weight', value: string) => {
+const FINAL_WEIGHT = 60;       // Final ağırlığı %60 (sabit)
+const MAX_OTHER_WEIGHT = 40;   // Diğer notların toplam ağırlığı en fazla %40
+const PASSING_GRADE = 50;      // Dersi geçme notu 50
+
+export default function CalculatorScreen({ onNavigateBack }: CalculatorScreenProps) {
+    const [grades, setGrades] = useState<GradeItem[]>([
+        { id: '1', label: 'Vize', score: '', weight: '40' },
+    ]);
+    const [targetFinalScore, setTargetFinalScore] = useState('');
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [resultData, setResultData] = useState<{
+        requiredFinal: number;
+        isPossible: boolean;
+        currentWeightedSum: number;
+        totalOtherWeight: number;
+    } | null>(null);
+
+    const updateGrade = (id: string, field: 'score' | 'weight' | 'label', value: string) => {
         setGrades(prev => prev.map(grade =>
             grade.id === id ? { ...grade, [field]: value } : grade
         ));
-        setShowResult(false); // Reset result when values change
     };
 
     const addGrade = () => {
-        const newId = (grades.length + 1).toString();
-        const gradeTypes = [
-            { label: 'Ödev Notu', icon: '📚' },
-            { label: 'Lab Notu', icon: '🔬' },
-            { label: 'Sunum Notu', icon: '📊' },
-            { label: 'Katılım Notu', icon: '✋' },
-        ];
-        const typeIndex = (grades.length - 3) % gradeTypes.length;
-        const newGrade = gradeTypes[typeIndex >= 0 ? typeIndex : 0];
-
+        const newId = Date.now().toString();
+        
         setGrades(prev => [...prev, {
             id: newId,
-            label: newGrade.label,
-            icon: newGrade.icon,
+            label: '',
             score: '',
             weight: ''
         }]);
@@ -59,156 +61,193 @@ export default function CalculatorScreen() {
 
     // Hesaplamalar
     const calculations = useMemo(() => {
-        const parseNum = (str: string) => parseFloat(str) || 0;
-
-        let totalWeight = 0;
+        let totalOtherWeight = 0;
         let weightedSum = 0;
 
         grades.forEach(grade => {
-            const score = parseNum(grade.score);
-            const weight = parseNum(grade.weight);
-            totalWeight += weight;
+            const score = parseFloat(grade.score) || 0;
+            const weight = parseFloat(grade.weight) || 0;
+            totalOtherWeight += weight;
             weightedSum += score * weight;
         });
 
-        const currentAverage = totalWeight > 0 ? weightedSum / totalWeight : 0;
-        const requiredFinal = calculateRequiredFinal(currentAverage, totalWeight, targetGrade);
+        const remainingFromOther = MAX_OTHER_WEIGHT - totalOtherWeight;
 
         return {
-            totalWeight,
-            currentAverage: currentAverage.toFixed(1),
-            requiredFinal: requiredFinal.toFixed(1),
-            weightedSum: weightedSum.toFixed(1),
+            totalOtherWeight,
+            weightedSum,
+            remainingFromOther: Math.max(0, remainingFromOther),
         };
-    }, [grades, targetGrade]);
+    }, [grades]);
 
     const handleCalculate = () => {
-        const totalWeight = calculations.totalWeight;
+        const { totalOtherWeight, weightedSum } = calculations;
 
-        // Ağırlık kontrolü: Diğer notlar toplam %40 olmalı, Final %60 sabit
-        if (totalWeight === 0) {
-            setResultMessage('⚠️ Lütfen en az bir not girişi yapın!');
-            setShowResult(true);
+        if (totalOtherWeight === 0) {
+            setResultData({
+                requiredFinal: 0,
+                isPossible: false,
+                currentWeightedSum: 0,
+                totalOtherWeight: 0,
+            });
+            setShowResultModal(true);
             return;
         }
 
-        if (totalWeight > 40) {
-            setResultMessage(`⚠️ Toplam ağırlık %40'ı aşıyor (%${totalWeight})!\n\nFinal ağırlığı %60 sabit olduğundan, diğer notların toplam ağırlığı en fazla %40 olabilir.\n\nLütfen ağırlıkları düzeltin.`);
-            setShowResult(true);
+        if (totalOtherWeight > MAX_OTHER_WEIGHT) {
+            setResultData({
+                requiredFinal: 0,
+                isPossible: false,
+                currentWeightedSum: weightedSum,
+                totalOtherWeight,
+            });
+            setShowResultModal(true);
             return;
         }
 
-        // Ağırlıklı toplam hesapla (diğer notlar)
-        const weightedSum = parseFloat(calculations.weightedSum);
-
-        // Dersi geçmek için gereken minimum final notu
         // Formül: (weightedSum + finalNote * 60) / 100 >= 50
-        // finalNote >= (50 * 100 - weightedSum) / 60
-        // Ayrıca: Final notu 50'nin altıysa otomatik kalır!
-        const calculatedMinFinal = ((50 * 100) - weightedSum) / 60;
-        const minFinalToPass = Math.max(50, calculatedMinFinal); // Final en az 50 olmalı
+        // finalNote >= (5000 - weightedSum) / 60
+        // Ama finalden 50 altı alırsa otomatik kalır!
+        const rawRequired = Math.ceil((PASSING_GRADE * 100 - weightedSum) / FINAL_WEIGHT);
+        const requiredFinal = Math.max(50, rawRequired); // Final en az 50 olmalı
+        const isPossible = requiredFinal <= 100;
 
-        let message = '';
-        if (minFinalToPass > 100) {
-            message = `❌ Dersi Geçemezsiniz!\n\nMaalesef mevcut notlarınızla finalden 100 alsanız bile dersi geçemezsiniz.`;
-        } else {
-            message = `🎯 Dersi geçmek için finalden\nminimum ${minFinalToPass.toFixed(1)} almanız gerekiyor.\n\n⚠️ Final notu 50'nin altıysa otomatik kalırsınız!`;
-        }
-
-        setResultMessage(message);
-        setShowResult(true);
+        setResultData({
+            requiredFinal: Math.max(0, requiredFinal),
+            isPossible,
+            currentWeightedSum: weightedSum,
+            totalOtherWeight,
+        });
+        setShowResultModal(true);
     };
 
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            {/* Header */}
-            {/* Header Removed */}<View style={{ marginTop: 20 }} />
-
-            {/* Description */}
-            <View style={styles.descriptionCard}>
-                <Text style={styles.cardTitle}>Puan Hesaplama</Text>
-                <Text style={styles.cardDescription}>
-                    Mevcut notlarınızı ve ağırlıklarını girerek ortalamanızı hesaplayın.
-                </Text>
-
-
+        <View style={styles.container}>
+            {/* Header - CalendarScreen ile aynı stil */}
+            <View style={styles.header}>
+                <TouchableOpacity style={styles.backButton} onPress={onNavigateBack}>
+                    <Feather name="chevron-left" size={24} color={colors.primary} />
+                </TouchableOpacity>
+                <View style={styles.headerTitleContainer}>
+                    <Text style={styles.headerTitle}>FİNAL NOTU HESAPLA</Text>
+                </View>
+                <View style={styles.headerRight} />
             </View>
 
-            {/* Grade Inputs */}
-            <View style={styles.gradesCard}>
-                {grades.map((grade, index) => (
-                    <View key={grade.id} style={styles.gradeRow}>
-                        <View style={styles.gradeInputWrapper}>
-                            <GradeInput
-                                label={grade.label}
-                                icon={grade.icon}
-                                score={grade.score}
-                                weight={grade.weight}
-                                onScoreChange={(v) => updateGrade(grade.id, 'score', v)}
-                                onWeightChange={(v) => updateGrade(grade.id, 'weight', v)}
-                            />
-                        </View>
-                        {grades.length > 1 && (
-                            <TouchableOpacity
-                                style={styles.removeButton}
-                                onPress={() => removeGrade(grade.id)}
-                            >
-                                <Text style={styles.removeIcon}>✕</Text>
-                            </TouchableOpacity>
-                        )}
-                    </View>
+            <ScrollView 
+                style={styles.scrollContent} 
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={styles.scrollContainer}
+            >
+                {/* Section: Mevcut Notlar */}
+                <Text style={styles.sectionTitle}>Mevcut Notlar</Text>
+
+                {/* Grade Input Cards */}
+                {grades.map((grade) => (
+                    <GradeInput
+                        key={grade.id}
+                        label={grade.label}
+                        score={grade.score}
+                        weight={grade.weight}
+                        onScoreChange={(v) => updateGrade(grade.id, 'score', v)}
+                        onWeightChange={(v) => updateGrade(grade.id, 'weight', v)}
+                        onLabelChange={(v) => updateGrade(grade.id, 'label', v)}
+                        onRemove={() => removeGrade(grade.id)}
+                        showRemove={grades.length > 1}
+                    />
                 ))}
 
+                {/* Add Assessment Button */}
                 <TouchableOpacity style={styles.addButton} onPress={addGrade}>
-                    <Text style={styles.addIcon}>+</Text>
+                    <Feather name="plus" size={16} color={colors.accent} />
                     <Text style={styles.addText}>Değerlendirme Ekle</Text>
                 </TouchableOpacity>
-            </View>
 
-            {/* Final Score Settings */}
-            <View style={styles.finalCard}>
-                <View style={styles.finalHeader}>
-                    <Text style={styles.finalIcon}>🎯</Text>
-                    <Text style={styles.finalTitle}>Final Sınavı Ayarları</Text>
-                </View>
-                <Text style={styles.finalSubtitle}>
-                    FİNAL AĞIRLIĞI: %60 (Sabit)
-                </Text>
-
-                <View style={styles.resultContainer}>
-                    <View style={styles.averageCircle}>
-                        <Text style={styles.averageNumber}>{calculations.currentAverage}</Text>
-                        <Text style={styles.averageLabel}>ORT</Text>
-                    </View>
-                    <View style={styles.requiredInfo}>
-                        <Text style={styles.requiredText}>
-                            Dersi geçebilmek için:
-                        </Text>
-                        <Text style={styles.requiredValue}>
-                            <Text style={styles.requiredHighlight}>{calculations.requiredFinal}</Text> final notu gerekli
-                        </Text>
-                    </View>
-                </View>
-            </View>
-
-            {/* Result Message */}
-            {showResult && (
-                <View style={styles.resultCard}>
-                    <Text style={styles.resultTitle}>📋 Hesaplama Sonucu</Text>
-                    <Text style={styles.resultMessage}>{resultMessage}</Text>
-                </View>
-            )}
-
-            {/* Calculate Button - sadece hesaplama yapılmamışsa göster */}
-            {!showResult && (
+                {/* Calculate Button */}
                 <TouchableOpacity style={styles.calculateButton} onPress={handleCalculate}>
-                    <Text style={styles.calculateIcon}>🧮</Text>
-                    <Text style={styles.calculateText}>Puanı Hesapla</Text>
+                    <Text style={styles.calculateText}>Final Notunu Hesapla</Text>
                 </TouchableOpacity>
-            )}
 
-            <View style={styles.bottomSpacing} />
-        </ScrollView>
+                <View style={{ height: 120 }} />
+            </ScrollView>
+
+            {/* Result Modal (Popup) */}
+            <Modal visible={showResultModal} animationType="fade" transparent onRequestClose={() => setShowResultModal(false)}>
+                <TouchableOpacity 
+                    style={styles.modalOverlay} 
+                    activeOpacity={1} 
+                    onPress={() => setShowResultModal(false)}
+                >
+                    <TouchableOpacity 
+                        activeOpacity={1} 
+                        style={styles.modalCard}
+                        onPress={(e) => e.stopPropagation()}
+                    >
+                        {/* Close */}
+                        <TouchableOpacity 
+                            onPress={() => setShowResultModal(false)} 
+                            style={styles.modalClose}
+                        >
+                            <Feather name="x" size={20} color={colors.textSecondary} />
+                        </TouchableOpacity>
+
+                        {resultData && (
+                            <>
+                                {/* Icon */}
+                                <View style={[
+                                    styles.modalIconCircle, 
+                                    { backgroundColor: resultData.isPossible ? '#EFF6FF' : '#FEF2F2' }
+                                ]}>
+                                    <Feather 
+                                        name={resultData.isPossible ? 'target' : 'alert-circle'} 
+                                        size={32} 
+                                        color={resultData.isPossible ? '#3B82F6' : '#EF4444'} 
+                                    />
+                                </View>
+
+                                {/* Title */}
+                                <Text style={styles.modalTitle}>
+                                    {resultData.isPossible ? 'Hesaplama Sonucu' : 'Dersi Geçemezsiniz!'}
+                                </Text>
+
+                                {resultData.totalOtherWeight > MAX_OTHER_WEIGHT ? (
+                                    <Text style={styles.modalMessage}>
+                                        Toplam ağırlık %{MAX_OTHER_WEIGHT}'ı aştı (%{resultData.totalOtherWeight}).{"\n"}Lütfen ağırlıkları kontrol edin.
+                                    </Text>
+                                ) : resultData.isPossible ? (
+                                    <>
+                                        <Text style={styles.modalMessage}>
+                                            Dersi geçmek için finalden minimum almanız gereken not:
+                                        </Text>
+                                        <View style={styles.modalScoreBox}>
+                                            <Text style={styles.modalScoreText}>
+                                                {resultData.requiredFinal}
+                                            </Text>
+                                        </View>
+                                        <Text style={styles.modalFootnote}>
+                                            Final ağırlığı: %{FINAL_WEIGHT} · Geçme notu: {PASSING_GRADE}
+                                        </Text>
+
+                                    </>
+                                ) : (
+                                    <Text style={styles.modalMessage}>
+                                        Mevcut notlarınızla finalden 100 alsanız bile dersi geçemezsiniz.
+                                    </Text>
+                                )}
+
+                                {/* Dismiss */}
+                                <TouchableOpacity 
+                                    style={styles.modalDismissButton} 
+                                    onPress={() => setShowResultModal(false)}
+                                >
+                                    <Text style={styles.modalDismissText}>Tamam</Text>
+                                </TouchableOpacity>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </TouchableOpacity>
+            </Modal>
+        </View>
     );
 }
 
@@ -219,217 +258,243 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
-        alignItems: 'center',
         justifyContent: 'space-between',
+        alignItems: 'center',
         paddingHorizontal: spacing.lg,
         paddingVertical: spacing.md,
+        backgroundColor: colors.backgroundCard,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.borderLight || colors.border,
+        zIndex: 10,
     },
-    placeholder: {
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: colors.backgroundMain,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: colors.borderLight || '#E2E8F0',
+    },
+    headerTitleContainer: {
+        flex: 1,
+        alignItems: 'center',
+    },
+    headerTitle: {
+        fontSize: 14,
+        fontWeight: fontWeight.bold,
+        color: colors.accent,
+        letterSpacing: 0.5,
+    },
+    headerRight: {
         width: 40,
     },
-    title: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
-        color: colors.textPrimary,
-    },
-    descriptionCard: {
-        marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
-    },
-    cardTitle: {
-        fontSize: fontSize.xxl,
-        fontWeight: fontWeight.bold,
-        color: colors.textPrimary,
-        marginBottom: spacing.sm,
-    },
-    cardDescription: {
-        fontSize: fontSize.xs,
-        color: colors.textSecondary,
-        lineHeight: 16,
-        marginBottom: spacing.md,
-    },
-    progressContainer: {
-        marginTop: spacing.sm,
-    },
-    progressBar: {
-        height: 8,
-        backgroundColor: colors.backgroundCard,
-        borderRadius: borderRadius.full,
-        overflow: 'hidden',
-        marginBottom: spacing.sm,
-    },
-    progressFill: {
-        height: '100%',
-        backgroundColor: colors.accent,
-        borderRadius: borderRadius.full,
-    },
-    progressText: {
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        textAlign: 'right',
-    },
-    gradesCard: {
-        backgroundColor: colors.backgroundCard,
-        marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
-        padding: spacing.lg,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-    gradeRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    gradeInputWrapper: {
+    scrollContent: {
         flex: 1,
     },
-    removeButton: {
-        width: 32,
-        height: 32,
-        borderRadius: 16,
-        backgroundColor: colors.error + '30',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginLeft: spacing.sm,
-        marginBottom: spacing.lg,
+    scrollContainer: {
+        paddingHorizontal: spacing.xl,
+        paddingTop: spacing.xxl,
     },
-    removeIcon: {
-        fontSize: 14,
-        color: colors.error,
+    sectionTitle: {
+        fontSize: fontSize.xl,
         fontWeight: fontWeight.bold,
+        color: '#0F2C59',
+        marginBottom: spacing.lg,
     },
     addButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
-        paddingVertical: spacing.md,
-        marginTop: spacing.sm,
-        borderWidth: 1,
-        borderColor: colors.accent,
-        borderRadius: borderRadius.md,
+        paddingVertical: spacing.lg,
+        borderWidth: 1.5,
+        borderColor: '#CBD5E1',
+        borderRadius: borderRadius.lg,
         borderStyle: 'dashed',
-        backgroundColor: colors.accent + '10',
-    },
-    addIcon: {
-        fontSize: fontSize.lg,
-        color: colors.accent,
-        marginRight: spacing.sm,
+        backgroundColor: '#FFFFFF',
+        gap: spacing.sm,
     },
     addText: {
         fontSize: fontSize.sm,
         color: colors.accent,
-        fontWeight: fontWeight.medium,
+        fontWeight: fontWeight.semibold,
     },
     finalCard: {
-        backgroundColor: colors.backgroundCard,
-        marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
-        padding: spacing.lg,
+        backgroundColor: '#FFFFFF',
         borderRadius: borderRadius.lg,
+        padding: spacing.xl,
         borderWidth: 1,
-        borderColor: colors.border,
+        borderColor: '#E2E8F0',
+        ...shadows.card,
     },
-    finalHeader: {
+    finalWeightInfo: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: spacing.xs,
     },
-    finalIcon: {
-        fontSize: 18,
-        marginRight: spacing.sm,
-    },
-    finalTitle: {
-        fontSize: fontSize.lg,
+    finalWeightLabel: {
+        fontSize: 10,
         fontWeight: fontWeight.bold,
-        color: colors.textPrimary,
-    },
-    finalSubtitle: {
-        fontSize: fontSize.xs,
         color: colors.textMuted,
-        marginBottom: spacing.lg,
-        letterSpacing: 0.5,
+        letterSpacing: 0.8,
     },
-    resultContainer: {
+    finalWeightValue: {
+        fontSize: fontSize.sm,
+        fontWeight: fontWeight.bold,
+        color: '#0F2C59',
+    },
+    finalRow: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
     },
-    averageCircle: {
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        borderWidth: 2,
-        borderColor: colors.accent,
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginRight: spacing.md,
-    },
-    averageNumber: {
-        fontSize: fontSize.xxl,
-        fontWeight: fontWeight.bold,
-        color: colors.textPrimary,
-    },
-    averageLabel: {
-        fontSize: fontSize.xs,
-        color: colors.textMuted,
-    },
-    requiredInfo: {
+    finalLabelCol: {
         flex: 1,
     },
-    requiredText: {
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        marginBottom: spacing.xs,
-    },
-    requiredValue: {
+    finalLabel: {
         fontSize: fontSize.md,
-        color: colors.textPrimary,
+        fontWeight: fontWeight.semibold,
+        color: '#0F2C59',
     },
-    requiredHighlight: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
-        color: colors.accent,
+    finalSubLabel: {
+        fontSize: fontSize.xs,
+        color: colors.textMuted,
+        marginTop: 2,
     },
-    resultCard: {
-        backgroundColor: colors.accent + '20',
-        marginHorizontal: spacing.lg,
-        marginBottom: spacing.lg,
-        padding: spacing.lg,
-        borderRadius: borderRadius.lg,
+    remainingWeightBox: {
+        backgroundColor: '#EFF6FF',
+        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.md,
+        borderRadius: borderRadius.md,
         borderWidth: 1,
-        borderColor: colors.accent + '50',
+        borderColor: '#BFDBFE',
     },
-    resultTitle: {
-        fontSize: fontSize.lg,
+    remainingWeightText: {
+        fontSize: fontSize.xxl,
         fontWeight: fontWeight.bold,
-        color: colors.accent,
-        marginBottom: spacing.md,
+        color: '#3B82F6',
     },
-    resultMessage: {
-        fontSize: fontSize.md,
+    divider: {
+        height: 1,
+        backgroundColor: '#F1F5F9',
+        marginVertical: spacing.lg,
+    },
+    targetLabel: {
+        fontSize: 10,
+        fontWeight: fontWeight.bold,
+        color: colors.textMuted,
+        letterSpacing: 0.8,
+        marginBottom: spacing.sm,
+    },
+    targetInput: {
+        backgroundColor: '#F8FAFC',
+        borderRadius: borderRadius.md,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md + 2,
+        fontSize: fontSize.sm,
         color: colors.textPrimary,
-        lineHeight: 24,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     calculateButton: {
-        flexDirection: 'row',
+        backgroundColor: colors.accent,
+        borderRadius: borderRadius.full,
+        paddingVertical: spacing.lg + 2,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.accent,
-        marginHorizontal: spacing.lg,
-        padding: spacing.lg,
-        borderRadius: borderRadius.md,
+        marginTop: spacing.xxl,
         ...shadows.button,
-    },
-    calculateIcon: {
-        fontSize: 18,
-        marginRight: spacing.sm,
     },
     calculateText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.bold,
         color: colors.textInverse,
+        letterSpacing: 0.3,
     },
-    bottomSpacing: {
-        height: spacing.xxxl,
+
+    // Modal Styles
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(15, 44, 89, 0.4)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: spacing.xl,
+    },
+    modalCard: {
+        width: '100%',
+        backgroundColor: '#FFFFFF',
+        borderRadius: borderRadius.xl,
+        padding: spacing.xxxl,
+        alignItems: 'center',
+        ...shadows.modal,
+    },
+    modalClose: {
+        position: 'absolute',
+        top: spacing.lg,
+        right: spacing.lg,
+        padding: 4,
+    },
+    modalIconCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: spacing.lg,
+    },
+    modalTitle: {
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.bold,
+        color: '#0F2C59',
+        marginBottom: spacing.md,
+        textAlign: 'center',
+    },
+    modalMessage: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        textAlign: 'center',
+        lineHeight: 20,
+        marginBottom: spacing.lg,
+    },
+    modalScoreBox: {
+        backgroundColor: '#EFF6FF',
+        paddingHorizontal: spacing.xxxl,
+        paddingVertical: spacing.lg,
+        borderRadius: borderRadius.lg,
+        borderWidth: 1,
+        borderColor: '#BFDBFE',
+        marginBottom: spacing.lg,
+    },
+    modalScoreText: {
+        fontSize: 36,
+        fontWeight: fontWeight.bold,
+        color: '#3B82F6',
+        textAlign: 'center',
+    },
+    modalFootnote: {
+        fontSize: fontSize.xs,
+        color: colors.textMuted,
+        textAlign: 'center',
+        marginBottom: spacing.md,
+    },
+    modalWarning: {
+        fontSize: fontSize.xs,
+        color: '#DC2626',
+        fontWeight: fontWeight.semibold,
+        textAlign: 'center',
+        marginBottom: spacing.xxl,
+    },
+    modalDismissButton: {
+        backgroundColor: colors.accent,
+        borderRadius: borderRadius.full,
+        paddingVertical: spacing.md + 2,
+        paddingHorizontal: spacing.xxxl * 2,
+        ...shadows.button,
+    },
+    modalDismissText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
+        color: colors.textInverse,
     },
 });

@@ -172,7 +172,7 @@ export function createFallbackDataset(now = new Date()): FallbackDataset {
                 { id: 'slot-2', offeringId: 'offering-1', dayOfWeek: 2, startTime: '09:00', endTime: '10:45', room: 'A-101', building: 'Merkez Yerleske', deliveryType: 'face_to_face' },
             ],
             examSessions: [
-                { id: 'exam-1', offeringId: 'offering-1', examType: 'vize', examDate: toIsoDate(addDays(now, 5)), startTime: '09:00', endTime: '10:30', building: 'Merkez Yerleske', room: 'Amfi 1', notes: null, isPublished: true },
+                { id: 'exam-1', offeringId: 'offering-1', examType: 'vize', examDate: toIsoDate(addDays(now, 0)), startTime: '09:00', endTime: '12:00', building: 'Merkez Yerleske', room: 'Amfi 1', notes: null, isPublished: true },
             ],
         },
         {
@@ -192,7 +192,7 @@ export function createFallbackDataset(now = new Date()): FallbackDataset {
                 { id: 'slot-4', offeringId: 'offering-2', dayOfWeek: 3, startTime: '11:00', endTime: '12:30', room: 'B-204', building: 'Teknoloji Binasi', deliveryType: 'face_to_face' },
             ],
             examSessions: [
-                { id: 'exam-2', offeringId: 'offering-2', examType: 'vize', examDate: toIsoDate(addDays(now, 5)), startTime: '11:00', endTime: '12:30', building: 'Teknoloji Binasi', room: 'Derslik 204', notes: null, isPublished: true },
+                { id: 'exam-2', offeringId: 'offering-2', examType: 'vize', examDate: toIsoDate(addDays(now, 0)), startTime: '11:00', endTime: '13:00', building: 'Teknoloji Binasi', room: 'Derslik 204', notes: null, isPublished: true },
             ],
         },
         {
@@ -211,7 +211,7 @@ export function createFallbackDataset(now = new Date()): FallbackDataset {
                 { id: 'slot-5', offeringId: 'offering-3', dayOfWeek: 4, startTime: '14:00', endTime: '15:30', room: 'Lab-2', building: 'Teknoloji Binasi', deliveryType: 'lab' },
             ],
             examSessions: [
-                { id: 'exam-3', offeringId: 'offering-3', examType: 'quiz', examDate: toIsoDate(addDays(now, 9)), startTime: '14:00', endTime: '14:45', building: 'Teknoloji Binasi', room: 'Lab-2', notes: 'Kisa quiz', isPublished: true },
+                { id: 'exam-3', offeringId: 'offering-3', examType: 'quiz', examDate: toIsoDate(addDays(now, 1)), startTime: '14:00', endTime: '15:30', building: 'Teknoloji Binasi', room: 'Lab-2', notes: 'Kisa quiz', isPublished: true },
             ],
         },
         {
