@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, type DimensionValue } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, type DimensionValue } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAcademic } from '../../../contexts/AcademicContext';
@@ -16,24 +17,21 @@ export default function AbsenceDetailsScreen() {
 
     const formatDate = (dateStr: string) => {
         const months = [
-            'Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
-            'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik',
+            'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+            'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
         ];
         const date = new Date(dateStr + 'T12:00:00');
         return String(date.getDate()) + ' ' + months[date.getMonth()] + ' ' + String(date.getFullYear());
     };
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.header}>
                 <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
-                    <Ionicons name="chevron-back" size={28} color="white" />
+                    <Ionicons name="chevron-back" size={24} color="#0F172A" />
                 </TouchableOpacity>
-                <View style={{ flex: 1 }}>
-                    <Text style={styles.headerTitle}>Devamsizlik Detaylari</Text>
-                    <Text style={styles.headerSubtitle} numberOfLines={1}>{offering?.course.courseName ?? String(params.name || '')}</Text>
-                </View>
+                <Text style={styles.headerTitle}>Devamsızlık Detayları</Text>
+                <View style={styles.headerSpacer} />
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -46,13 +44,13 @@ export default function AbsenceDetailsScreen() {
                     </Text>
                 </View>
 
-                <Text style={styles.sectionHeader}>Local Devamsizlik Kayitlari</Text>
+                <Text style={styles.sectionHeader}>Devamsızlık Kayıtları</Text>
 
                 {absences.length === 0 ? (
                     <View style={styles.emptyState}>
                         <Ionicons name="checkmark-circle" size={48} color="#2E7D32" />
-                        <Text style={styles.emptyTitle}>Kayit bulunmuyor</Text>
-                        <Text style={styles.emptySubtitle}>Bu ders icin local devamsizlik eklenmemis.</Text>
+                        <Text style={styles.emptyTitle}>Kayıt bulunmuyor</Text>
+                        <Text style={styles.emptySubtitle}>Bu ders için henüz devamsızlık kaydı eklenmemiş.</Text>
                     </View>
                 ) : (
                     <View style={styles.timelineContainer}>
@@ -60,16 +58,14 @@ export default function AbsenceDetailsScreen() {
                         {absences.map((absence) => (
                             <View key={absence.id} style={styles.timelineItem}>
                                 <View style={styles.indicatorContainer}>
-                                    <View style={styles.outerCircle}>
-                                        <View style={styles.innerCircle} />
-                                    </View>
+                                    <View style={styles.timelineDot} />
                                 </View>
 
                                 <View style={styles.cardContainer}>
                                     <Text style={styles.dateText}>{formatDate(absence.date)}</Text>
                                     <Text style={styles.dayText}>{absence.dayLabel}</Text>
                                     <View style={styles.statusBadge}>
-                                        <Text style={styles.statusText}>DEVAMSIZ</Text>
+                                        <Text style={styles.statusText}>Devamsız</Text>
                                     </View>
                                 </View>
                             </View>
@@ -84,7 +80,7 @@ export default function AbsenceDetailsScreen() {
                 <View style={styles.bottomCard}>
                     <View style={styles.bottomCardHeader}>
                         <Text style={styles.bottomCardTitle}>
-                            Toplam Devamsizlik: <Text style={{ color: '#D32F2F', fontWeight: 'bold' }}>{card?.usedHours ?? 0} / {card?.totalHours ?? 0}</Text>
+                            Toplam Devamsızlık: <Text style={styles.bottomCardHighlight}>{card?.usedHours ?? 0} / {card?.totalHours ?? 0}</Text>
                         </Text>
                         <View style={styles.percentageCircle}>
                             <Text style={styles.percentageText}>
@@ -94,7 +90,7 @@ export default function AbsenceDetailsScreen() {
                     </View>
 
                     <Text style={styles.bottomCardSubtitle}>
-                        Kalan hak: <Text style={{ fontWeight: 'bold', color: '#0F172A' }}>{typeof card?.remainingHours === 'number' ? card.remainingHours + ' saat' : card?.remainingHours ?? '-'}</Text>
+                        Kalan hak: <Text style={styles.bottomCardValue}>{typeof card?.remainingHours === 'number' ? card.remainingHours + ' saat' : card?.remainingHours ?? '-'}</Text>
                     </Text>
 
                     <View style={styles.progressBarBackground}>
@@ -107,7 +103,7 @@ export default function AbsenceDetailsScreen() {
                     </View>
                 </View>
             </View>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -117,24 +113,33 @@ const styles = StyleSheet.create({
         backgroundColor: '#F8FAFC',
     },
     header: {
-        backgroundColor: '#1D3557',
-        paddingTop: 60,
-        paddingBottom: 20,
+        backgroundColor: '#F8FAFC',
+        paddingTop: 12,
+        paddingBottom: 16,
         paddingHorizontal: 20,
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
+        borderBottomWidth: 1,
+        borderBottomColor: '#E2E8F0',
     },
     backButton: {
-        marginRight: 16,
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     headerTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: 'white',
+        fontSize: 24,
+        fontWeight: '700',
+        color: '#0F172A',
     },
-    headerSubtitle: {
-        fontSize: 12,
-        color: '#94A3B8',
+    headerSpacer: {
+        width: 40,
     },
     content: {
         flex: 1,
@@ -172,46 +177,42 @@ const styles = StyleSheet.create({
     emptySubtitle: {
         color: '#64748B',
         marginTop: 4,
+        textAlign: 'center',
     },
     timelineContainer: {
-        paddingLeft: 10,
+        position: 'relative',
     },
     timelineLine: {
         position: 'absolute',
-        left: 17,
+        left: 11,
         top: 0,
         bottom: 0,
-        width: 2,
+        width: 1,
         backgroundColor: '#CBD5E1',
     },
     timelineItem: {
         flexDirection: 'row',
-        marginBottom: 20,
+        alignItems: 'flex-start',
+        marginBottom: 16,
     },
     indicatorContainer: {
-        width: 34,
+        width: 24,
         alignItems: 'center',
+        paddingTop: 20,
     },
-    outerCircle: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        backgroundColor: '#BFDBFE',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginTop: 4,
-    },
-    innerCircle: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-        backgroundColor: '#1D4ED8',
+    timelineDot: {
+        width: 10,
+        height: 10,
+        borderRadius: 5,
+        backgroundColor: '#94A3B8',
     },
     cardContainer: {
         flex: 1,
-        backgroundColor: 'white',
+        backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 16,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     dateText: {
         fontSize: 15,
@@ -226,14 +227,14 @@ const styles = StyleSheet.create({
     },
     statusBadge: {
         alignSelf: 'flex-start',
-        backgroundColor: '#FEE2E2',
+        backgroundColor: '#F1F5F9',
         borderRadius: 999,
         paddingHorizontal: 10,
         paddingVertical: 6,
     },
     statusText: {
         fontSize: 11,
-        color: '#B91C1C',
+        color: '#475569',
         fontWeight: '700',
     },
     bottomCardContainer: {
@@ -243,7 +244,7 @@ const styles = StyleSheet.create({
         bottom: 20,
     },
     bottomCard: {
-        backgroundColor: 'white',
+        backgroundColor: '#FFFFFF',
         borderRadius: 18,
         padding: 18,
         shadowColor: '#000',
@@ -261,6 +262,12 @@ const styles = StyleSheet.create({
     bottomCardTitle: {
         fontSize: 15,
         color: '#0F172A',
+        flex: 1,
+        paddingRight: 12,
+    },
+    bottomCardHighlight: {
+        color: '#D32F2F',
+        fontWeight: '700',
     },
     percentageCircle: {
         width: 48,
@@ -278,6 +285,10 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: '#475569',
         marginBottom: 10,
+    },
+    bottomCardValue: {
+        fontWeight: '700',
+        color: '#0F172A',
     },
     progressBarBackground: {
         height: 8,

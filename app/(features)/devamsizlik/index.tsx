@@ -8,9 +8,9 @@ import {
     LayoutAnimation,
     Platform,
     UIManager,
-    StatusBar,
     ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import CourseCard from '../../../components/CourseCard';
@@ -40,7 +40,6 @@ export default function DevamsizlikScreen() {
         getAbsenceCard,
         recordAbsence,
         undoLastAbsence,
-        refreshAcademicData,
     } = useAcademic();
     const [showAll, setShowAll] = useState(false);
     const [undoId, setUndoId] = useState<string | null>(null);
@@ -106,29 +105,22 @@ export default function DevamsizlikScreen() {
 
     if (loading) {
         return (
-            <View style={[styles.container, styles.centered]}>
-                <StatusBar barStyle="light-content" />
+            <SafeAreaView style={[styles.container, styles.centered]} edges={['top']}>
                 <ActivityIndicator size="large" color="#1D3557" />
-                <Text style={styles.infoText}>Devamsizlik verileri yukleniyor...</Text>
-            </View>
+                <Text style={styles.infoText}>Devamsızlık verileri yükleniyor...</Text>
+            </SafeAreaView>
         );
     }
 
     return (
-        <View style={styles.container}>
-            <StatusBar barStyle="light-content" />
-
+        <SafeAreaView style={styles.container} edges={['top']}>
             <View style={styles.headerContainer}>
                 <View style={styles.topBar}>
-                    <TouchableOpacity onPress={() => router.back()}>
-                        <Ionicons name="chevron-back" size={28} color="white" />
+                    <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+                        <Ionicons name="chevron-back" size={24} color="#0F172A" />
                     </TouchableOpacity>
-                    <Text style={styles.headerTitle}>Devamsizlik Takibi</Text>
-                    <TouchableOpacity onPress={() => void refreshAcademicData()}>
-                        <Ionicons name="refresh" size={24} color="white" />
-                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Devamsızlık Takibi</Text>
                 </View>
-                <Text style={styles.subHeader}>Local takip, cloud verisini degistirmez</Text>
             </View>
 
             <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
@@ -142,8 +134,8 @@ export default function DevamsizlikScreen() {
                     <CourseCard
                         key={course.id}
                         course={course}
-                        onMinus={() => void handleMinus(course.id)}
-                        onUndo={() => void handleUndo(course.id)}
+                        onAddAbsence={handleMinus}
+                        onUndo={handleUndo}
                         undoActive={undoId === course.id}
                         onDetails={handleDetails}
                     />
@@ -151,19 +143,19 @@ export default function DevamsizlikScreen() {
 
                 {courses.length === 0 ? (
                     <View style={styles.messageCard}>
-                        <Text style={styles.infoText}>Etkin ders bulunmuyor. Ders ekleme/kaldirma islemlerini program ekranindan yapabilirsiniz.</Text>
+                        <Text style={styles.infoText}>Etkin ders bulunmuyor. Ders ekleme veya kaldırma işlemlerini ders programı ekranından yapabilirsiniz.</Text>
                     </View>
                 ) : null}
 
                 {courses.length > 3 ? (
                     <TouchableOpacity style={styles.showAllButton} onPress={toggleShowAll}>
-                        <Text style={styles.showAllButtonText}>{showAll ? 'Daha Az Goster' : 'Tum Dersleri Goster'}</Text>
+                        <Text style={styles.showAllButtonText}>{showAll ? 'Daha Az Göster' : 'Tüm Dersleri Göster'}</Text>
                     </TouchableOpacity>
                 ) : null}
 
                 <View style={{ height: 100 }} />
             </ScrollView>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -177,36 +169,45 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     headerContainer: {
-        backgroundColor: '#1D3557',
-        paddingTop: 60,
-        paddingBottom: 20,
+        backgroundColor: '#F8FAFC',
+        paddingTop: 12,
+        paddingBottom: 16,
         paddingHorizontal: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E2E8F0',
     },
     topBar: {
         flexDirection: 'row',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 8,
+    },
+    backButton: {
+        width: 40,
+        height: 40,
+        borderRadius: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
+        marginRight: 12,
     },
     headerTitle: {
-        fontSize: 20,
+        flex: 1,
+        fontSize: 24,
         fontWeight: '700',
-        color: 'white',
-    },
-    subHeader: {
-        fontSize: 13,
-        color: '#BFDBFE',
-        textAlign: 'center',
+        color: '#0F172A',
     },
     content: {
         flex: 1,
         padding: 20,
     },
     messageCard: {
-        backgroundColor: 'white',
+        backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 16,
         marginBottom: 16,
+        borderWidth: 1,
+        borderColor: '#E2E8F0',
     },
     infoText: {
         marginTop: 12,
