@@ -65,8 +65,7 @@ export default function CalendarGrid({ currentDate, events, participatedEvents, 
                 {calendarDays.map((day, index) => {
                     if (day === null) return <View key={`empty-${index}`} style={styles.dayCell} />;
                     const dateStr = formatDate(day);
-                    const allDayEvents = events.get(dateStr) || [];
-                    const dayEvents = allDayEvents.filter(e => participatedEvents.has(e.id));
+                    const dayEvents = events.get(dateStr) || [];
                     const isSelected = selectedDate === dateStr;
                     return (
                         <TouchableOpacity key={`day-${day}`} style={styles.dayCell} onPress={() => onDateSelect(dateStr)} activeOpacity={0.7}>
@@ -75,9 +74,7 @@ export default function CalendarGrid({ currentDate, events, participatedEvents, 
                             </View>
                             {dayEvents.length > 0 && (
                                 <View style={styles.dotsContainer}>
-                                    {dayEvents.slice(0, 3).map((event) => (
-                                        <View key={event.id} style={[styles.dot, { backgroundColor: event.color }]} />
-                                    ))}
+                                    <View style={[styles.dot, { backgroundColor: dayEvents[0].color || colors.primary }]} />
                                 </View>
                             )}
                         </TouchableOpacity>
@@ -104,7 +101,7 @@ const styles = StyleSheet.create({
     dayNumberSelected: { backgroundColor: colors.accent },
     dayText: { fontSize: fontSize.md, color: colors.textPrimary, fontWeight: fontWeight.medium },
     dayTextSelected: { color: colors.textWhite },
-    dotsContainer: { flexDirection: 'row', marginTop: 2, gap: 2 },
-    dot: { width: 5, height: 5, borderRadius: borderRadius.full },
+    dotsContainer: { flexDirection: 'row', marginTop: 3 },
+    dot: { width: 6, height: 6, borderRadius: borderRadius.full },
     footerText: { textAlign: 'center', fontSize: fontSize.sm, color: colors.textSecondary, marginTop: spacing.lg, letterSpacing: 1 },
 });
