@@ -8,11 +8,15 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 
 interface VoteSectionProps {
+    likes: number;
+    dislikes: number;
     userVote: 'like' | 'dislike' | null;
     onVote: (vote: 'like' | 'dislike') => void;
 }
 
-export default function VoteSection({ userVote, onVote }: VoteSectionProps) {
+export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteSectionProps) {
+    const totalVotes = likes + dislikes;
+    const likePercent = totalVotes > 0 ? Math.round((likes / totalVotes) * 100) : 50;
     const handleVote = (vote: 'like' | 'dislike') => {
         onVote(vote);
     };
@@ -34,7 +38,7 @@ export default function VoteSection({ userVote, onVote }: VoteSectionProps) {
                     <Text style={[
                         styles.voteIcon,
                         userVote === 'like' && styles.voteIconActive
-                    ]}>👍</Text>
+                    ]}>✓</Text>
                     <Text style={styles.voteLabel}>Beğendim</Text>
                 </TouchableOpacity>
 
@@ -50,9 +54,19 @@ export default function VoteSection({ userVote, onVote }: VoteSectionProps) {
                     <Text style={[
                         styles.voteIcon,
                         userVote === 'dislike' && styles.voteIconActive
-                    ]}>👎</Text>
+                    ]}>✕</Text>
                     <Text style={styles.voteLabel}>Beğenmedim</Text>
                 </TouchableOpacity>
+            </View>
+
+            <View style={styles.barContainer}>
+                <View style={styles.barBackground}>
+                    <View style={[styles.barPositive, { width: `${likePercent}%` }]} />
+                </View>
+                <View style={styles.barLabels}>
+                    <Text style={styles.barText}>%{likePercent} Beğeni</Text>
+                    <Text style={styles.barText}>%{100 - likePercent} Beğenmeme</Text>
+                </View>
             </View>
         </View>
     );
@@ -80,15 +94,15 @@ const styles = StyleSheet.create({
     },
     buttonContainer: {
         flexDirection: 'row',
-        gap: spacing.xl,
+        gap: spacing.lg,
     },
     voteButton: {
         alignItems: 'center',
-        paddingVertical: spacing.md,
-        paddingHorizontal: spacing.xl,
+        paddingVertical: spacing.sm,
+        paddingHorizontal: spacing.lg,
         borderRadius: borderRadius.lg,
         backgroundColor: colors.backgroundLight,
-        minWidth: 110,
+        minWidth: 88,
     },
     voteButtonLikeActive: {
         backgroundColor: `${colors.success}15`,
@@ -101,15 +115,40 @@ const styles = StyleSheet.create({
         borderColor: colors.error,
     },
     voteIcon: {
-        fontSize: 28,
-        marginBottom: spacing.sm,
+        fontSize: 22,
+        marginBottom: spacing.xs,
         opacity: 0.7,
     },
     voteIconActive: {
         opacity: 1,
     },
     voteLabel: {
-        fontSize: fontSize.sm,
+        fontSize: fontSize.xs,
+        color: colors.textSecondary,
+        fontWeight: fontWeight.medium,
+    },
+    barContainer: {
+        width: '100%',
+        marginTop: spacing.lg,
+    },
+    barBackground: {
+        height: 10,
+        borderRadius: borderRadius.full,
+        backgroundColor: `${colors.error}20`,
+        overflow: 'hidden',
+    },
+    barPositive: {
+        height: '100%',
+        backgroundColor: colors.success,
+        borderRadius: borderRadius.full,
+    },
+    barLabels: {
+        marginTop: spacing.sm,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    barText: {
+        fontSize: fontSize.xs,
         color: colors.textSecondary,
         fontWeight: fontWeight.medium,
     },

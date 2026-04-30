@@ -1,6 +1,7 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
     Animated,
+    Image,
     Platform,
     ScrollView,
     StyleSheet,
@@ -100,7 +101,6 @@ export default function HomeScreen() {
         : 'Güncel sınav duyurusu bulunmuyor.';
 
     const menuItems = todaysMenu?.items.slice(0, 4) ?? [];
-    const menuBadge = todaysMenu ? 'Önbellek Hazır' : 'Menü Bekleniyor';
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -116,11 +116,14 @@ export default function HomeScreen() {
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
                             <TouchableOpacity style={styles.avatar} activeOpacity={0.8} onPress={() => setIsIDVisible(true)}>
-                                <Ionicons name="person" size={22} color="#FFFFFF" />
+                                <Image
+                                    source={require('../assets/muhammedsalihay.png')}
+                                    style={styles.avatarImage}
+                                />
                             </TouchableOpacity>
                             <View>
                                 <Text style={styles.eyebrow}>ÖĞRENCİ</Text>
-                                <Text style={styles.studentName}>{profile?.fullName ?? 'Bandırma Öğrencisi'}</Text>
+                                <Text style={styles.studentName}>Muhammed Salih Ay</Text>
                             </View>
                         </View>
 
@@ -150,9 +153,6 @@ export default function HomeScreen() {
                 <AnimatedCard delay={160}>
                     <View style={styles.sectionHeader}>
                         <Text style={styles.sectionTitle}>Günün Menüsü</Text>
-                        <View style={styles.badge}>
-                            <Text style={styles.badgeText}>{menuBadge}</Text>
-                        </View>
                     </View>
 
                     <View style={styles.card}>
@@ -235,8 +235,8 @@ export default function HomeScreen() {
             <DigitalIDModal
                 visible={isIDVisible}
                 onClose={() => setIsIDVisible(false)}
-                studentName={profile?.fullName ?? 'Bandırma Öğrencisi'}
-                studentID={profile?.studentNumber ?? profile?.id ?? 'N/A'}
+                studentName="Muhammed Salih Ay"
+                studentID="2311504208"
                 role="ÖĞRENCİ"
             />
         </SafeAreaView>
@@ -274,6 +274,12 @@ const styles = StyleSheet.create({
         backgroundColor: '#1D4ED8',
         alignItems: 'center',
         justifyContent: 'center',
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     eyebrow: {
         fontSize: 11,

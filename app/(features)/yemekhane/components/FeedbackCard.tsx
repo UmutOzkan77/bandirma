@@ -15,7 +15,7 @@ interface FeedbackCardProps {
 }
 
 const nameMap: Record<string, string> = {
-    user1: 'Ahmet Y.',
+    user1: 'Muhammed Salih Ay',
     user2: 'Merve K.',
     user3: 'Berk A.',
     user4: 'Selin T.',

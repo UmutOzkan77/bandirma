@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight, densityColors } from '../theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight, densityColors, shadows } from '../theme';
 import { DensityLevel } from '../mockData';
 
 interface DensityIndicatorProps {
@@ -37,7 +37,7 @@ const getDensityInfo = (level: DensityLevel) => {
 };
 
 export default function DensityIndicator({ level, percentFull, waitTime }: DensityIndicatorProps) {
-    const { label, color, icon } = getDensityInfo(level);
+    const { label, color } = getDensityInfo(level);
     const percentLabel = `${percentFull ?? 0}%`;
 
     return (
@@ -47,7 +47,6 @@ export default function DensityIndicator({ level, percentFull, waitTime }: Densi
                 <View style={styles.statusRow}>
                     <View style={[styles.dot, { backgroundColor: color }]} />
                     <Text style={[styles.status, { color }]}>{label}</Text>
-                    <Text style={styles.icon}>{icon}</Text>
                 </View>
                 <Text style={styles.waitText}>{waitTime || 'Bekleme süresi ~5 dk'}</Text>
             </View>
@@ -74,6 +73,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        ...shadows.card,
     },
     left: {
         flex: 1,
@@ -103,9 +103,6 @@ const styles = StyleSheet.create({
     status: {
         fontSize: fontSize.md,
         fontWeight: fontWeight.semibold,
-    },
-    icon: {
-        fontSize: 18,
     },
     percentText: {
         fontSize: fontSize.sm,

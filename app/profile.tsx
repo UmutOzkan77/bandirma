@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DigitalIDModal from '../components/DigitalIDModal';
@@ -14,9 +14,12 @@ export default function ProfileScreen() {
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.heroCard}>
                     <View style={styles.avatar}>
-                        <Ionicons name="person" size={44} color="#1D4ED8" />
+                        <Image
+                            source={require('../assets/muhammedsalihay.png')}
+                            style={styles.avatarImage}
+                        />
                     </View>
-                    <Text style={styles.name}>{profile?.fullName ?? 'Bandirma Ogrencisi'}</Text>
+                    <Text style={styles.name}>Muhammed Salih Ay</Text>
                     <Text style={styles.subtitle}>{profile?.schoolEmail ?? 'E-posta yok'}</Text>
                     <Text style={styles.meta}>
                         {profile?.departmentName ?? 'Bolum bilgisi yok'}
@@ -67,8 +70,8 @@ export default function ProfileScreen() {
             <DigitalIDModal
                 visible={isIDVisible}
                 onClose={() => setIsIDVisible(false)}
-                studentName={profile?.fullName ?? 'Bandirma Ogrencisi'}
-                studentID={profile?.studentNumber ?? profile?.id ?? 'N/A'}
+                studentName="Muhammed Salih Ay"
+                studentID="2311504208"
                 role="OGRENCI"
             />
         </SafeAreaView>
@@ -104,6 +107,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginBottom: 16,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     name: {
         fontSize: 24,

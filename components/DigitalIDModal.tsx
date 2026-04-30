@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import {
     Animated,
+    Image,
     Modal,
     Platform,
     Pressable,
@@ -139,7 +140,10 @@ export default function DigitalIDModal({
 
                     <View style={styles.profileRow}>
                         <View style={styles.avatar}>
-                            <Ionicons name="person" size={34} color="#0066CC" />
+                            <Image
+                                source={require('../assets/muhammedsalihay.png')}
+                                style={styles.avatarImage}
+                            />
                         </View>
 
                         <View style={styles.profileInfo}>
@@ -221,6 +225,12 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         marginRight: 16,
+        overflow: 'hidden',
+    },
+    avatarImage: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     profileInfo: {
         flex: 1,

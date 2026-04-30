@@ -131,7 +131,7 @@ export function createFallbackDataset(now = new Date()): FallbackDataset {
     const studentProfile: StudentProfile = {
         id: 'fallback-user',
         schoolEmail: 'ogrenci@bandirma.edu.tr',
-        fullName: 'Ahmet Yilmaz',
+        fullName: 'Muhammed Salih Ay',
         phone: '05551234567',
         facultyName: departments[0].facultyName,
         departmentId: departments[0].id,

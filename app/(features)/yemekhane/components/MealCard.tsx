@@ -4,7 +4,7 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
+import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { Meal, MealType } from '../mockData';
 
 interface MealCardProps {
@@ -95,6 +95,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: colors.border,
         marginBottom: spacing.sm,
+        ...shadows.card,
     },
     iconContainer: {
         width: 48,

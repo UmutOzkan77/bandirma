@@ -46,7 +46,7 @@ export const allCourses: Course[] = [
         offeringId: 'course-1',
         code: 'BM101',
         name: 'Yazilim Muhendisligi',
-        instructor: 'Dr. Ogr. Uyesi Ahmet Yilmaz',
+        instructor: 'Dr. Ogr. Uyesi Muhammed Salih Ay',
         startTime: '09:00',
         endTime: '10:45',
         room: 'A-101',

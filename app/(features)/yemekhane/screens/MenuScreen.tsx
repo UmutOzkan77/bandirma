@@ -51,6 +51,14 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     const { loading, menuPeriod } = useAcademic();
     const [selectedDayId, setSelectedDayId] = useState('');
     const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike' | null>>({});
+    const [votes, setVotes] = useState<Record<string, { likes: number; dislikes: number }>>({});
+    const [selectedLocation, setSelectedLocation] = useState<'kampus' | 'kyk'>('kampus');
+    const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
+
+    const locationOptions: { key: 'kampus' | 'kyk'; label: string }[] = [
+        { key: 'kampus', label: 'Kampüs Yemekhanesi' },
+        { key: 'kyk', label: 'KYK Yurt Yemekhanesi' },
+    ];
 
     const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days) : []), [menuPeriod]);
 
@@ -61,6 +69,9 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     }, [menuData, selectedDayId]);
 
     const selectedMenu = useMemo(() => menuData.find((day) => day.id === selectedDayId) || menuData[0], [menuData, selectedDayId]);
+    const selectedVotes = selectedMenu
+        ? votes[selectedMenu.id] ?? { likes: selectedMenu.votes.likes, dislikes: selectedMenu.votes.dislikes }
+        : { likes: 0, dislikes: 0 };
 
 
     const totalCalories = useMemo(() => {
@@ -74,6 +85,17 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
 
     const handleVote = (vote: 'like' | 'dislike') => {
         if (!selectedMenu) return;
+        if (userVotes[selectedMenu.id]) return;
+        setVotes((current) => {
+            const currentVote = current[selectedMenu.id] ?? { likes: selectedMenu.votes.likes, dislikes: selectedMenu.votes.dislikes };
+            return {
+                ...current,
+                [selectedMenu.id]: {
+                    likes: currentVote.likes + (vote === 'like' ? 1 : 0),
+                    dislikes: currentVote.dislikes + (vote === 'dislike' ? 1 : 0),
+                },
+            };
+        });
         setUserVotes((current) => ({ ...current, [selectedMenu.id]: vote }));
     };
 
@@ -97,8 +119,37 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Kampüs Yemekhanesi</Text>
+                <TouchableOpacity
+                    style={styles.headerDropdown}
+                    onPress={() => setIsLocationMenuOpen((prev) => !prev)}
+                    activeOpacity={0.8}
+                >
+                    <Text style={styles.headerTitle}>
+                        {locationOptions.find((opt) => opt.key === selectedLocation)?.label}
+                    </Text>
+                    <Text style={styles.headerCaret}>{isLocationMenuOpen ? '▴' : '▾'}</Text>
+                </TouchableOpacity>
             </View>
+
+            {isLocationMenuOpen && (
+                <View style={styles.dropdownMenu}>
+                    {locationOptions.map((option, index) => (
+                        <TouchableOpacity
+                            key={option.key}
+                            style={[
+                                styles.dropdownItem,
+                                index === locationOptions.length - 1 && styles.dropdownItemLast,
+                            ]}
+                            onPress={() => {
+                                setSelectedLocation(option.key);
+                                setIsLocationMenuOpen(false);
+                            }}
+                        >
+                            <Text style={styles.dropdownItemText}>{option.label}</Text>
+                        </TouchableOpacity>
+                    ))}
+                </View>
+            )}
 
             <DaySelector days={menuData} selectedDayId={selectedDayId} onDaySelect={setSelectedDayId} />
 
@@ -115,7 +166,7 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                         <Text style={styles.sectionMeta}>Toplam {totalCalories} kcal</Text>
                     </View>
                     <TouchableOpacity style={styles.sectionHeaderButton} onPress={onNavigateToStatistics}>
-                        <Text style={styles.sectionHeaderIcon}>{'>'}</Text>
+                        <Text style={styles.sectionHeaderIcon}>➜</Text>
                     </TouchableOpacity>
                 </View>
 
@@ -126,6 +177,8 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                 </View>
 
                 <VoteSection
+                    likes={selectedVotes.likes}
+                    dislikes={selectedVotes.dislikes}
                     userVote={userVotes[selectedDayId] || null}
                     onVote={handleVote}
                 />
@@ -170,10 +223,49 @@ const styles = StyleSheet.create({
         paddingTop: spacing.lg,
         paddingBottom: spacing.md,
     },
+    headerDropdown: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.sm,
+        backgroundColor: colors.cardWhite,
+        borderWidth: 1,
+        borderColor: colors.border,
+        borderRadius: borderRadius.full,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.sm,
+    },
     headerTitle: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
         color: colors.textDark,
+    },
+    headerCaret: {
+        fontSize: fontSize.md,
+        color: colors.textSecondary,
+    },
+    dropdownMenu: {
+        marginHorizontal: spacing.lg,
+        backgroundColor: colors.cardWhite,
+        borderRadius: borderRadius.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        overflow: 'hidden',
+        marginBottom: spacing.sm,
+        ...shadows.card,
+    },
+    dropdownItem: {
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    dropdownItemLast: {
+        borderBottomWidth: 0,
+    },
+    dropdownItemText: {
+        fontSize: fontSize.sm,
+        color: colors.textDark,
+        fontWeight: fontWeight.medium,
     },
     content: {
         paddingBottom: spacing.xxxl,
