@@ -42,7 +42,10 @@ export default function EventDetailScreen({
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
                 <View style={styles.infoCard}>
                     <Image source={{ uri: event.image }} style={styles.image} resizeMode="cover" />
-                    <Text style={styles.communityName}>{community.name}</Text>
+                    <View style={styles.communityRow}>
+                        <Image source={{ uri: community.logo }} style={styles.communityAvatar} />
+                        <Text style={styles.communityName}>{community.name}</Text>
+                    </View>
                     <Text style={styles.title}>{event.title}</Text>
                     <Text style={styles.eventDescription} numberOfLines={3}>{event.description}</Text>
 
@@ -162,11 +165,24 @@ const styles = StyleSheet.create({
         maxWidth: 520,
         alignSelf: 'center',
     },
+    communityRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.sm,
+    },
+    communityAvatar: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        marginRight: 6,
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        backgroundColor: colors.border,
+    },
     communityName: {
         fontSize: fontSize.sm,
         color: colors.primary,
         fontWeight: fontWeight.semibold,
-        marginBottom: spacing.sm,
     },
     title: {
         fontSize: fontSize.lg,

@@ -115,7 +115,10 @@ export default function FeedScreen({
                             <View style={styles.content}>
                                 <View style={styles.communityRow}>
                                     <TouchableOpacity onPress={() => onCommunityPress?.(community.id)} activeOpacity={0.7}>
-                                        <Text style={styles.communityName}>{community.name}</Text>
+                                        <View style={styles.communityProfileRow}>
+                                            <Image source={{ uri: community.logo }} style={styles.communityAvatar} />
+                                            <Text style={styles.communityName}>{community.name}</Text>
+                                        </View>
                                     </TouchableOpacity>
                                 </View>
 
@@ -226,6 +229,19 @@ const styles = StyleSheet.create({
     },
     communityRow: {
         marginBottom: spacing.md,
+    },
+    communityProfileRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    communityAvatar: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        marginRight: 6,
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        backgroundColor: colors.border,
     },
     communityName: {
         fontSize: fontSize.sm,
