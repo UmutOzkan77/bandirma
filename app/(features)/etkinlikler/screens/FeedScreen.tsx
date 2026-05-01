@@ -110,18 +110,19 @@ export default function FeedScreen({
 
                     return (
                         <TouchableOpacity style={styles.card} activeOpacity={0.86} onPress={() => onEventPress?.(item, community)}>
-                            <Image source={{ uri: item.image }} style={styles.eventImage} resizeMode="cover" />
+                            <View style={styles.cardTopBar}>
+                                <TouchableOpacity onPress={() => onCommunityPress?.(community.id)} activeOpacity={0.7}>
+                                    <View style={styles.communityProfileRow}>
+                                        <Image source={{ uri: community.logo }} style={styles.communityAvatar} />
+                                        <Text style={styles.communityName}>{community.name}</Text>
+                                    </View>
+                                </TouchableOpacity>
+                            </View>
+                            <View style={styles.imageContainer}>
+                                <Image source={{ uri: item.image }} style={styles.eventImage} resizeMode="cover" />
+                            </View>
 
                             <View style={styles.content}>
-                                <View style={styles.communityRow}>
-                                    <TouchableOpacity onPress={() => onCommunityPress?.(community.id)} activeOpacity={0.7}>
-                                        <View style={styles.communityProfileRow}>
-                                            <Image source={{ uri: community.logo }} style={styles.communityAvatar} />
-                                            <Text style={styles.communityName}>{community.name}</Text>
-                                        </View>
-                                    </TouchableOpacity>
-                                </View>
-
                                 <Text style={styles.eventTitle}>{item.title}</Text>
                                 <Text style={styles.eventDescription} numberOfLines={2}>{item.description}</Text>
 
@@ -219,16 +220,21 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
         ...shadows.card,
     },
+    cardTopBar: {
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+    },
+    imageContainer: {
+        paddingHorizontal: spacing.lg,
+    },
     eventImage: {
         width: '100%',
         height: 108,
+        borderRadius: borderRadius.md,
         backgroundColor: colors.border,
     },
     content: {
         padding: spacing.lg,
-    },
-    communityRow: {
-        marginBottom: spacing.md,
     },
     communityProfileRow: {
         flexDirection: 'row',
