@@ -234,7 +234,9 @@ const styles = StyleSheet.create({
         backgroundColor: colors.border,
     },
     content: {
-        padding: spacing.lg,
+        paddingVertical: spacing.lg,
+        paddingRight: spacing.lg,
+        paddingLeft: spacing.xl,
     },
     communityProfileRow: {
         flexDirection: 'row',
