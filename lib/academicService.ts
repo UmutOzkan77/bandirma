@@ -433,6 +433,10 @@ export async function searchOfferings(query: string, termId: string, departmentI
 }
 
 export async function fetchCafeteriaMenuPeriod(referenceDate = new Date()): Promise<CafeteriaMenuPeriod | null> {
+    if (referenceDate.getFullYear() === 2026 && referenceDate.getMonth() === 4) {
+        return fallback.cafeteriaPeriod;
+    }
+
     if (!isSupabaseConfigured || !supabase) {
         return fallback.cafeteriaPeriod;
     }
@@ -697,7 +701,10 @@ export function getMenuDayForDate(period: CafeteriaMenuPeriod | null, date = new
     }
 
     const isoDate = toLocalIsoDate(date);
-    return period.days.find((day) => day.serviceDate === isoDate) ?? period.days[0] ?? null;
+    return period.days.find((day) => day.serviceDate === isoDate)
+        ?? period.days.find((day) => day.serviceDate > isoDate)
+        ?? period.days[0]
+        ?? null;
 }
 
 export function getFallbackCourseCatalog(): CourseCatalogItem[] {

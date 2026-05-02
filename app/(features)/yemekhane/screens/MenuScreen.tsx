@@ -48,18 +48,18 @@ function mapMenuData(menuPeriodDays: NonNullable<ReturnType<typeof useAcademic>[
 }
 
 export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedback }: MenuScreenProps) {
-    const { loading, menuPeriod } = useAcademic();
+    const { loading, menuPeriod, todaysMenu } = useAcademic();
     const [selectedDayId, setSelectedDayId] = useState('');
     const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike' | null>>({});
     const [votes, setVotes] = useState<Record<string, { likes: number; dislikes: number }>>({});
 
-    const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days) : []), [menuPeriod]);
+    const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days).sort((a, b) => a.date.localeCompare(b.date)) : []), [menuPeriod]);
 
     useEffect(() => {
         if (menuData.length > 0 && !selectedDayId) {
-            setSelectedDayId(menuData[0].id);
+            setSelectedDayId(todaysMenu?.id ?? menuData[0].id);
         }
-    }, [menuData, selectedDayId]);
+    }, [menuData, selectedDayId, todaysMenu?.id]);
 
     const selectedMenu = useMemo(() => menuData.find((day) => day.id === selectedDayId) || menuData[0], [menuData, selectedDayId]);
     const selectedVotes = selectedMenu

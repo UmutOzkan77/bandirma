@@ -10,14 +10,13 @@ interface HomeScreenProps {
     onNavigateToCalendar: () => void;
 }
 
-const campusNews = [
-    { id: '1', title: 'Yemekhane Nisan menu guncellendi', date: 'Bugun' },
-    { id: '2', title: 'Yeni sinav saloni duyurusu yayinlandi', date: 'Dun' },
-];
-
 export default function HomeScreen({ onNavigateToCalendar }: HomeScreenProps) {
     const { profile } = useAuth();
-    const { nextExam, todayTimetable } = useAcademic();
+    const { nextExam, todayTimetable, examList, menuPeriod } = useAcademic();
+    const campusNews = [
+        { id: '1', title: `${menuPeriod?.month ?? 5}/2026 yemekhane menusu guncellendi`, date: 'Bugun' },
+        { id: '2', title: `${profile?.departmentName ?? 'Bolum'} ${profile?.classLevel ?? ''}. sinif sinav takvimi yayinda`, date: 'Bugun' },
+    ];
 
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -35,7 +34,7 @@ export default function HomeScreen({ onNavigateToCalendar }: HomeScreenProps) {
                 </View>
             </View>
 
-            <ExamAlertBanner onPress={onNavigateToCalendar} />
+            <ExamAlertBanner examCount={examList.length} nextExamDate={nextExam?.date ?? null} onPress={onNavigateToCalendar} />
 
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitle}>Siradaki Sinav</Text>

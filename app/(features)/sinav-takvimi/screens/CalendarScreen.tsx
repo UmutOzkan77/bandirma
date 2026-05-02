@@ -24,7 +24,12 @@ export default function CalendarScreen({ onNavigateToCalculator }: CalendarScree
 
     useEffect(() => {
         if (examList.length > 0) {
-            setSelectedDate((current) => current || examList[0].date);
+            const firstExamDate = examList[0].date;
+            setSelectedDate(firstExamDate);
+            const currentWeekStart = getWeekStart();
+            const firstExamWeekStart = getWeekStart(new Date(firstExamDate + 'T12:00:00'));
+            const weekDiff = Math.round((firstExamWeekStart.getTime() - currentWeekStart.getTime()) / (7 * 24 * 60 * 60 * 1000));
+            setWeekOffset(weekDiff);
         }
     }, [examList]);
 

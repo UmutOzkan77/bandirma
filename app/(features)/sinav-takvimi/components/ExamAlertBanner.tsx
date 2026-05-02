@@ -7,10 +7,23 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight } from '../theme';
 
 interface ExamAlertBannerProps {
+    examCount: number;
+    nextExamDate: string | null;
     onPress: () => void;
 }
 
-export default function ExamAlertBanner({ onPress }: ExamAlertBannerProps) {
+function formatShortDate(date: string | null) {
+    if (!date) {
+        return 'Takvim hazirlaniyor';
+    }
+
+    return new Date(date + 'T12:00:00').toLocaleDateString('tr-TR', {
+        day: 'numeric',
+        month: 'long',
+    });
+}
+
+export default function ExamAlertBanner({ examCount, nextExamDate, onPress }: ExamAlertBannerProps) {
     return (
         <View style={styles.container}>
             <View style={styles.iconContainer}>
@@ -18,10 +31,10 @@ export default function ExamAlertBanner({ onPress }: ExamAlertBannerProps) {
             </View>
             <View style={styles.content}>
                 <View style={styles.badge}>
-                    <Text style={styles.badgeText}>SINAV HAFTASI</Text>
+                    <Text style={styles.badgeText}>{examCount > 0 ? `${examCount} SINAV` : 'SINAV TAKVIMI'}</Text>
                 </View>
                 <Text style={styles.title}>Sınav Takvimi Yayında</Text>
-                <Text style={styles.subtitle}>Sınav takvimine ulaşmak için tıkla</Text>
+                <Text style={styles.subtitle}>Sıradaki sınav: {formatShortDate(nextExamDate)}</Text>
             </View>
             <TouchableOpacity
                 style={styles.button}

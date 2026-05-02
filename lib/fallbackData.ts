@@ -177,6 +177,12 @@ function buildCatalog() {
 function buildOfferings(activeTerm: AcademicTerm, catalog: CourseCatalogItem[]) {
     const catalogByCode = new Map(catalog.map((course) => [course.courseCode, course]));
     const offerings: CourseOffering[] = [];
+    const examStartTimes = [
+        ['09:00', '10:30'],
+        ['11:00', '12:30'],
+        ['13:00', '14:30'],
+        ['15:00', '16:30'],
+    ] as const;
 
     departments.forEach((department) => {
         const seedsByClass = courseSeeds[department.code] ?? {};
@@ -184,6 +190,7 @@ function buildOfferings(activeTerm: AcademicTerm, catalog: CourseCatalogItem[]) 
             seeds.forEach((seed, index) => {
                 const course = catalogByCode.get(seed.code)!;
                 const id = `offering-${department.code.toLowerCase()}-${classLevel}-${index + 1}`;
+                const [examStartTime, examEndTime] = examStartTimes[index % examStartTimes.length];
                 offerings.push({
                     id,
                     courseId: course.id,
@@ -214,9 +221,9 @@ function buildOfferings(activeTerm: AcademicTerm, catalog: CourseCatalogItem[]) 
                             id: `exam-${id}`,
                             offeringId: id,
                             examType: 'final',
-                            examDate: toIsoDate(addDays(new Date(2026, 4, 25), index + Number(classLevel))),
-                            startTime: '10:00',
-                            endTime: '11:30',
+                            examDate: toIsoDate(addDays(new Date(2026, 4, 11), index + (Number(classLevel) - 1) * 2)),
+                            startTime: examStartTime,
+                            endTime: examEndTime,
                             building: department.code === 'YBS' ? 'Ömer Seyfettin UBF' : 'MDBF',
                             room: seed.room,
                             notes: null,

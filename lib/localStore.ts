@@ -4,7 +4,7 @@ import type { LocalAbsenceState, LocalCourseOverride, StudentProfile } from './d
 const STORAGE_PREFIX = 'bandirma:v2';
 const FALLBACK_AUTH_KEY = `${STORAGE_PREFIX}:fallback-auth`;
 const FALLBACK_ACCOUNTS_KEY = `${STORAGE_PREFIX}:fallback-accounts`;
-const MENU_CACHE_KEY = `${STORAGE_PREFIX}:menu-cache:may-2026-v2`;
+const MENU_CACHE_KEY = `${STORAGE_PREFIX}:menu-cache:may-2026-v3`;
 
 export interface FallbackAuthRecord {
     email: string;
