@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import DigitalIDModal from '../components/DigitalIDModal';
@@ -13,10 +13,10 @@ export default function ProfileScreen() {
         <SafeAreaView style={styles.container} edges={['top']}>
             <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.heroCard}>
-                    <View style={styles.avatar}>
+                    <TouchableOpacity style={styles.avatar} activeOpacity={0.85} onPress={() => setIsIDVisible(true)}>
                         <Ionicons name="person" size={44} color="#1D4ED8" />
-                    </View>
-                    <Text style={styles.name}>Muhammed Salih Ay</Text>
+                    </TouchableOpacity>
+                    <Text style={styles.name}>{profile?.fullName ?? 'Bandirma Ogrencisi'}</Text>
                     <Text style={styles.subtitle}>{profile?.schoolEmail ?? 'E-posta yok'}</Text>
                     <Text style={styles.meta}>
                         {profile?.departmentName ?? 'Bolum bilgisi yok'}
@@ -25,19 +25,6 @@ export default function ProfileScreen() {
                 </View>
 
                 <View style={styles.section}>
-                    <TouchableOpacity style={styles.row} onPress={() => setIsIDVisible(true)}>
-                        <View style={styles.rowIcon}>
-                            <Ionicons name="qr-code-outline" size={22} color="#1D4ED8" />
-                        </View>
-                        <View style={styles.rowContent}>
-                            <Text style={styles.rowTitle}>Dijital Kimlik</Text>
-                            <Text style={styles.rowSubtitle}>QR ile kampus girisi</Text>
-                        </View>
-                        <Ionicons name="chevron-forward" size={18} color="#94A3B8" />
-                    </TouchableOpacity>
-
-                    <View style={styles.divider} />
-
                     <View style={styles.row}>
                         <View style={styles.rowIcon}>
                             <Ionicons name="school-outline" size={22} color="#1D4ED8" />
@@ -67,9 +54,12 @@ export default function ProfileScreen() {
             <DigitalIDModal
                 visible={isIDVisible}
                 onClose={() => setIsIDVisible(false)}
-                studentName="Muhammed Salih Ay"
-                studentID="2311504208"
-                role="OGRENCI"
+                studentName={profile?.fullName ?? 'Bandırma Öğrencisi'}
+                studentID={profile?.studentNumber ?? profile?.id ?? '-'}
+                tcLast4={profile?.tcLast4}
+                unitName={profile?.facultyName ?? '-'}
+                departmentName={profile?.departmentName ?? '-'}
+                profilePhotoUri={(profile as any)?.photoUrl ?? (profile as any)?.avatarUrl ?? (profile as any)?.profileImageUrl ?? null}
             />
         </SafeAreaView>
     );

@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState, useEffect } from 'react';
+import React, { useMemo, useRef, useEffect, useState } from 'react';
 import {
     Animated,
     Platform,
@@ -114,7 +114,7 @@ export default function HomeScreen() {
                 <AnimatedCard>
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
-                            <TouchableOpacity style={styles.avatar} activeOpacity={0.8} onPress={() => setIsIDVisible(true)}>
+                            <TouchableOpacity style={styles.avatar} activeOpacity={0.85} onPress={() => setIsIDVisible(true)}>
                                 <Ionicons name="person" size={22} color="#FFFFFF" />
                             </TouchableOpacity>
                             <View>
@@ -231,9 +231,12 @@ export default function HomeScreen() {
             <DigitalIDModal
                 visible={isIDVisible}
                 onClose={() => setIsIDVisible(false)}
-                studentName="Muhammed Salih Ay"
-                studentID="2311504208"
-                role="ÖĞRENCİ"
+                studentName={profile?.fullName ?? 'Bandırma Öğrencisi'}
+                studentID={profile?.studentNumber ?? profile?.id ?? '-'}
+                tcLast4={profile?.tcLast4}
+                unitName={profile?.facultyName ?? '-'}
+                departmentName={profile?.departmentName ?? '-'}
+                profilePhotoUri={(profile as any)?.photoUrl ?? (profile as any)?.avatarUrl ?? (profile as any)?.profileImageUrl ?? null}
             />
         </SafeAreaView>
     );

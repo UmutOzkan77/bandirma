@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors, spacing, fontSize, fontWeight } from './theme';
@@ -16,6 +16,10 @@ import AddCourseModal from './components/AddCourseModal';
 export default function DersProgramiScreen() {
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const swipeStartX = useRef(0);
+    const swipeStartY = useRef(0);
+    const swipeCurrentX = useRef(0);
+    const swipeCurrentY = useRef(0);
     const {
         loading,
         timetableEntries,
@@ -62,13 +66,36 @@ export default function DersProgramiScreen() {
 
     const activeTimeSlot = `${String(new Date().getHours()).padStart(2, '0')}:${String(new Date().getMinutes()).padStart(2, '0')}`;
 
+    const shiftSelectedDate = (dayOffset: number) => {
+        setSelectedDate((currentDate) => {
+            const nextDate = new Date(currentDate);
+            nextDate.setDate(currentDate.getDate() + dayOffset);
+            return nextDate;
+        });
+    };
+
+    const handleSwipeRelease = () => {
+        const deltaX = swipeCurrentX.current - swipeStartX.current;
+        const deltaY = swipeCurrentY.current - swipeStartY.current;
+
+        if (Math.abs(deltaX) < 50 || Math.abs(deltaX) <= Math.abs(deltaY)) {
+            return;
+        }
+
+        if (deltaX < 0) {
+            shiftSelectedDate(1);
+        } else {
+            shiftSelectedDate(-1);
+        }
+    };
+
     const handleSaveCourse = async (offering: SelectableOffering) => {
         await addLocalOffering(offering);
     };
 
     const handleRemoveCourse = (offeringId: string) => {
         Alert.alert(
-            'Dersi localden kaldir',
+            'Dersi kaldir',
             'Bu islem yalnizca bu cihazdaki ders programi, sinav takvimi ve devamsizliga yansir.',
             [
                 { text: 'Vazgec', style: 'cancel' },
@@ -89,51 +116,83 @@ export default function DersProgramiScreen() {
 
             <DaySelector days={weekDays} onDaySelect={setSelectedDate} />
 
-            <View style={styles.dayLabelContainer}>
-                <Text style={styles.dayLabel}>{selectedDayName}</Text>
+            <View
+                style={styles.contentArea}
+                onStartShouldSetResponder={() => false}
+                onStartShouldSetResponderCapture={(event) => {
+                    swipeStartX.current = event.nativeEvent.pageX;
+                    swipeStartY.current = event.nativeEvent.pageY;
+                    swipeCurrentX.current = event.nativeEvent.pageX;
+                    swipeCurrentY.current = event.nativeEvent.pageY;
+                    return false;
+                }}
+                onMoveShouldSetResponderCapture={(event) => {
+                    const { pageX, pageY } = event.nativeEvent;
+                    const deltaX = pageX - swipeStartX.current;
+                    const deltaY = pageY - swipeStartY.current;
+                    return Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY);
+                }}
+                onResponderGrant={(event) => {
+                    swipeStartX.current = event.nativeEvent.pageX;
+                    swipeStartY.current = event.nativeEvent.pageY;
+                    swipeCurrentX.current = event.nativeEvent.pageX;
+                    swipeCurrentY.current = event.nativeEvent.pageY;
+                }}
+                onResponderMove={(event) => {
+                    swipeCurrentX.current = event.nativeEvent.pageX;
+                    swipeCurrentY.current = event.nativeEvent.pageY;
+                }}
+                onResponderRelease={handleSwipeRelease}
+                onResponderTerminate={handleSwipeRelease}
+            >
+                <View style={styles.dayLabelContainer}>
+                    <Text style={styles.dayLabel}>{selectedDayName}</Text>
+                </View>
+
+                <ScrollView style={styles.timeline} showsVerticalScrollIndicator={false} contentContainerStyle={styles.timelineContent}>
+                    {loading ? (
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyIcon}>⏳</Text>
+                            <Text style={styles.emptyTitle}>Program yukleniyor</Text>
+                            <Text style={styles.emptySubtitle}>Aktif donem ve local override verileri hazirlaniyor.</Text>
+                        </View>
+                    ) : coursesForDay.length === 0 ? (
+                        <View style={styles.emptyState}>
+                            <Text style={styles.emptyIcon}>📚</Text>
+                            <Text style={styles.emptyTitle}>Bu gun icin ders yok</Text>
+                            <Text style={styles.emptySubtitle}>Buluttaki ders acilislarindan local olarak ekleme yapabilirsiniz.</Text>
+                        </View>
+                    ) : (
+                        <>
+                            {morningCourses.map((course) => (
+                                <CourseCard
+                                    key={course.id}
+                                    course={course}
+                                    isActive={activeTimeSlot >= course.startTime && activeTimeSlot <= course.endTime}
+                                    onRemove={handleRemoveCourse}
+                                />
+                            ))}
+
+                            {morningCourses.length > 0 && afternoonCourses.length > 0 && (
+                                <LunchBreak startTime={lunchBreak.startTime} endTime={lunchBreak.endTime} />
+                            )}
+
+                            {afternoonCourses.map((course) => (
+                                <CourseCard
+                                    key={course.id}
+                                    course={course}
+                                    isActive={activeTimeSlot >= course.startTime && activeTimeSlot <= course.endTime}
+                                    onRemove={handleRemoveCourse}
+                                />
+                            ))}
+                        </>
+                    )}
+                </ScrollView>
             </View>
 
-            <ScrollView style={styles.timeline} showsVerticalScrollIndicator={false} contentContainerStyle={styles.timelineContent}>
-                {loading ? (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyIcon}>⏳</Text>
-                        <Text style={styles.emptyTitle}>Program yukleniyor</Text>
-                        <Text style={styles.emptySubtitle}>Aktif donem ve local override verileri hazirlaniyor.</Text>
-                    </View>
-                ) : coursesForDay.length === 0 ? (
-                    <View style={styles.emptyState}>
-                        <Text style={styles.emptyIcon}>📚</Text>
-                        <Text style={styles.emptyTitle}>Bu gun icin ders yok</Text>
-                        <Text style={styles.emptySubtitle}>Buluttaki ders acilislarindan local olarak ekleme yapabilirsiniz.</Text>
-                    </View>
-                ) : (
-                    <>
-                        {morningCourses.map((course) => (
-                            <CourseCard
-                                key={course.id}
-                                course={course}
-                                isActive={activeTimeSlot >= course.startTime && activeTimeSlot <= course.endTime}
-                                onRemove={handleRemoveCourse}
-                            />
-                        ))}
-
-                        {morningCourses.length > 0 && afternoonCourses.length > 0 && (
-                            <LunchBreak startTime={lunchBreak.startTime} endTime={lunchBreak.endTime} />
-                        )}
-
-                        {afternoonCourses.map((course) => (
-                            <CourseCard
-                                key={course.id}
-                                course={course}
-                                isActive={activeTimeSlot >= course.startTime && activeTimeSlot <= course.endTime}
-                                onRemove={handleRemoveCourse}
-                            />
-                        ))}
-                    </>
-                )}
-            </ScrollView>
-
-            <FloatingActionButton onPress={() => setIsModalVisible(true)} />
+            <View pointerEvents="box-none" style={styles.fabLayer}>
+                <FloatingActionButton onPress={() => setIsModalVisible(true)} />
+            </View>
 
             <AddCourseModal
                 visible={isModalVisible}
@@ -149,6 +208,15 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
+    },
+    contentArea: {
+        flex: 1,
+    },
+    fabLayer: {
+        ...StyleSheet.absoluteFillObject,
+        zIndex: 100,
+        elevation: 100,
+        pointerEvents: 'box-none',
     },
     dayLabelContainer: {
         paddingHorizontal: spacing.xl,
