@@ -1,7 +1,6 @@
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import {
     Animated,
-    Image,
     Platform,
     ScrollView,
     StyleSheet,
@@ -116,10 +115,7 @@ export default function HomeScreen() {
                     <View style={styles.header}>
                         <View style={styles.headerLeft}>
                             <TouchableOpacity style={styles.avatar} activeOpacity={0.8} onPress={() => setIsIDVisible(true)}>
-                                <Image
-                                    source={require('../assets/muhammedsalihay.png')}
-                                    style={styles.avatarImage}
-                                />
+                                <Ionicons name="person" size={22} color="#FFFFFF" />
                             </TouchableOpacity>
                             <View>
                                 <Text style={styles.eyebrow}>ÖĞRENCİ</Text>
@@ -274,12 +270,6 @@ const styles = StyleSheet.create({
         backgroundColor: '#1D4ED8',
         alignItems: 'center',
         justifyContent: 'center',
-        overflow: 'hidden',
-    },
-    avatarImage: {
-        width: '100%',
-        height: '100%',
-        resizeMode: 'cover',
     },
     eyebrow: {
         fontSize: 11,
