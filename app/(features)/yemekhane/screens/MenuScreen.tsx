@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
-import { serviceHours, DailyMenu, Meal } from '../mockData';
+import { serviceHours, DailyMenu, Meal, feedbackData } from '../mockData';
 import DaySelector from '../components/DaySelector';
-import MealSection from '../components/MealSection';
 import VoteSection from '../components/VoteSection';
 import DensityIndicator from '../components/DensityIndicator';
+import FeedbackCard from '../components/FeedbackCard';
+import MealCard from '../components/MealCard';
 import { useAcademic } from '../../../../contexts/AcademicContext';
 
 interface MenuScreenProps {
@@ -13,10 +14,9 @@ interface MenuScreenProps {
     onNavigateToFeedback?: () => void;
 }
 
-const dayNames = ['Pazar', 'Pazartesi', 'Sali', 'Carsamba', 'Persembe', 'Cuma', 'Cumartesi'];
-const dayShorts = ['Paz', 'Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt'];
+const dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+const dayShorts = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 
-type VoteMap = Record<string, { likes: number; dislikes: number }>;
 
 function mapMenuData(menuPeriodDays: NonNullable<ReturnType<typeof useAcademic>['menuPeriod']>['days']): DailyMenu[] {
     return menuPeriodDays.map((day) => {
@@ -51,7 +51,7 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     const { loading, menuPeriod } = useAcademic();
     const [selectedDayId, setSelectedDayId] = useState('');
     const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike' | null>>({});
-    const [votes, setVotes] = useState<VoteMap>({});
+    const [votes, setVotes] = useState<Record<string, { likes: number; dislikes: number }>>({});
 
     const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days) : []), [menuPeriod]);
 
@@ -62,8 +62,10 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     }, [menuData, selectedDayId]);
 
     const selectedMenu = useMemo(() => menuData.find((day) => day.id === selectedDayId) || menuData[0], [menuData, selectedDayId]);
+    const selectedVotes = selectedMenu
+        ? votes[selectedMenu.id] ?? { likes: selectedMenu.votes.likes, dislikes: selectedMenu.votes.dislikes }
+        : { likes: 0, dislikes: 0 };
 
-    const selectedVotes = selectedMenu ? votes[selectedMenu.id] ?? { likes: selectedMenu.votes.likes, dislikes: selectedMenu.votes.dislikes } : { likes: 0, dislikes: 0 };
 
     const totalCalories = useMemo(() => {
         if (!selectedMenu) return 0;
@@ -71,14 +73,14 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     }, [selectedMenu]);
 
     const currentHour = new Date().getHours();
-    const isLunchTime = currentHour >= 11 && currentHour < 14;
     const densityLevel = currentHour < 12 ? 'low' : currentHour < 14 ? 'high' : 'medium';
     const densityPercent = currentHour < 12 ? 35 : currentHour < 14 ? 82 : 58;
 
     const handleVote = (vote: 'like' | 'dislike') => {
         if (!selectedMenu) return;
+        if (userVotes[selectedMenu.id]) return;
         setVotes((current) => {
-            const currentVote = current[selectedMenu.id] ?? { likes: 0, dislikes: 0 };
+            const currentVote = current[selectedMenu.id] ?? { likes: selectedMenu.votes.likes, dislikes: selectedMenu.votes.dislikes };
             return {
                 ...current,
                 [selectedMenu.id]: {
@@ -93,8 +95,8 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     if (loading) {
         return (
             <View style={[styles.container, styles.centered]}>
-                <ActivityIndicator size="large" color={colors.textLight} />
-                <Text style={styles.loadingText}>Yemekhane menusu yukleniyor...</Text>
+                <ActivityIndicator size="large" color={colors.primaryAccent} />
+                <Text style={styles.loadingText}>Yemekhane menüsü yükleniyor...</Text>
             </View>
         );
     }
@@ -102,7 +104,7 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     if (!selectedMenu) {
         return (
             <View style={[styles.container, styles.centered]}>
-                <Text style={styles.loadingText}>Gecerli bir yemekhane periyodu bulunamadi.</Text>
+                <Text style={styles.loadingText}>Geçerli bir yemekhane periyodu bulunamadı.</Text>
             </View>
         );
     }
@@ -110,33 +112,33 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces>
             <View style={styles.header}>
-                <Text style={styles.headerTitle}>Gunun Menusu</Text>
-                <TouchableOpacity style={styles.calendarButton} onPress={onNavigateToStatistics}>
-                    <Text style={styles.calendarIcon}>📅</Text>
-                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Kampüs Yemekhanesi</Text>
             </View>
 
             <DaySelector days={menuData} selectedDayId={selectedDayId} onDaySelect={setSelectedDayId} />
 
             <View style={styles.content}>
-                <View style={styles.dateInfo}>
-                    <Text style={styles.dateText}>{selectedMenu.date} - {selectedMenu.dayName}</Text>
-                    <Text style={styles.calorieText}>Toplam: {totalCalories} kcal</Text>
-                </View>
-
                 <DensityIndicator
                     level={densityLevel as any}
                     percentFull={densityPercent}
-                    lastUpdated={menuPeriod ? 'Cache aktif' : 'Yeni cekildi'}
+                    waitTime="Bekleme süresi ~5 dk"
                 />
 
-                <MealSection
-                    mealTime="lunch"
-                    timeRange={serviceHours.birinciOgretimOgle}
-                    meals={selectedMenu.meals}
-                    isOpen={isLunchTime}
-                    isAvailable
-                />
+                <View style={styles.sectionHeader}>
+                    <View style={styles.sectionHeaderLeft}>
+                        <Text style={styles.sectionTitle}>Günün Menüsü</Text>
+                        <Text style={styles.sectionMeta}>Toplam {totalCalories} kcal</Text>
+                    </View>
+                    <TouchableOpacity style={styles.sectionHeaderButton} onPress={onNavigateToStatistics}>
+                        <Text style={styles.sectionHeaderIcon}>➜</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.menuCards}>
+                    {selectedMenu.meals.map((meal) => (
+                        <MealCard key={meal.id} meal={meal} />
+                    ))}
+                </View>
 
                 <VoteSection
                     likes={selectedVotes.likes}
@@ -144,6 +146,14 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                     userVote={userVotes[selectedDayId] || null}
                     onVote={handleVote}
                 />
+
+                <View style={styles.communityHeader}>
+                    <Text style={styles.communityTitle}>Topluluk Geri Bildirimi</Text>
+                </View>
+
+                {feedbackData.slice(0, 2).map((feedback) => (
+                    <FeedbackCard key={feedback.id} feedback={feedback} variant="compact" />
+                ))}
 
                 <TouchableOpacity style={styles.feedbackButton} activeOpacity={0.8} onPress={onNavigateToFeedback}>
                     <Text style={styles.feedbackButtonIcon}>💬</Text>
@@ -159,14 +169,14 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.primaryDark,
+        backgroundColor: colors.backgroundLight,
     },
     centered: {
         justifyContent: 'center',
         alignItems: 'center',
     },
     loadingText: {
-        color: colors.textLight,
+        color: colors.textSecondary,
         marginTop: 12,
     },
     header: {
@@ -174,48 +184,19 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: spacing.lg,
-        paddingTop: spacing.xl,
+        paddingTop: spacing.lg,
         paddingBottom: spacing.md,
     },
     headerTitle: {
-        fontSize: fontSize.title,
-        fontWeight: fontWeight.bold,
-        color: colors.textLight,
-    },
-    calendarButton: {
-        width: 40,
-        height: 40,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.cardWhite,
-        alignItems: 'center',
-        justifyContent: 'center',
-        ...shadows.button,
-    },
-    calendarIcon: {
-        fontSize: 18,
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.semibold,
+        color: colors.textDark,
     },
     content: {
         paddingBottom: spacing.xxxl,
     },
-    dateInfo: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.lg,
-        marginBottom: spacing.md,
-    },
-    dateText: {
-        fontSize: fontSize.md,
-        color: colors.textLight,
-        fontWeight: fontWeight.medium,
-    },
-    calorieText: {
-        fontSize: fontSize.sm,
-        color: colors.textLight,
-        opacity: 0.85,
-    },
     feedbackButton: {
-        backgroundColor: colors.cardWhite,
+        backgroundColor: colors.primaryDark,
         marginHorizontal: spacing.lg,
         marginTop: spacing.md,
         borderRadius: borderRadius.lg,
@@ -232,9 +213,58 @@ const styles = StyleSheet.create({
     feedbackButtonText: {
         fontSize: fontSize.md,
         fontWeight: fontWeight.bold,
-        color: colors.textDark,
+        color: colors.textLight,
     },
     bottomSpacer: {
         height: spacing.xxxl,
+    },
+    sectionHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.lg,
+        marginBottom: spacing.md,
+        marginTop: spacing.sm,
+    },
+    sectionHeaderLeft: {
+        flex: 1,
+        paddingRight: spacing.md,
+    },
+    sectionTitle: {
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.semibold,
+        color: colors.textDark,
+    },
+    sectionMeta: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        marginTop: spacing.xs,
+    },
+    sectionHeaderButton: {
+        width: 36,
+        height: 36,
+        borderRadius: borderRadius.full,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: colors.cardWhite,
+        borderWidth: 1,
+        borderColor: colors.border,
+    },
+    sectionHeaderIcon: {
+        fontSize: 16,
+        color: colors.textDark,
+    },
+    menuCards: {
+        paddingHorizontal: spacing.lg,
+    },
+    communityHeader: {
+        marginTop: spacing.lg,
+        marginBottom: spacing.sm,
+        paddingHorizontal: spacing.lg,
+    },
+    communityTitle: {
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.semibold,
+        color: colors.textDark,
     },
 });
