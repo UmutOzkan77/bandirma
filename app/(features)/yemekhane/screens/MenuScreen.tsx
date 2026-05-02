@@ -52,13 +52,6 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     const [selectedDayId, setSelectedDayId] = useState('');
     const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike' | null>>({});
     const [votes, setVotes] = useState<Record<string, { likes: number; dislikes: number }>>({});
-    const [selectedLocation, setSelectedLocation] = useState<'kampus' | 'kyk'>('kampus');
-    const [isLocationMenuOpen, setIsLocationMenuOpen] = useState(false);
-
-    const locationOptions: { key: 'kampus' | 'kyk'; label: string }[] = [
-        { key: 'kampus', label: 'Kampüs Yemekhanesi' },
-        { key: 'kyk', label: 'KYK Yurt Yemekhanesi' },
-    ];
 
     const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days) : []), [menuPeriod]);
 
@@ -119,37 +112,8 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     return (
         <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces>
             <View style={styles.header}>
-                <TouchableOpacity
-                    style={styles.headerDropdown}
-                    onPress={() => setIsLocationMenuOpen((prev) => !prev)}
-                    activeOpacity={0.8}
-                >
-                    <Text style={styles.headerTitle}>
-                        {locationOptions.find((opt) => opt.key === selectedLocation)?.label}
-                    </Text>
-                    <Text style={styles.headerCaret}>{isLocationMenuOpen ? '▴' : '▾'}</Text>
-                </TouchableOpacity>
+                <Text style={styles.headerTitle}>Kampüs Yemekhanesi</Text>
             </View>
-
-            {isLocationMenuOpen && (
-                <View style={styles.dropdownMenu}>
-                    {locationOptions.map((option, index) => (
-                        <TouchableOpacity
-                            key={option.key}
-                            style={[
-                                styles.dropdownItem,
-                                index === locationOptions.length - 1 && styles.dropdownItemLast,
-                            ]}
-                            onPress={() => {
-                                setSelectedLocation(option.key);
-                                setIsLocationMenuOpen(false);
-                            }}
-                        >
-                            <Text style={styles.dropdownItemText}>{option.label}</Text>
-                        </TouchableOpacity>
-                    ))}
-                </View>
-            )}
 
             <DaySelector days={menuData} selectedDayId={selectedDayId} onDaySelect={setSelectedDayId} />
 
@@ -223,49 +187,10 @@ const styles = StyleSheet.create({
         paddingTop: spacing.lg,
         paddingBottom: spacing.md,
     },
-    headerDropdown: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-        backgroundColor: colors.cardWhite,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: borderRadius.full,
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.sm,
-    },
     headerTitle: {
-        fontSize: fontSize.md,
+        fontSize: fontSize.xl,
         fontWeight: fontWeight.semibold,
         color: colors.textDark,
-    },
-    headerCaret: {
-        fontSize: fontSize.md,
-        color: colors.textSecondary,
-    },
-    dropdownMenu: {
-        marginHorizontal: spacing.lg,
-        backgroundColor: colors.cardWhite,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
-        overflow: 'hidden',
-        marginBottom: spacing.sm,
-        ...shadows.card,
-    },
-    dropdownItem: {
-        paddingHorizontal: spacing.lg,
-        paddingVertical: spacing.md,
-        borderBottomWidth: 1,
-        borderBottomColor: colors.border,
-    },
-    dropdownItemLast: {
-        borderBottomWidth: 0,
-    },
-    dropdownItemText: {
-        fontSize: fontSize.sm,
-        color: colors.textDark,
-        fontWeight: fontWeight.medium,
     },
     content: {
         paddingBottom: spacing.xxxl,
