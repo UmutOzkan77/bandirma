@@ -113,10 +113,20 @@ export default function CommunityDetailScreen({
                         <Image source={{ uri: item.image }} style={styles.eventImage} />
                         <View style={styles.eventContent}>
                             <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
-                            <Text style={styles.eventMeta}>{formatDateTurkish(item.date)}  {item.time}</Text>
-                            <View style={styles.eventLocationRow}>
-                                <Ionicons name="location-outline" size={13} color={colors.accent} />
-                                <Text style={styles.eventLocation} numberOfLines={1}>{item.location}</Text>
+
+                            <View style={styles.metaBar}>
+                                <View style={styles.metaItem}>
+                                    <Ionicons name="calendar-outline" size={13} color={colors.primary} />
+                                    <Text style={styles.metaItemText}>{formatDateTurkish(item.date)}</Text>
+                                </View>
+                                <View style={styles.metaItem}>
+                                    <Ionicons name="time-outline" size={13} color={colors.primary} />
+                                    <Text style={styles.metaItemText}>{item.time}</Text>
+                                </View>
+                                <View style={styles.metaItem}>
+                                    <Ionicons name="location-outline" size={13} color={colors.primary} />
+                                    <Text style={styles.metaItemText} numberOfLines={1}>{item.location}</Text>
+                                </View>
                             </View>
                         </View>
                     </View>
@@ -285,20 +295,26 @@ const styles = StyleSheet.create({
         color: colors.textPrimary,
         marginBottom: 4,
     },
-    eventMeta: {
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        marginBottom: 4,
+    metaBar: {
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
+        gap: 2,
+        paddingTop: 0,
+        marginTop: -2,
     },
-    eventLocationRow: {
+    metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'flex-start',
+        width: '100%',
+        minHeight: 18,
     },
-    eventLocation: {
+    metaItemText: {
         marginLeft: 4,
         fontSize: fontSize.sm,
-        color: colors.accent,
-        fontWeight: fontWeight.medium,
+        color: colors.textSecondary,
+        fontWeight: fontWeight.semibold,
+        textAlign: 'left',
     },
     emptyText: {
         textAlign: 'center',

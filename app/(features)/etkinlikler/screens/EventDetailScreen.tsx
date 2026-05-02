@@ -41,23 +41,34 @@ export default function EventDetailScreen({
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
                 <View style={styles.infoCard}>
-                    <Image source={{ uri: event.image }} style={styles.image} resizeMode="cover" />
-                    <Text style={styles.communityName}>{community.name}</Text>
-                    <Text style={styles.title}>{event.title}</Text>
-                    <Text style={styles.eventDescription} numberOfLines={3}>{event.description}</Text>
+                    <View style={styles.cardTopBar}>
+                        <View style={styles.communityProfileRow}>
+                            <Image source={{ uri: community.logo }} style={styles.communityAvatar} />
+                            <Text style={styles.communityName}>{community.name}</Text>
+                        </View>
+                    </View>
 
-                    <View style={styles.metaGroup}>
-                        <View style={styles.metaRow}>
-                            <Ionicons name="calendar-outline" size={15} color={colors.primary} />
-                            <Text style={styles.metaText}>{formatDateTurkish(event.date)}</Text>
-                        </View>
-                        <View style={styles.metaRow}>
-                            <Ionicons name="time-outline" size={15} color={colors.primary} />
-                            <Text style={styles.metaText}>{event.time}</Text>
-                        </View>
-                        <View style={styles.metaRow}>
-                            <Ionicons name="location-outline" size={15} color={colors.primary} />
-                            <Text style={styles.metaText}>{event.location}</Text>
+                    <View style={styles.imageContainer}>
+                        <Image source={{ uri: event.image }} style={styles.eventImage} resizeMode="cover" />
+                    </View>
+
+                    <View style={styles.cardContent}>
+                        <Text style={styles.title}>{event.title}</Text>
+                        <Text style={styles.eventDescription} numberOfLines={3}>{event.description}</Text>
+
+                        <View style={styles.metaBar}>
+                            <View style={styles.metaItem}>
+                                <Ionicons name="calendar-outline" size={13} color={colors.primary} />
+                                <Text style={styles.metaItemText}>{formatDateTurkish(event.date)}</Text>
+                            </View>
+                            <View style={styles.metaItem}>
+                                <Ionicons name="time-outline" size={13} color={colors.primary} />
+                                <Text style={styles.metaItemText}>{event.time}</Text>
+                            </View>
+                            <View style={styles.metaItem}>
+                                <Ionicons name="location-outline" size={13} color={colors.primary} />
+                                <Text style={styles.metaItemText}>{event.location}</Text>
+                            </View>
                         </View>
                     </View>
                 </View>
@@ -144,55 +155,85 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         justifyContent: 'center',
     },
-    image: {
-        width: '100%',
-        height: 180,
-        borderRadius: borderRadius.lg,
-        backgroundColor: colors.border,
-        marginBottom: spacing.md,
-    },
     infoCard: {
         borderWidth: 1,
         borderColor: colors.border,
         borderRadius: borderRadius.lg,
         backgroundColor: colors.cardLight,
-        padding: spacing.lg,
         marginBottom: spacing.lg,
         width: '88%',
         maxWidth: 520,
         alignSelf: 'center',
+        overflow: 'hidden',
+    },
+    cardTopBar: {
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+    },
+    communityProfileRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    communityAvatar: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+        marginRight: 6,
+        borderWidth: 1,
+        borderColor: '#D1D5DB',
+        backgroundColor: colors.border,
     },
     communityName: {
         fontSize: fontSize.sm,
-        color: colors.primary,
         fontWeight: fontWeight.semibold,
-        marginBottom: spacing.sm,
+        color: colors.primary,
+    },
+    imageContainer: {
+        paddingHorizontal: spacing.lg,
+    },
+    eventImage: {
+        width: '100%',
+        height: 108,
+        borderRadius: borderRadius.md,
+        backgroundColor: colors.border,
+    },
+    cardContent: {
+        paddingVertical: spacing.lg,
+        paddingRight: spacing.lg,
+        paddingLeft: spacing.xl,
     },
     title: {
         fontSize: fontSize.lg,
-        color: colors.textPrimary,
         fontWeight: fontWeight.bold,
+        color: colors.textPrimary,
         marginBottom: 2,
     },
     eventDescription: {
         fontSize: fontSize.sm,
         color: colors.textSecondary,
-        lineHeight: 22,
-        marginBottom: spacing.md,
+        lineHeight: 15,
+        marginBottom: spacing.lg,
     },
-    metaGroup: {
+    metaBar: {
+        alignItems: 'flex-start',
+        justifyContent: 'flex-start',
         gap: 2,
+        paddingTop: 0,
+        marginTop: -2,
     },
-    metaRow: {
+    metaItem: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'flex-start',
+        width: '100%',
         minHeight: 18,
     },
-    metaText: {
-        marginLeft: 8,
+    metaItemText: {
+        marginLeft: 4,
         fontSize: fontSize.sm,
         color: colors.textSecondary,
         fontWeight: fontWeight.semibold,
+        textAlign: 'left',
     },
     actions: {
         gap: spacing.sm,
