@@ -1,83 +1,87 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Modal } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Modal, Switch, ScrollView } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import type { Exam } from '../utils';
 import { formatDate } from '../utils';
-import { Feather } from '@expo/vector-icons';
 
 interface ExamDetailModalProps {
     visible: boolean;
     exam: Exam | null;
     onClose: () => void;
-    onNavigateToCalculator?: () => void; // Keep prop signature but ignore usage as requested
+    onNavigateToCalculator?: () => void;
 }
 
-export default function ExamDetailModal({ visible, exam, onClose }: ExamDetailModalProps) {
+export default function ExamDetailModal({ visible, exam, onClose, onNavigateToCalculator }: ExamDetailModalProps) {
+    const [reminderEnabled, setReminderEnabled] = useState(true);
+
     if (!exam) {
         return null;
     }
 
     return (
-        <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-            <TouchableOpacity 
-                style={styles.overlay} 
-                activeOpacity={1} 
-                onPress={onClose}
-            >
-                <TouchableOpacity 
-                    activeOpacity={1} 
-                    style={styles.card}
-                    onPress={(e) => e.stopPropagation()} // Prevent closing when clicking inside card
-                >
-                    {/* Header */}
-                    <View style={styles.headerRow}>
+        <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
+            <View style={styles.overlay}>
+                <View style={styles.container}>
+                    <ScrollView showsVerticalScrollIndicator={false}>
                         <View style={styles.badge}>
                             <Text style={styles.badgeText}>{exam.examType.toUpperCase()}</Text>
                         </View>
-                        <TouchableOpacity onPress={onClose} style={styles.closeIcon}>
-                            <Feather name="x" size={20} color={colors.textSecondary} />
+
+                        <Text style={styles.courseName}>{exam.courseName}</Text>
+                        <Text style={styles.courseCode}>{exam.courseCode}</Text>
+
+                        <View style={styles.detailsList}>
+                            <View style={styles.detailItem}>
+                                <Text style={styles.detailLabel}>Tarih</Text>
+                                <Text style={styles.detailValue}>{formatDate(exam.date)}</Text>
+                            </View>
+                            <View style={styles.detailItem}>
+                                <Text style={styles.detailLabel}>Saat</Text>
+                                <Text style={styles.detailValue}>{exam.startTime} - {exam.endTime}</Text>
+                            </View>
+                            <View style={styles.detailItem}>
+                                <Text style={styles.detailLabel}>Bina</Text>
+                                <Text style={styles.detailValue}>{exam.building}</Text>
+                            </View>
+                            <View style={styles.detailItem}>
+                                <Text style={styles.detailLabel}>Salon</Text>
+                                <Text style={styles.detailValue}>{exam.room}</Text>
+                            </View>
+                            {exam.hasConflict && (
+                                <View style={styles.conflictCard}>
+                                    <Text style={styles.conflictTitle}>Cakisma uyarisi</Text>
+                                    <Text style={styles.conflictText}>
+                                        Bu saat diliminde {exam.conflictWith} ile cakisan bir baska sinav var.
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+
+                        <View style={styles.reminderRow}>
+                            <View>
+                                <Text style={styles.reminderTitle}>Hatirlatici</Text>
+                                <Text style={styles.reminderSubtitle}>Sinavdan bir gun once bildirim al.</Text>
+                            </View>
+                            <Switch
+                                value={reminderEnabled}
+                                onValueChange={setReminderEnabled}
+                                trackColor={{ false: colors.border, true: colors.accent }}
+                                thumbColor={colors.textPrimary}
+                            />
+                        </View>
+
+                        {onNavigateToCalculator && (
+                            <TouchableOpacity style={styles.secondaryButton} onPress={onNavigateToCalculator}>
+                                <Text style={styles.secondaryButtonText}>Puan Hesaplayiciya Git</Text>
+                            </TouchableOpacity>
+                        )}
+
+                        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                            <Text style={styles.closeButtonText}>Kapat</Text>
                         </TouchableOpacity>
-                    </View>
-
-                    {/* Title */}
-                    <Text style={styles.courseName} numberOfLines={2}>{exam.courseName}</Text>
-                    <Text style={styles.courseCode}>{exam.courseCode}</Text>
-
-                    {/* Info Grid */}
-                    <View style={styles.infoGrid}>
-                        <View style={styles.infoCol}>
-                            <View style={styles.infoRow}>
-                                <Feather name="calendar" size={14} color={colors.accent} />
-                                <Text style={styles.infoText}>{formatDate(exam.date)}</Text>
-                            </View>
-                            <View style={styles.infoRow}>
-                                <Feather name="clock" size={14} color={colors.accent} />
-                                <Text style={styles.infoText}>{exam.startTime} - {exam.endTime}</Text>
-                            </View>
-                        </View>
-                        <View style={styles.infoCol}>
-                            <View style={styles.infoRow}>
-                                <Feather name="map" size={14} color={colors.accent} />
-                                <Text style={styles.infoText} numberOfLines={1}>{exam.building}</Text>
-                            </View>
-                            <View style={styles.infoRow}>
-                                <Feather name="map-pin" size={14} color={colors.accent} />
-                                <Text style={styles.infoText} numberOfLines={1}>Derslik: {exam.room}</Text>
-                            </View>
-                        </View>
-                    </View>
-
-                    {/* Conflict Warning */}
-                    {exam.hasConflict && (
-                        <View style={styles.conflictCard}>
-                            <Feather name="alert-triangle" size={16} color={colors.conflictBlockText} />
-                            <Text style={styles.conflictText}>
-                                Çakışma: {exam.conflictWith}
-                            </Text>
-                        </View>
-                    )}
-                </TouchableOpacity>
-            </TouchableOpacity>
+                    </ScrollView>
+                </View>
+            </View>
         </Modal>
     );
 }
@@ -85,89 +89,122 @@ export default function ExamDetailModal({ visible, exam, onClose }: ExamDetailMo
 const styles = StyleSheet.create({
     overlay: {
         flex: 1,
-        backgroundColor: 'rgba(15, 44, 89, 0.4)', // Temaya uygun koyu lacivert yari saydam arka plan
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: spacing.xl,
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        justifyContent: 'flex-end',
     },
-    card: {
-        width: '100%',
-        backgroundColor: '#FFFFFF',
-        borderRadius: borderRadius.xl,
+    container: {
+        backgroundColor: colors.backgroundModal,
+        borderTopLeftRadius: borderRadius.xxl,
+        borderTopRightRadius: borderRadius.xxl,
         padding: spacing.xl,
-        ...shadows.card,
-    },
-    headerRow: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: spacing.md,
+        paddingBottom: spacing.xxxl,
+        maxHeight: '85%',
+        ...shadows.modal,
     },
     badge: {
-        backgroundColor: '#EFF6FF', // Soft blue
-        paddingHorizontal: spacing.sm,
-        paddingVertical: 4,
+        alignSelf: 'flex-start',
+        backgroundColor: colors.accent + '20',
+        paddingHorizontal: spacing.md,
+        paddingVertical: spacing.sm,
         borderRadius: borderRadius.sm,
+        marginBottom: spacing.md,
     },
     badgeText: {
         fontSize: fontSize.xs,
         color: colors.accent,
         fontWeight: fontWeight.bold,
     },
-    closeIcon: {
-        padding: 4,
-        marginTop: -4,
-        marginRight: -4,
-    },
     courseName: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        color: '#0F2C59', // Lacivert tema
-        marginBottom: 2,
+        fontSize: fontSize.title,
+        fontWeight: fontWeight.bold,
+        color: colors.textPrimary,
     },
     courseCode: {
-        fontSize: fontSize.sm,
+        marginTop: spacing.xs,
+        fontSize: fontSize.md,
         color: colors.textSecondary,
-        marginBottom: spacing.lg,
+        marginBottom: spacing.xl,
     },
-    infoGrid: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        backgroundColor: '#F8FAFC',
-        padding: spacing.md,
+    detailsList: {
+        gap: spacing.md,
+        marginBottom: spacing.xl,
+    },
+    detailItem: {
+        backgroundColor: colors.backgroundCard,
         borderRadius: borderRadius.md,
+        padding: spacing.lg,
         borderWidth: 1,
-        borderColor: '#E2E8F0',
+        borderColor: colors.border,
     },
-    infoCol: {
-        flex: 1,
-        gap: spacing.sm,
+    detailLabel: {
+        fontSize: fontSize.xs,
+        color: colors.textMuted,
+        fontWeight: fontWeight.bold,
+        marginBottom: spacing.xs,
     },
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: spacing.sm,
-    },
-    infoText: {
-        fontSize: fontSize.sm,
+    detailValue: {
+        fontSize: fontSize.md,
         color: colors.textPrimary,
-        fontWeight: '500',
+        fontWeight: fontWeight.medium,
     },
     conflictCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#FEF2F2', // Red warning bg
-        borderRadius: borderRadius.sm,
-        padding: spacing.sm,
-        marginTop: spacing.md,
-        borderWidth: 1,
-        borderColor: '#FECACA',
-        gap: spacing.sm,
+        backgroundColor: colors.conflictBlock,
+        borderRadius: borderRadius.md,
+        padding: spacing.lg,
+    },
+    conflictTitle: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
+        color: colors.conflictBlockText,
+        marginBottom: spacing.xs,
     },
     conflictText: {
-        flex: 1,
-        fontSize: fontSize.xs,
-        color: '#DC2626',
-        fontWeight: '600',
+        fontSize: fontSize.sm,
+        color: colors.conflictBlockText,
+        lineHeight: 20,
+    },
+    reminderRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        backgroundColor: colors.backgroundCard,
+        borderRadius: borderRadius.md,
+        padding: spacing.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        marginBottom: spacing.md,
+    },
+    reminderTitle: {
+        fontSize: fontSize.md,
+        color: colors.textPrimary,
+        fontWeight: fontWeight.bold,
+    },
+    reminderSubtitle: {
+        marginTop: spacing.xs,
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+    },
+    secondaryButton: {
+        backgroundColor: colors.backgroundSubtle,
+        borderRadius: borderRadius.md,
+        paddingVertical: spacing.lg,
+        alignItems: 'center',
+        marginBottom: spacing.md,
+    },
+    secondaryButtonText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
+        color: colors.accent,
+    },
+    closeButton: {
+        backgroundColor: colors.accent,
+        borderRadius: borderRadius.md,
+        paddingVertical: spacing.lg,
+        alignItems: 'center',
+    },
+    closeButtonText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.bold,
+        color: colors.textInverse,
     },
 });

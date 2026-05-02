@@ -5,45 +5,55 @@
  * Bandırma Onyedi Eylül Üniversitesi - Sınav Takvimi Modülü
  */
 import React, { useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { colors } from './theme';
+import BottomTabBar, { TabName } from './components/BottomTabBar';
+import HomeScreen from './screens/HomeScreen';
 import CalendarScreen from './screens/CalendarScreen';
 import CalculatorScreen from './screens/CalculatorScreen';
 
-type ScreenName = 'calendar' | 'calculator';
-
 export default function SinavTakvimiScreen() {
-    // Aktif ekran state'i
-    const [activeScreen, setActiveScreen] = useState<ScreenName>('calendar');
+    // Aktif tab state'i
+    const [activeTab, setActiveTab] = useState<TabName>('home');
 
-    // Calculator'a geçiş fonksiyonu
-    const navigateToCalculator = () => {
-        setActiveScreen('calculator');
+    // Takvime geçiş fonksiyonu (HomeScreen'den çağrılır)
+    const navigateToCalendar = () => {
+        setActiveTab('calendar');
     };
 
-    // Takvime geri dönüş fonksiyonu
-    const navigateToCalendar = () => {
-        setActiveScreen('calendar');
+    // Calculator'a geçiş fonksiyonu (ExamDetailModal'dan çağrılır)
+    const navigateToCalculator = () => {
+        setActiveTab('calculator');
     };
 
     // Aktif ekranı render et
     const renderScreen = () => {
-        switch (activeScreen) {
+        switch (activeTab) {
+            case 'home':
+                return <HomeScreen onNavigateToCalendar={navigateToCalendar} />;
             case 'calendar':
                 return <CalendarScreen onNavigateToCalculator={navigateToCalculator} />;
             case 'calculator':
-                return <CalculatorScreen onNavigateBack={navigateToCalendar} />;
+                return <CalculatorScreen />;
+
             default:
-                return <CalendarScreen onNavigateToCalculator={navigateToCalculator} />;
+                return <HomeScreen onNavigateToCalendar={navigateToCalendar} />;
         }
     };
 
     return (
         <SafeAreaView style={styles.container} edges={['top']}>
+            {/* Ana içerik */}
             <View style={styles.content}>
                 {renderScreen()}
             </View>
+
+            {/* Alt navigasyon çubuğu */}
+            <BottomTabBar
+                activeTab={activeTab}
+                onTabPress={setActiveTab}
+            />
         </SafeAreaView>
     );
 }

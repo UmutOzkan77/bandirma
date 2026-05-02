@@ -5,27 +5,27 @@
 
 export const colors = {
     // Primary Colors
-    primaryDark: '#0B2E6D',      // Header, navbar arka planı
-    primaryAccent: '#0B5ED7',    // Seçili elemanlar, vurgu rengi
+    primaryDark: '#1E3A5F',      // Header, navbar arka planı
+    primaryAccent: '#2DD4BF',    // Seçili elemanlar, vurgu rengi (teal)
 
     // Status Colors
     success: '#22C55E',          // Beğeni, olumlu durumlar
     error: '#EF4444',            // Beğenmeme, olumsuz durumlar
-    warning: '#F59E0B',          // Orta yoğunluk, uyarı
+    warning: '#EAB308',          // Orta yoğunluk, uyarı
 
     // Background Colors
-    backgroundLight: '#F4F6FB',  // Ana arka plan
-    backgroundDark: '#0B1F3A',   // Dark mode arka plan
+    backgroundLight: '#F8FAFC',  // Ana arka plan
+    backgroundDark: '#1E293B',   // Dark mode arka plan
     cardWhite: '#FFFFFF',        // Kart arka planları
 
     // Text Colors
-    textDark: '#0B1F3A',         // Başlıklar
-    textSecondary: '#6B7280',    // Alt metinler
+    textDark: '#1E293B',         // Başlıklar
+    textSecondary: '#64748B',    // Alt metinler
     textLight: '#FFFFFF',        // Açık metin (koyu arka plan üzerinde)
 
     // Additional Colors
-    border: '#E5E9F2',           // Kart sınırları
-    shadow: 'rgba(15, 23, 42, 0.08)', // Gölge rengi
+    border: '#E2E8F0',           // Kart sınırları
+    shadow: 'rgba(0, 0, 0, 0.1)', // Gölge rengi
     overlay: 'rgba(0, 0, 0, 0.5)', // Overlay
 
     // Category Colors (for meal icons)

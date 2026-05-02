@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+/**
+ * CalendarScreen - Aylık takvim modal (Supabase entegrasyonlu)
+ */
+import React, { useState, useEffect } from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, fontWeight, borderRadius } from '../theme';
 import { Event } from '../types';
 import { fetchEventDates } from '../services/eventService';
@@ -12,53 +14,41 @@ interface CalendarScreenProps {
     participatedEvents: Set<string>;
 }
 
-export default function CalendarScreen({ onClose, onDateSelect }: CalendarScreenProps) {
-    const [currentDate, setCurrentDate] = useState(new Date());
+export default function CalendarScreen({ onClose, onDateSelect, participatedEvents }: CalendarScreenProps) {
+    const [currentDate, setCurrentDate] = useState(new Date(2024, 4, 1));
     const [selectedDate, setSelectedDate] = useState<string | null>(null);
     const [eventDates, setEventDates] = useState<Map<string, Event[]>>(new Map());
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadEventDates = async () => {
-            setLoading(true);
-            try {
-                const dates = await fetchEventDates();
-                setEventDates(dates);
-
-                const firstDate = Array.from(dates.keys()).sort()[0];
-                if (firstDate) {
-                    setCurrentDate(new Date(`${firstDate}T00:00:00`));
-                }
-            } catch (error) {
-                console.error('Calendar data load error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        void loadEventDates();
+        loadEventDates();
     }, []);
+
+    const loadEventDates = async () => {
+        setLoading(true);
+        try {
+            const dates = await fetchEventDates();
+            setEventDates(dates);
+        } catch (error) {
+            console.error('Calendar data load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleDateSelect = (date: string) => {
         setSelectedDate(date);
-        if (eventDates.has(date)) {
-            onDateSelect(date);
-        }
+        if (eventDates.has(date)) onDateSelect(date);
     };
 
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
-                    <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
-                </TouchableOpacity>
-                <View>
-                    <Text style={styles.headerLabel}>ETKİNLİK TAKVİMİ</Text>
-                    <Text style={styles.headerTitle}>Takvim</Text>
-                </View>
                 <View style={styles.placeholder} />
+                <TouchableOpacity style={styles.closeButton} onPress={onClose} activeOpacity={0.7}>
+                    <Text style={styles.closeIcon}>✕</Text>
+                </TouchableOpacity>
             </View>
-
             {loading ? (
                 <View style={styles.loadingContainer}>
                     <ActivityIndicator size="large" color={colors.primary} />
@@ -68,7 +58,7 @@ export default function CalendarScreen({ onClose, onDateSelect }: CalendarScreen
                     <CalendarGrid
                         currentDate={currentDate}
                         events={eventDates}
-                        participatedEvents={new Set<string>()}
+                        participatedEvents={participatedEvents}
                         selectedDate={selectedDate}
                         onDateSelect={handleDateSelect}
                         onPreviousMonth={() => setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1))}
@@ -82,38 +72,10 @@ export default function CalendarScreen({ onClose, onDateSelect }: CalendarScreen
 
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: colors.backgroundLight },
-    header: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        paddingHorizontal: spacing.xl,
-        paddingTop: spacing.lg,
-        paddingBottom: spacing.md,
-    },
-    closeButton: {
-        width: 36,
-        height: 36,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.border,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.cardLight,
-    },
-    headerLabel: {
-        fontSize: fontSize.xs,
-        fontWeight: fontWeight.medium,
-        color: colors.textSecondary,
-        letterSpacing: 1,
-        textAlign: 'center',
-    },
-    headerTitle: {
-        fontSize: fontSize.xxl,
-        fontWeight: fontWeight.bold,
-        color: colors.textPrimary,
-        textAlign: 'center',
-    },
-    placeholder: { width: 36 },
-    calendarContainer: { flex: 1, justifyContent: 'center', paddingBottom: 40 },
+    header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+    placeholder: { width: 40 },
+    closeButton: { width: 40, height: 40, borderRadius: borderRadius.full, backgroundColor: colors.textSecondary, justifyContent: 'center', alignItems: 'center' },
+    closeIcon: { fontSize: fontSize.lg, color: colors.textWhite, fontWeight: fontWeight.bold },
+    calendarContainer: { flex: 1, justifyContent: 'center', paddingBottom: 100 },
     loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 });

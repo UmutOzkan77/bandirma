@@ -1,10 +1,13 @@
+/**
+ * CommunityDetailScreen - Topluluk detay sayfası (Supabase entegrasyonlu)
+ */
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { colors, spacing, fontSize, fontWeight, borderRadius, shadows } from '../theme';
 import { Community, Event } from '../types';
 import { fetchCommunityById, fetchEventsByCommunity } from '../services/eventService';
 import { formatDateTurkish } from '../mockData';
+import EventMiniCard from '../components/EventMiniCard';
 
 interface CommunityDetailScreenProps {
     communityId: string;
@@ -17,122 +20,103 @@ export default function CommunityDetailScreen({
     communityId,
     isFollowing,
     onFollowToggle,
-    onClose,
+    onClose
 }: CommunityDetailScreenProps) {
     const [community, setCommunity] = useState<Community | null>(null);
     const [communityEvents, setCommunityEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const loadCommunityData = async () => {
-            setLoading(true);
-            try {
-                const [communityData, eventsData] = await Promise.all([
-                    fetchCommunityById(communityId),
-                    fetchEventsByCommunity(communityId),
-                ]);
-                setCommunity(communityData);
-                setCommunityEvents(eventsData);
-            } catch (error) {
-                console.error('Community data load error:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        void loadCommunityData();
+        loadCommunityData();
     }, [communityId]);
+
+    const loadCommunityData = async () => {
+        setLoading(true);
+        try {
+            const [communityData, eventsData] = await Promise.all([
+                fetchCommunityById(communityId),
+                fetchEventsByCommunity(communityId),
+            ]);
+            setCommunity(communityData);
+            setCommunityEvents(eventsData);
+        } catch (error) {
+            console.error('Community data load error:', error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     if (loading) {
         return (
-            <View style={[styles.container, styles.centered]}>
+            <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
                 <ActivityIndicator size="large" color={colors.primary} />
             </View>
         );
     }
 
-    if (!community) {
-        return (
-            <View style={[styles.container, styles.centered]}>
-                <Text style={styles.emptyText}>Topluluk bulunamadı.</Text>
-            </View>
-        );
-    }
+    if (!community) return null;
 
     return (
         <View style={styles.container}>
+            {/* Header */}
             <View style={styles.header}>
-                <TouchableOpacity onPress={onClose} style={styles.backButton} activeOpacity={0.7}>
-                    <Ionicons name="chevron-back" size={22} color={colors.textPrimary} />
+                <TouchableOpacity onPress={onClose} style={styles.backButton}>
+                    <Text style={styles.backIcon}>←</Text>
                 </TouchableOpacity>
-                <View>
-                    <Text style={styles.headerLabel}>TOPLULUK DETAYI</Text>
-                    <Text style={styles.headerTitle}>Topluluk</Text>
-                </View>
+                <Text style={styles.headerTitle}>Topluluk</Text>
                 <View style={styles.placeholder} />
             </View>
 
-            <FlatList
-                data={communityEvents}
-                keyExtractor={(item) => item.id}
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={styles.listContent}
-                ListHeaderComponent={
-                    <View>
-                        <View style={styles.profileCard}>
-                            <Image source={{ uri: community.logo }} style={styles.logo} />
-                            <Text style={styles.communityName}>{community.name}</Text>
-                            {community.description ? <Text style={styles.description}>{community.description}</Text> : null}
+            {/* Community Info */}
+            <View style={styles.communityInfo}>
+                <Image source={{ uri: community.logo }} style={styles.logo} />
+                <View style={styles.nameContainer}>
+                    <Text style={styles.communityName}>{community.name}</Text>
+                    {community.isVerified && <Text style={styles.verifiedBadge}>✓</Text>}
+                </View>
 
-                            <View style={styles.statsRow}>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statValue}>{community.memberCount || 0}</Text>
-                                    <Text style={styles.statLabel}>Üye</Text>
-                                </View>
-                                <View style={styles.statBox}>
-                                    <Text style={styles.statValue}>{communityEvents.length}</Text>
-                                    <Text style={styles.statLabel}>Etkinlik</Text>
-                                </View>
-                            </View>
-
-                            <TouchableOpacity
-                                style={[styles.followButton, isFollowing && styles.followButtonActive]}
-                                onPress={onFollowToggle}
-                                activeOpacity={0.85}
-                            >
-                                <Text style={[styles.followButtonText, isFollowing && styles.followButtonTextActive]}>
-                                    {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                        <Text style={styles.sectionTitle}>Yaklaşan Etkinlikler</Text>
-                    </View>
-                }
-                renderItem={({ item }) => (
-                    <View style={styles.eventRow}>
-                        <Image source={{ uri: item.image }} style={styles.eventImage} />
-                        <View style={styles.eventContent}>
-                            <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
-
-                            <View style={styles.metaBar}>
-                                <View style={styles.metaItem}>
-                                    <Ionicons name="calendar-outline" size={13} color={colors.primary} />
-                                    <Text style={styles.metaItemText}>{formatDateTurkish(item.date)}</Text>
-                                </View>
-                                <View style={styles.metaItem}>
-                                    <Ionicons name="time-outline" size={13} color={colors.primary} />
-                                    <Text style={styles.metaItemText}>{item.time}</Text>
-                                </View>
-                                <View style={styles.metaItem}>
-                                    <Ionicons name="location-outline" size={13} color={colors.primary} />
-                                    <Text style={styles.metaItemText} numberOfLines={1}>{item.location}</Text>
-                                </View>
-                            </View>
-                        </View>
-                    </View>
+                {community.description && (
+                    <Text style={styles.description}>{community.description}</Text>
                 )}
-                ListEmptyComponent={<Text style={styles.emptyText}>Henüz etkinlik yok.</Text>}
-            />
+
+                <View style={styles.statsContainer}>
+                    <View style={styles.stat}>
+                        <Text style={styles.statValue}>{community.memberCount || 0}</Text>
+                        <Text style={styles.statLabel}>Üye</Text>
+                    </View>
+                    <View style={styles.stat}>
+                        <Text style={styles.statValue}>{communityEvents.length}</Text>
+                        <Text style={styles.statLabel}>Etkinlik</Text>
+                    </View>
+                </View>
+
+                {/* Follow Button */}
+                <TouchableOpacity
+                    style={[styles.followButton, isFollowing && styles.followingButton]}
+                    onPress={onFollowToggle}
+                >
+                    <Text style={[styles.followButtonText, isFollowing && styles.followingButtonText]}>
+                        {isFollowing ? 'Takip Ediliyor' : 'Takip Et'}
+                    </Text>
+                </TouchableOpacity>
+            </View>
+
+            {/* Events List */}
+            <View style={styles.eventsSection}>
+                <Text style={styles.sectionTitle}>Etkinlikler</Text>
+                <FlatList
+                    data={communityEvents}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <EventMiniCard event={item} community={community} />
+                    )}
+                    contentContainerStyle={styles.eventsList}
+                    showsVerticalScrollIndicator={false}
+                    ListEmptyComponent={
+                        <Text style={styles.emptyText}>Henüz etkinlik yok</Text>
+                    }
+                />
+            </View>
         </View>
     );
 }
@@ -140,186 +124,130 @@ export default function CommunityDetailScreen({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: colors.backgroundLight,
-    },
-    centered: {
-        alignItems: 'center',
-        justifyContent: 'center',
+        backgroundColor: colors.backgroundLight
     },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingHorizontal: spacing.xl,
-        paddingTop: spacing.lg,
-        paddingBottom: spacing.md,
-        backgroundColor: colors.backgroundLight,
+        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
     },
     backButton: {
-        width: 36,
-        height: 36,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.border,
+        width: 40,
+        height: 40,
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: 'center'
     },
-    headerLabel: {
-        fontSize: fontSize.xs,
-        fontWeight: fontWeight.medium,
-        color: colors.textSecondary,
-        letterSpacing: 1,
-        textAlign: 'center',
+    backIcon: {
+        fontSize: 24,
+        color: colors.textPrimary
     },
     headerTitle: {
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.bold,
+        color: colors.textPrimary
+    },
+    placeholder: {
+        width: 40
+    },
+    communityInfo: {
+        padding: spacing.lg,
+        alignItems: 'center',
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
+    },
+    logo: {
+        width: 100,
+        height: 100,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.border,
+        marginBottom: spacing.md,
+    },
+    nameContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: spacing.sm
+    },
+    communityName: {
         fontSize: fontSize.xxl,
         fontWeight: fontWeight.bold,
         color: colors.textPrimary,
-        textAlign: 'center',
     },
-    placeholder: {
-        width: 36,
-    },
-    listContent: {
-        paddingHorizontal: spacing.lg,
-        paddingBottom: spacing.xxxl,
-    },
-    profileCard: {
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: borderRadius.lg,
-        backgroundColor: colors.cardLight,
-        alignItems: 'center',
-        padding: spacing.lg,
-        marginBottom: spacing.md,
-        ...shadows.card,
-    },
-    logo: {
-        width: 82,
-        height: 82,
-        borderRadius: 41,
-        marginBottom: spacing.md,
-        backgroundColor: colors.border,
-    },
-    communityName: {
-        fontSize: fontSize.xl,
-        fontWeight: fontWeight.bold,
-        color: colors.textPrimary,
-        textAlign: 'center',
+    verifiedBadge: {
+        fontSize: 18,
+        color: colors.primary,
+        marginLeft: spacing.xs
     },
     description: {
-        marginTop: spacing.sm,
-        fontSize: fontSize.sm,
+        fontSize: 14,
         color: colors.textSecondary,
         textAlign: 'center',
-        lineHeight: 20,
+        lineHeight: 22,
+        marginBottom: spacing.lg,
+        paddingHorizontal: spacing.md,
     },
-    statsRow: {
+    statsContainer: {
         flexDirection: 'row',
-        gap: spacing.sm,
-        marginTop: spacing.md,
-        width: '100%',
+        gap: 32,
+        marginBottom: spacing.lg
     },
-    statBox: {
-        flex: 1,
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: borderRadius.md,
-        paddingVertical: spacing.sm,
-        alignItems: 'center',
+    stat: {
+        alignItems: 'center'
     },
     statValue: {
+        fontSize: 20,
+        fontWeight: '800',
+        color: colors.textPrimary
+    },
+    statLabel: {
+        fontSize: 12,
+        color: colors.textSecondary,
+        marginTop: 2
+    },
+    followButton: {
+        backgroundColor: colors.primary,
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 14,
+        minWidth: 180,
+        alignItems: 'center',
+        ...shadows.card,
+    },
+    followingButton: {
+        backgroundColor: '#F1F5F9',
+        borderWidth: 1,
+        borderColor: colors.border,
+        elevation: 0,
+        shadowOpacity: 0,
+    },
+    followButtonText: {
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#FFFFFF'
+    },
+    followingButtonText: {
+        color: colors.textSecondary
+    },
+    eventsSection: {
+        flex: 1,
+        padding: spacing.lg
+    },
+    sectionTitle: {
         fontSize: fontSize.xl,
         fontWeight: fontWeight.bold,
         color: colors.textPrimary,
+        marginBottom: spacing.md,
     },
-    statLabel: {
-        fontSize: fontSize.xs,
-        color: colors.textSecondary,
-        marginTop: 2,
-    },
-    followButton: {
-        marginTop: spacing.md,
-        width: '100%',
-        height: 44,
-        borderRadius: borderRadius.md,
-        borderWidth: 1,
-        borderColor: colors.primary,
-        backgroundColor: colors.primary,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    followButtonActive: {
-        backgroundColor: colors.cardLight,
-        borderColor: colors.border,
-    },
-    followButtonText: {
-        color: colors.textWhite,
-        fontSize: fontSize.sm,
-        fontWeight: fontWeight.semibold,
-    },
-    followButtonTextActive: {
-        color: colors.textSecondary,
-    },
-    sectionTitle: {
-        marginTop: spacing.xs,
-        marginBottom: spacing.sm,
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        fontWeight: fontWeight.semibold,
-        letterSpacing: 0.5,
-    },
-    eventRow: {
-        flexDirection: 'row',
-        borderWidth: 1,
-        borderColor: colors.border,
-        borderRadius: borderRadius.md,
-        backgroundColor: colors.cardLight,
-        padding: spacing.sm,
-        marginBottom: spacing.sm,
-        ...shadows.card,
-    },
-    eventImage: {
-        width: 72,
-        height: 72,
-        borderRadius: borderRadius.sm,
-        marginRight: spacing.sm,
-        backgroundColor: colors.border,
-    },
-    eventContent: {
-        flex: 1,
-    },
-    eventTitle: {
-        fontSize: fontSize.md,
-        fontWeight: fontWeight.semibold,
-        color: colors.textPrimary,
-        marginBottom: 4,
-    },
-    metaBar: {
-        alignItems: 'flex-start',
-        justifyContent: 'flex-start',
-        gap: 2,
-        paddingTop: 0,
-        marginTop: -2,
-    },
-    metaItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'flex-start',
-        width: '100%',
-        minHeight: 18,
-    },
-    metaItemText: {
-        marginLeft: 4,
-        fontSize: fontSize.sm,
-        color: colors.textSecondary,
-        fontWeight: fontWeight.semibold,
-        textAlign: 'left',
+    eventsList: {
+        paddingBottom: spacing.xxl
     },
     emptyText: {
-        textAlign: 'center',
-        color: colors.textSecondary,
-        marginTop: spacing.xl,
         fontSize: fontSize.md,
+        color: colors.textSecondary,
+        textAlign: 'center',
+        marginTop: spacing.xxl,
     },
 });

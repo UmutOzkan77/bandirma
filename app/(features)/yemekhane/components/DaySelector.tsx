@@ -14,30 +14,26 @@ interface DaySelectorProps {
 }
 
 export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySelectorProps) {
-    const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-    const fallbackDay = days[0] || null;
-    const weekdayDays = weekdayOrder.map((name) => ({
-        name,
-        day: days.find((day) => day.dayName === name) || fallbackDay,
-    }));
-
     return (
         <ScrollView
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.container}
         >
-            {weekdayDays.map(({ name, day }) => {
-                const isSelected = day?.id === selectedDayId;
+            {days.map((day) => {
+                const isSelected = day.id === selectedDayId;
                 return (
                     <TouchableOpacity
-                        key={day?.id ?? `weekday-${name}`}
+                        key={day.id}
                         style={[styles.dayItem, isSelected && styles.dayItemSelected]}
-                        onPress={() => day && onDaySelect(day.id)}
+                        onPress={() => onDaySelect(day.id)}
                         activeOpacity={0.7}
                     >
-                        <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
-                            {name}
+                        <Text style={[styles.dayShort, isSelected && styles.dayShortSelected]}>
+                            {day.dayShort}
+                        </Text>
+                        <Text style={[styles.dayNumber, isSelected && styles.dayNumberSelected]}>
+                            {day.dayNumber}
                         </Text>
                     </TouchableOpacity>
                 );
@@ -54,23 +50,34 @@ const styles = StyleSheet.create({
         gap: spacing.sm,
     },
     dayItem: {
-        paddingHorizontal: spacing.lg,
+        width: 56,
+        height: 72,
+        borderRadius: borderRadius.lg,
+        backgroundColor: 'transparent',
+        alignItems: 'center',
+        justifyContent: 'center',
         paddingVertical: spacing.sm,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.cardWhite,
-        borderWidth: 1,
-        borderColor: colors.border,
     },
     dayItemSelected: {
-        backgroundColor: colors.primaryDark,
-        borderColor: colors.primaryDark,
+        backgroundColor: colors.primaryAccent,
     },
-    dayLabel: {
+    dayShort: {
         fontSize: fontSize.sm,
         fontWeight: fontWeight.medium,
-        color: colors.textSecondary,
-    },
-    dayLabelSelected: {
         color: colors.textLight,
+        opacity: 0.7,
+        marginBottom: spacing.xs,
+    },
+    dayShortSelected: {
+        opacity: 1,
+        color: colors.textDark,
+    },
+    dayNumber: {
+        fontSize: fontSize.xl,
+        fontWeight: fontWeight.bold,
+        color: colors.textLight,
+    },
+    dayNumberSelected: {
+        color: colors.textDark,
     },
 });

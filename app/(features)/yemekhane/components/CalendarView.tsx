@@ -116,13 +116,10 @@ export default function CalendarView({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: colors.cardWhite,
+        backgroundColor: colors.backgroundDark,
         borderRadius: borderRadius.xl,
         margin: spacing.lg,
         padding: spacing.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
-        ...shadows.card,
     },
     monthSelector: {
         flexDirection: 'row',
@@ -136,13 +133,13 @@ const styles = StyleSheet.create({
     },
     arrow: {
         fontSize: 28,
-        color: colors.textDark,
+        color: colors.textLight,
         fontWeight: fontWeight.bold,
     },
     monthText: {
         fontSize: fontSize.lg,
         fontWeight: fontWeight.semibold,
-        color: colors.textDark,
+        color: colors.textLight,
     },
     weekdaysRow: {
         flexDirection: 'row',
@@ -175,9 +172,6 @@ const styles = StyleSheet.create({
         borderRadius: borderRadius.full,
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: colors.backgroundLight,
-        borderWidth: 1,
-        borderColor: colors.border,
     },
     dayText: {
         fontSize: fontSize.sm,
@@ -195,7 +189,7 @@ const styles = StyleSheet.create({
         marginTop: spacing.xl,
         paddingTop: spacing.lg,
         borderTopWidth: 1,
-        borderTopColor: colors.border,
+        borderTopColor: `${colors.textSecondary}30`,
     },
     legendItem: {
         flexDirection: 'row',
@@ -209,6 +203,6 @@ const styles = StyleSheet.create({
     },
     legendText: {
         fontSize: fontSize.xs,
-        color: colors.textSecondary,
+        color: colors.textLight,
     },
 });

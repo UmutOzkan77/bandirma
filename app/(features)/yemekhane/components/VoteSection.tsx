@@ -3,8 +3,8 @@
  * Beğendim/Beğenmedim oylama bölümü
  * Oy sonrası 4 saniyelik toast bildirim gösterir
  */
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Animated } from 'react-native';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 
 interface VoteSectionProps {
@@ -15,15 +15,56 @@ interface VoteSectionProps {
 }
 
 export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteSectionProps) {
-    const totalVotes = likes + dislikes;
-    const likePercent = totalVotes > 0 ? Math.round((likes / totalVotes) * 100) : 50;
+    const total = likes + dislikes;
+    const likePercentage = total > 0 ? Math.round((likes / total) * 100) : 50;
+
+    // Toast state
+    const [showToast, setShowToast] = useState(false);
+    const [toastType, setToastType] = useState<'like' | 'dislike'>('like');
+    const toastAnim = useRef(new Animated.Value(100)).current;
+    const toastOpacity = useRef(new Animated.Value(0)).current;
+
     const handleVote = (vote: 'like' | 'dislike') => {
         onVote(vote);
+        setToastType(vote);
+        setShowToast(true);
+
+        // Toast animasyonu - yukarı kayarak gel
+        Animated.parallel([
+            Animated.timing(toastAnim, {
+                toValue: 0,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+            Animated.timing(toastOpacity, {
+                toValue: 1,
+                duration: 300,
+                useNativeDriver: true,
+            }),
+        ]).start();
+
+        // 4 saniye sonra kaybolsun
+        setTimeout(() => {
+            Animated.parallel([
+                Animated.timing(toastAnim, {
+                    toValue: 100,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(toastOpacity, {
+                    toValue: 0,
+                    duration: 300,
+                    useNativeDriver: true,
+                }),
+            ]).start(() => {
+                setShowToast(false);
+            });
+        }, 4000);
     };
 
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>MENÜYÜ DEĞERLENDİR</Text>
+            <Text style={styles.title}>Bugünkü yemeği nasıl buldun?</Text>
 
             <View style={styles.buttonContainer}>
                 {/* Beğendim butonu */}
@@ -38,8 +79,11 @@ export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteS
                     <Text style={[
                         styles.voteIcon,
                         userVote === 'like' && styles.voteIconActive
-                    ]}>✓</Text>
-                    <Text style={styles.voteLabel}>Beğendim</Text>
+                    ]}>👍</Text>
+                    <Text style={[
+                        styles.voteLabel,
+                        userVote === 'like' && styles.voteLabelActive
+                    ]}>Beğendim</Text>
                 </TouchableOpacity>
 
                 {/* Beğenmedim butonu */}
@@ -54,20 +98,48 @@ export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteS
                     <Text style={[
                         styles.voteIcon,
                         userVote === 'dislike' && styles.voteIconActive
-                    ]}>✕</Text>
-                    <Text style={styles.voteLabel}>Beğenmedim</Text>
+                    ]}>👎</Text>
+                    <Text style={[
+                        styles.voteLabel,
+                        userVote === 'dislike' && styles.voteLabelActive
+                    ]}>Beğenmedim</Text>
                 </TouchableOpacity>
             </View>
 
-            <View style={styles.barContainer}>
-                <View style={styles.barBackground}>
-                    <View style={[styles.barPositive, { width: `${likePercent}%` }]} />
+            {/* Oy yüzdeleri (oy verildikten sonra göster) */}
+            {userVote && (
+                <View style={styles.resultContainer}>
+                    <View style={styles.progressBar}>
+                        <View style={[styles.progressFill, { width: `${likePercentage}%` }]} />
+                    </View>
+                    <View style={styles.resultStats}>
+                        <Text style={styles.resultText}>
+                            <Text style={styles.resultHighlight}>{likes}</Text> Beğeni
+                        </Text>
+                        <Text style={styles.resultText}>
+                            <Text style={styles.resultHighlightNegative}>{dislikes}</Text> Beğenmeme
+                        </Text>
+                    </View>
                 </View>
-                <View style={styles.barLabels}>
-                    <Text style={styles.barText}>%{likePercent} Beğeni</Text>
-                    <Text style={styles.barText}>%{100 - likePercent} Beğenmeme</Text>
-                </View>
-            </View>
+            )}
+
+            {/* Toast Bildirim */}
+            {showToast && (
+                <Animated.View
+                    style={[
+                        styles.toast,
+                        toastType === 'like' ? styles.toastLike : styles.toastDislike,
+                        {
+                            transform: [{ translateY: toastAnim }],
+                            opacity: toastOpacity,
+                        },
+                    ]}
+                >
+                    <Text style={styles.toastText}>
+                        {toastType === 'like' ? '👍' : '👎'} Oyunuz kaydedildi!
+                    </Text>
+                </Animated.View>
+            )}
         </View>
     );
 }
@@ -75,81 +147,110 @@ export default function VoteSection({ likes, dislikes, userVote, onVote }: VoteS
 const styles = StyleSheet.create({
     container: {
         backgroundColor: colors.cardWhite,
-        paddingVertical: spacing.lg,
+        paddingVertical: spacing.xl,
         paddingHorizontal: spacing.lg,
         alignItems: 'center',
-        borderRadius: borderRadius.xl,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginHorizontal: spacing.lg,
-        marginTop: spacing.md,
-        ...shadows.card,
+        position: 'relative',
     },
     title: {
-        fontSize: fontSize.xs,
-        fontWeight: fontWeight.semibold,
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.medium,
         color: colors.textDark,
-        marginBottom: spacing.md,
-        letterSpacing: 0.8,
+        marginBottom: spacing.lg,
     },
     buttonContainer: {
         flexDirection: 'row',
-        gap: spacing.lg,
+        gap: spacing.xl,
     },
     voteButton: {
         alignItems: 'center',
-        paddingVertical: spacing.sm,
-        paddingHorizontal: spacing.lg,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.xl,
         borderRadius: borderRadius.lg,
         backgroundColor: colors.backgroundLight,
-        minWidth: 88,
+        minWidth: 100,
+        ...shadows.button,
     },
     voteButtonLikeActive: {
-        backgroundColor: `${colors.success}15`,
-        borderWidth: 1,
+        backgroundColor: `${colors.success}20`,
+        borderWidth: 2,
         borderColor: colors.success,
     },
     voteButtonDislikeActive: {
-        backgroundColor: `${colors.error}12`,
-        borderWidth: 1,
+        backgroundColor: `${colors.error}20`,
+        borderWidth: 2,
         borderColor: colors.error,
     },
     voteIcon: {
-        fontSize: 22,
-        marginBottom: spacing.xs,
+        fontSize: 28,
+        marginBottom: spacing.sm,
         opacity: 0.7,
     },
     voteIconActive: {
         opacity: 1,
     },
     voteLabel: {
-        fontSize: fontSize.xs,
+        fontSize: fontSize.sm,
         color: colors.textSecondary,
         fontWeight: fontWeight.medium,
     },
-    barContainer: {
+    voteLabelActive: {
+        color: colors.textDark,
+        fontWeight: fontWeight.semibold,
+    },
+    resultContainer: {
         width: '100%',
-        marginTop: spacing.lg,
+        marginTop: spacing.xl,
     },
-    barBackground: {
-        height: 10,
+    progressBar: {
+        height: 8,
+        backgroundColor: `${colors.error}30`,
         borderRadius: borderRadius.full,
-        backgroundColor: `${colors.error}20`,
         overflow: 'hidden',
+        marginBottom: spacing.md,
     },
-    barPositive: {
+    progressFill: {
         height: '100%',
         backgroundColor: colors.success,
         borderRadius: borderRadius.full,
     },
-    barLabels: {
-        marginTop: spacing.sm,
+    resultStats: {
         flexDirection: 'row',
         justifyContent: 'space-between',
     },
-    barText: {
-        fontSize: fontSize.xs,
+    resultText: {
+        fontSize: fontSize.sm,
         color: colors.textSecondary,
-        fontWeight: fontWeight.medium,
+    },
+    resultHighlight: {
+        fontWeight: fontWeight.bold,
+        color: colors.success,
+    },
+    resultHighlightNegative: {
+        fontWeight: fontWeight.bold,
+        color: colors.error,
+    },
+    // Toast styles
+    toast: {
+        position: 'absolute',
+        bottom: 8,
+        left: spacing.lg,
+        right: spacing.lg,
+        paddingVertical: spacing.md,
+        paddingHorizontal: spacing.lg,
+        borderRadius: borderRadius.lg,
+        alignItems: 'center',
+        ...shadows.card,
+    },
+    toastLike: {
+        backgroundColor: colors.success,
+    },
+    toastDislike: {
+        backgroundColor: colors.error,
+    },
+    toastText: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
+        color: colors.textLight,
     },
 });

@@ -66,8 +66,6 @@ interface AcademicContextType {
     getAbsenceCard: (offeringId: string) => ReturnType<typeof buildAbsenceCard>['card'] | null;
     recordAbsence: (offeringId: string) => Promise<void>;
     undoLastAbsence: (offeringId: string) => Promise<void>;
-    addExam: (exam: { courseName: string; courseCode: string; instructor: string; date: string; startTime: string; endTime: string; room: string }) => void;
-    removeExam: (examId: string) => void;
 }
 
 const AcademicContext = createContext<AcademicContextType>({
@@ -94,8 +92,6 @@ const AcademicContext = createContext<AcademicContextType>({
     getAbsenceCard: () => null,
     recordAbsence: async () => {},
     undoLastAbsence: async () => {},
-    addExam: () => {},
-    removeExam: () => {},
 });
 
 export function AcademicProvider({ children }: { children: React.ReactNode }) {
@@ -109,7 +105,6 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
     const [overrides, setOverrides] = useState<LocalCourseOverride>({ addedOfferingIds: [], removedOfferingIds: [] });
     const [absenceState, setAbsenceState] = useState<LocalAbsenceState>({});
     const [menuPeriod, setMenuPeriod] = useState<CafeteriaMenuPeriod | null>(null);
-    const [manualExams, setManualExams] = useState<ExamViewModel[]>([]);
 
     const refreshAcademicData = async () => {
         if (!profile) {
@@ -183,8 +178,7 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
 
     const timetableEntries = useMemo(() => buildTimetableEntries(effectiveOfferings), [effectiveOfferings]);
     const todayTimetable = useMemo(() => getTodayTimetableEntries(effectiveOfferings), [effectiveOfferings]);
-    const examListFromOfferings = useMemo(() => buildExamViewModels(effectiveOfferings), [effectiveOfferings]);
-    const examList = useMemo(() => [...examListFromOfferings, ...manualExams], [examListFromOfferings, manualExams]);
+    const examList = useMemo(() => buildExamViewModels(effectiveOfferings), [effectiveOfferings]);
     const nextExam = useMemo(() => getNextExam(examList), [examList]);
     const todaysMenu = useMemo(() => getMenuDayForDate(menuPeriod), [menuPeriod]);
 
@@ -273,28 +267,6 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
         await persistAbsenceState(nextAbsenceState);
     };
 
-    const addExam = (examData: { courseName: string; courseCode: string; instructor: string; date: string; startTime: string; endTime: string; room: string }) => {
-        const newExam: ExamViewModel = {
-            id: `manual-${Date.now()}`,
-            offeringId: `manual-${Date.now()}`,
-            courseCode: examData.courseCode,
-            courseName: examData.courseName,
-            examType: 'vize',
-            date: examData.date,
-            startTime: examData.startTime,
-            endTime: examData.endTime,
-            building: '',
-            room: examData.room,
-            hasConflict: false,
-            conflictWith: null,
-        };
-        setManualExams(prev => [...prev, newExam]);
-    };
-
-    const removeExam = (examId: string) => {
-        setManualExams(prev => prev.filter(e => e.id !== examId));
-    };
-
     return (
         <AcademicContext.Provider
             value={{
@@ -321,8 +293,6 @@ export function AcademicProvider({ children }: { children: React.ReactNode }) {
                 getAbsenceCard,
                 recordAbsence,
                 undoLastAbsence,
-                addExam,
-                removeExam,
             }}
         >
             {children}

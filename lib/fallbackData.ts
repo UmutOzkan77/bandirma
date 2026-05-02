@@ -19,6 +19,13 @@ interface FallbackDataset {
 }
 
 const DAY_NAMES = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
+const SLOT_TIMES = [
+    ['08:45', '10:20'],
+    ['10:25', '12:00'],
+    ['12:50', '14:25'],
+    ['14:30', '16:05'],
+    ['16:10', '17:45'],
+] as const;
 
 function toIsoDate(date: Date) {
     return date.toISOString().slice(0, 10);
@@ -30,241 +37,235 @@ function addDays(date: Date, days: number) {
     return next;
 }
 
-function getWeekdayInMonth(baseDate: Date, weekday: number, weekOffset = 0) {
-    const date = new Date(baseDate.getFullYear(), baseDate.getMonth(), 1);
-    while (date.getDay() !== weekday) {
-        date.setDate(date.getDate() + 1);
-    }
-    date.setDate(date.getDate() + weekOffset * 7);
-    return date;
+const departments: Department[] = [
+    {
+        id: 'dep-ybs',
+        facultyName: 'Ömer Seyfettin Uygulamalı Bilimler Fakültesi',
+        departmentName: 'Yönetim Bilişim Sistemleri',
+        code: 'YBS',
+        isActive: true,
+    },
+    {
+        id: 'dep-ceng-en',
+        facultyName: 'Mühendislik ve Doğa Bilimleri Fakültesi',
+        departmentName: 'Bilgisayar Mühendisliği (İngilizce)',
+        code: 'CENG-EN',
+        isActive: true,
+    },
+];
+
+type CourseSeed = {
+    code: string;
+    name: string;
+    instructor: string;
+    room: string;
+    day: number;
+    slot: number;
+};
+
+const courseSeeds: Record<string, Record<number, CourseSeed[]>> = {
+    YBS: {
+        1: [
+            { code: 'YBS1203', name: 'Yönetim Bilişim Sistemlerine Giriş II', instructor: 'Dr. Öğr. Üyesi Emre Yıldız', room: 'UBF-101', day: 0, slot: 0 },
+            { code: 'IKT1202', name: 'Mikro İktisat', instructor: 'Dr. Öğr. Üyesi Selen Akın', room: 'UBF-102', day: 1, slot: 1 },
+            { code: 'MAT1202', name: 'Matematik II', instructor: 'Doç. Dr. Barış Acar', room: 'UBF-201', day: 2, slot: 2 },
+            { code: 'HUK1202', name: 'Temel Hukuk', instructor: 'Dr. Öğr. Üyesi Aylin Kara', room: 'UBF-103', day: 3, slot: 1 },
+        ],
+        2: [
+            { code: 'YBS2204', name: 'Veritabanı Yönetim Sistemleri', instructor: 'Dr. Öğr. Üyesi Ece Demir', room: 'Lab-1', day: 0, slot: 1 },
+            { code: 'YBS2206', name: 'Sistem Analizi ve Tasarımı', instructor: 'Dr. Öğr. Üyesi Can Öztürk', room: 'UBF-203', day: 1, slot: 2 },
+            { code: 'YBS2208', name: 'Nesne Yönelimli Programlama', instructor: 'Öğr. Gör. Mert Kaya', room: 'Lab-2', day: 2, slot: 3 },
+            { code: 'YBS2210', name: 'İşletme İstatistiği', instructor: 'Dr. Öğr. Üyesi Seda Arslan', room: 'UBF-204', day: 4, slot: 0 },
+        ],
+        3: [
+            { code: 'YBS3202', name: 'Kurumsal Kaynak Planlama', instructor: 'Dr. Öğr. Üyesi Deniz Yalçın', room: 'UBF-301', day: 0, slot: 2 },
+            { code: 'YBS3204', name: 'İş Zekası ve Veri Ambarı', instructor: 'Doç. Dr. Zeynep Şahin', room: 'Lab-1', day: 1, slot: 3 },
+            { code: 'YBS3206', name: 'E-Ticaret Sistemleri', instructor: 'Dr. Öğr. Üyesi Kerem Uslu', room: 'UBF-302', day: 3, slot: 0 },
+            { code: 'YBS3208', name: 'Proje Yönetimi', instructor: 'Dr. Öğr. Üyesi Elif Koç', room: 'UBF-303', day: 4, slot: 1 },
+        ],
+        4: [
+            { code: 'YBS4202', name: 'Bilişim Sistemleri Güvenliği', instructor: 'Dr. Öğr. Üyesi Alper Tuncer', room: 'Lab-2', day: 0, slot: 3 },
+            { code: 'YBS4204', name: 'Dijital Dönüşüm Yönetimi', instructor: 'Doç. Dr. Melis Aydın', room: 'UBF-401', day: 1, slot: 1 },
+            { code: 'YBS4206', name: 'Bitirme Projesi', instructor: 'Bölüm Öğretim Üyeleri', room: 'Proje Ofisi', day: 2, slot: 4 },
+            { code: 'YBS4208', name: 'Karar Destek Sistemleri', instructor: 'Dr. Öğr. Üyesi Burak Ergin', room: 'UBF-402', day: 4, slot: 2 },
+        ],
+    },
+    'CENG-EN': {
+        1: [
+            { code: 'MTI1221', name: 'Mathematics II', instructor: 'Prof. Dr. Mehmet Ali Akınlar', room: 'Derslik 9', day: 0, slot: 0 },
+            { code: 'BMI1222', name: 'Object Oriented Programming', instructor: 'Dr. Öğr. Üyesi Alpay Doruk', room: 'Tıp 10', day: 1, slot: 1 },
+            { code: 'BMI1221', name: 'Discrete Mathematics', instructor: 'Prof. Dr. Hüseyin Işık', room: 'Derslik 7', day: 2, slot: 2 },
+            { code: 'FZI1201', name: 'Physics II', instructor: 'Doç. Dr. Bülent Büyük', room: 'Derslik 7', day: 4, slot: 2 },
+        ],
+        2: [
+            { code: 'BMI2221', name: 'Logic Circuits', instructor: 'Doç. Dr. Semih Korkmaz', room: 'Tıp 10', day: 0, slot: 1 },
+            { code: 'BMI2223', name: 'Database Management Systems', instructor: 'Dr. Öğr. Üyesi Arzum Karataş', room: 'Derslik 8', day: 2, slot: 1 },
+            { code: 'BMI2224', name: 'Algorithms', instructor: 'Dr. Öğr. Üyesi Erkut Arıcan', room: 'Derslik 7', day: 4, slot: 0 },
+            { code: 'BMI2225', name: 'Internet Based Programming', instructor: 'Dr. Öğr. Üyesi Mehmet Sevi', room: 'Derslik 9', day: 4, slot: 2 },
+        ],
+        3: [
+            { code: 'BMI3221', name: 'Automata Theory', instructor: 'Dr. Öğr. Üyesi Muhammed Milani', room: 'Derslik 7', day: 0, slot: 1 },
+            { code: 'BMI3225', name: 'Computer Operating Systems', instructor: 'Dr. Öğr. Üyesi Alpay Doruk', room: 'Derslik 10', day: 4, slot: 1 },
+            { code: 'BMI3223', name: 'Software Engineering', instructor: 'Dr. Öğr. Üyesi Erkut Arıcan', room: 'Derslik 2', day: 3, slot: 2 },
+            { code: 'BMI3227', name: 'Computer Networks', instructor: 'Doç. Dr. Selahattin Koşunalp', room: 'Derslik 2', day: 4, slot: 3 },
+        ],
+        4: [
+            { code: 'BMI4246', name: 'Optimization Theory', instructor: 'Dr. Öğr. Üyesi Cemil Közkurt', room: 'Derslik 2', day: 0, slot: 1 },
+            { code: 'BMI4241', name: 'Parallel Programming', instructor: 'Doç. Dr. Mehmet Akif Çifçi', room: 'Derslik 7', day: 2, slot: 1 },
+            { code: 'BMI4244', name: 'Pattern Recognition', instructor: 'Dr. Öğr. Üyesi Bahar Milani', room: 'Derslik 3', day: 4, slot: 1 },
+            { code: 'BMI4248', name: 'Graduation Project', instructor: 'Department Members', room: 'Project Lab', day: 3, slot: 4 },
+        ],
+    },
+};
+
+function buildCatalog() {
+    const seen = new Map<string, CourseCatalogItem>();
+    Object.values(courseSeeds).forEach((byClass) => {
+        Object.values(byClass).flat().forEach((seed) => {
+            seen.set(seed.code, {
+                id: `catalog-${seed.code.toLowerCase()}`,
+                courseCode: seed.code,
+                courseName: seed.name,
+                credits: 4,
+                isActive: true,
+            });
+        });
+    });
+    return Array.from(seen.values());
 }
 
-function createMenuDays(periodId: string, monthDate: Date): CafeteriaMenuDay[] {
-    const recipeSets = [
-        [
-            ['Mercimek Corbasi', 'soup', 145],
-            ['Firinda Tavuk', 'main', 380],
-            ['Pirinç Pilavi', 'side', 260],
-            ['Cacik', 'salad', 90],
-        ],
-        [
-            ['Ezogelin Corbasi', 'soup', 160],
-            ['Etli Nohut', 'main', 420],
-            ['Bulgur Pilavi', 'side', 240],
-            ['Mevsim Salata', 'salad', 80],
-        ],
-        [
-            ['Domates Corbasi', 'soup', 150],
-            ['Kofte', 'main', 400],
-            ['Makarna', 'side', 300],
-            ['Ayran', 'drink', 95],
-        ],
-        [
-            ['Sebze Corbasi', 'soup', 130],
-            ['Tavuk Sote', 'main', 360],
-            ['Patates Pure', 'side', 210],
-            ['Meyve', 'dessert', 120],
-        ],
-    ] as const;
+function buildOfferings(activeTerm: AcademicTerm, catalog: CourseCatalogItem[]) {
+    const catalogByCode = new Map(catalog.map((course) => [course.courseCode, course]));
+    const offerings: CourseOffering[] = [];
 
-    const days: CafeteriaMenuDay[] = [];
+    departments.forEach((department) => {
+        const seedsByClass = courseSeeds[department.code] ?? {};
+        Object.entries(seedsByClass).forEach(([classLevel, seeds]) => {
+            seeds.forEach((seed, index) => {
+                const [startTime, endTime] = SLOT_TIMES[seed.slot];
+                const course = catalogByCode.get(seed.code)!;
+                const id = `offering-${department.code.toLowerCase()}-${classLevel}-${index + 1}`;
+                offerings.push({
+                    id,
+                    courseId: course.id,
+                    termId: activeTerm.id,
+                    departmentId: department.id,
+                    classLevel: Number(classLevel),
+                    section: 'A',
+                    instructorName: seed.instructor,
+                    isActive: true,
+                    weeklyHours: 3,
+                    allowedAbsenceHours: 9,
+                    course,
+                    scheduleSlots: [
+                        {
+                            id: `slot-${id}`,
+                            offeringId: id,
+                            dayOfWeek: seed.day,
+                            startTime,
+                            endTime,
+                            room: seed.room,
+                            building: department.code === 'YBS' ? 'Ömer Seyfettin UBF' : 'Mühendislik ve Doğa Bilimleri Fakültesi',
+                            deliveryType: seed.room.toLowerCase().includes('lab') ? 'lab' : 'face_to_face',
+                        },
+                    ],
+                    examSessions: [
+                        {
+                            id: `exam-${id}`,
+                            offeringId: id,
+                            examType: 'final',
+                            examDate: toIsoDate(addDays(new Date(2026, 4, 25), index + Number(classLevel))),
+                            startTime: startTime,
+                            endTime,
+                            building: department.code === 'YBS' ? 'Ömer Seyfettin UBF' : 'MDBF',
+                            room: seed.room,
+                            notes: null,
+                            isPublished: true,
+                        },
+                    ],
+                });
+            });
+        });
+    });
 
-    for (let i = 0; i < 10; i += 1) {
-        const weekdayIndex = i % 5;
-        const serviceDate = getWeekdayInMonth(monthDate, weekdayIndex === 4 ? 5 : weekdayIndex + 1, Math.floor(i / 5));
-        const menuDayId = `menu-day-${i + 1}`;
-        const items: CafeteriaMenuItem[] = recipeSets[i % recipeSets.length].map(([itemName, itemType, calories], index) => ({
-            id: `${menuDayId}-item-${index + 1}`,
-            menuDayId,
-            itemName,
-            itemType,
-            sortOrder: index,
-            calories,
-        }));
+    return offerings;
+}
 
-        days.push({
+function createMenuItems(menuDayId: string, names: Array<[string, string, number]>): CafeteriaMenuItem[] {
+    return names.map(([itemName, itemType, calories], index) => ({
+        id: `${menuDayId}-item-${index + 1}`,
+        menuDayId,
+        itemName,
+        itemType,
+        sortOrder: index,
+        calories,
+    }));
+}
+
+function createMay2026Menu(periodId: string): CafeteriaMenuDay[] {
+    const rows: Array<[string, Array<[string, string, number]>]> = [
+        ['2026-05-01', [['Mercimek Çorba', 'soup', 182], ['İzmir Köfte', 'main', 315], ['Pirinç Pilavı', 'side', 280], ['Mevsim Salata', 'salad', 95], ['Ayran', 'drink', 90]]],
+        ['2026-05-04', [['Ezogelin Çorba', 'soup', 195], ['Etli Nohut', 'main', 324], ['Bulgur Pilavı', 'side', 305], ['Turşu', 'salad', 76], ['Mevsim Meyve', 'dessert', 115]]],
+        ['2026-05-05', [['Tarhana Çorba', 'soup', 110], ['Tavuk Sote', 'main', 310], ['Makarna', 'side', 330], ['Cacık', 'salad', 90], ['Kemalpaşa Tatlısı', 'dessert', 260]]],
+        ['2026-05-06', [['Yayla Çorba', 'soup', 160], ['Etli Kuru Fasulye', 'main', 375], ['Pirinç Pilavı', 'side', 280], ['Karışık Turşu', 'salad', 70], ['Ayran', 'drink', 90]]],
+        ['2026-05-07', [['Domates Çorba', 'soup', 150], ['Hasanpaşa Köfte', 'main', 269], ['Zeytinyağlı Taze Fasulye', 'main', 180], ['Bulgur Pilavı', 'side', 305], ['Yoğurt', 'drink', 124]]],
+        ['2026-05-08', [['Sebze Çorba', 'soup', 130], ['Piliç Pane', 'main', 392], ['Soslu Makarna', 'side', 330], ['Mevsim Salata', 'salad', 95], ['Sütlaç', 'dessert', 220]]],
+        ['2026-05-11', [['Mercimek Çorba', 'soup', 182], ['Orman Kebabı', 'main', 360], ['Pirinç Pilavı', 'side', 280], ['Ayran', 'drink', 90], ['Meyve', 'dessert', 115]]],
+        ['2026-05-12', [['Tavuksuyu Çorba', 'soup', 213], ['Etli Bezelye', 'main', 350], ['Erişte', 'side', 296], ['Mevsim Salata', 'salad', 95], ['Şekerpare', 'dessert', 300]]],
+    ];
+
+    return rows.map(([serviceDate, items], index) => {
+        const menuDayId = `menu-day-may-2026-${index + 1}`;
+        return {
             id: menuDayId,
             periodId,
-            serviceDate: toIsoDate(serviceDate),
+            serviceDate,
             mealSession: 'lunch',
-            items,
-        });
-    }
-
-    return days;
+            items: createMenuItems(menuDayId, items),
+        };
+    });
 }
 
 export function createFallbackDataset(now = new Date()): FallbackDataset {
-    const departments: Department[] = [
-        {
-            id: 'dep-ceng',
-            facultyName: 'Muhendislik ve Doga Bilimleri Fakultesi',
-            departmentName: 'Bilgisayar Muhendisligi',
-            code: 'CENG',
-            isActive: true,
-        },
-        {
-            id: 'dep-ie',
-            facultyName: 'Muhendislik ve Doga Bilimleri Fakultesi',
-            departmentName: 'Endustri Muhendisligi',
-            code: 'IE',
-            isActive: true,
-        },
-        {
-            id: 'dep-law',
-            facultyName: 'Hukuk Fakultesi',
-            departmentName: 'Hukuk',
-            code: 'LAW',
-            isActive: true,
-        },
-    ];
-
     const activeTerm: AcademicTerm = {
         id: 'term-2026-spring',
-        year: now.getFullYear(),
+        year: 2026,
         termName: 'Bahar',
-        startsAt: toIsoDate(new Date(now.getFullYear(), 1, 10)),
-        endsAt: toIsoDate(new Date(now.getFullYear(), 5, 20)),
+        startsAt: '2026-02-10',
+        endsAt: '2026-06-20',
         isActive: true,
     };
 
+    const courseCatalog = buildCatalog();
+    const officialOfferings = buildOfferings(activeTerm, courseCatalog);
+    const sampleDepartment = departments[0];
     const studentProfile: StudentProfile = {
         id: 'fallback-user',
         schoolEmail: 'ogrenci@bandirma.edu.tr',
-        fullName: 'Muhammed Salih Ay',
-        phone: '05551234567',
-        facultyName: departments[0].facultyName,
-        departmentId: departments[0].id,
-        departmentCode: departments[0].code,
-        departmentName: departments[0].departmentName,
+        fullName: 'Bandırma Öğrencisi',
+        phone: null,
+        facultyName: sampleDepartment.facultyName,
+        departmentId: sampleDepartment.id,
+        departmentCode: sampleDepartment.code,
+        departmentName: sampleDepartment.departmentName,
         classLevel: 2,
-        studentNumber: 'BAN-123456',
+        studentNumber: 'BAN-000001',
         isActive: true,
-        source: 'imported',
-        mustChangePassword: true,
-        passwordChangedAt: null,
-        tcLast4: '7890',
+        source: 'demo_signup',
+        mustChangePassword: false,
+        passwordChangedAt: now.toISOString(),
+        tcLast4: null,
     };
 
-    const courseCatalog: CourseCatalogItem[] = [
-        { id: 'catalog-1', courseCode: 'CENG201', courseName: 'Veri Yapilari', credits: 4, isActive: true },
-        { id: 'catalog-2', courseCode: 'CENG203', courseName: 'Veritabani Sistemleri', credits: 4, isActive: true },
-        { id: 'catalog-3', courseCode: 'CENG205', courseName: 'Mobil Programlama', credits: 3, isActive: true },
-        { id: 'catalog-4', courseCode: 'CENG101', courseName: 'Programlamaya Giris', credits: 5, isActive: true },
-        { id: 'catalog-5', courseCode: 'CENG301', courseName: 'Algoritma Analizi', credits: 4, isActive: true },
-    ];
-
-    const officialOfferings: CourseOffering[] = [
-        {
-            id: 'offering-1',
-            courseId: 'catalog-1',
-            termId: activeTerm.id,
-            departmentId: departments[0].id,
-            classLevel: 2,
-            section: 'A',
-            instructorName: 'Dr. Ogretim Uyesi Elif Demir',
-            isActive: true,
-            weeklyHours: 4,
-            allowedAbsenceHours: 12,
-            course: courseCatalog[0],
-            scheduleSlots: [
-                { id: 'slot-1', offeringId: 'offering-1', dayOfWeek: 0, startTime: '09:00', endTime: '10:45', room: 'A-101', building: 'Merkez Yerleske', deliveryType: 'face_to_face' },
-                { id: 'slot-2', offeringId: 'offering-1', dayOfWeek: 2, startTime: '09:00', endTime: '10:45', room: 'A-101', building: 'Merkez Yerleske', deliveryType: 'face_to_face' },
-            ],
-            examSessions: [
-                { id: 'exam-1', offeringId: 'offering-1', examType: 'vize', examDate: toIsoDate(addDays(now, 0)), startTime: '09:00', endTime: '12:00', building: 'Merkez Yerleske', room: 'Amfi 1', notes: null, isPublished: true },
-            ],
-        },
-        {
-            id: 'offering-2',
-            courseId: 'catalog-2',
-            termId: activeTerm.id,
-            departmentId: departments[0].id,
-            classLevel: 2,
-            section: 'A',
-            instructorName: 'Dr. Ogretim Uyesi Mert Kaya',
-            isActive: true,
-            weeklyHours: 3,
-            allowedAbsenceHours: 10,
-            course: courseCatalog[1],
-            scheduleSlots: [
-                { id: 'slot-3', offeringId: 'offering-2', dayOfWeek: 1, startTime: '11:00', endTime: '12:30', room: 'B-204', building: 'Teknoloji Binasi', deliveryType: 'face_to_face' },
-                { id: 'slot-4', offeringId: 'offering-2', dayOfWeek: 3, startTime: '11:00', endTime: '12:30', room: 'B-204', building: 'Teknoloji Binasi', deliveryType: 'face_to_face' },
-            ],
-            examSessions: [
-                { id: 'exam-2', offeringId: 'offering-2', examType: 'vize', examDate: toIsoDate(addDays(now, 0)), startTime: '11:00', endTime: '13:00', building: 'Teknoloji Binasi', room: 'Derslik 204', notes: null, isPublished: true },
-            ],
-        },
-        {
-            id: 'offering-3',
-            courseId: 'catalog-3',
-            termId: activeTerm.id,
-            departmentId: departments[0].id,
-            classLevel: 2,
-            section: 'A',
-            instructorName: 'Ogretim Gorevlisi Zeynep Arslan',
-            isActive: true,
-            weeklyHours: 2,
-            allowedAbsenceHours: 8,
-            course: courseCatalog[2],
-            scheduleSlots: [
-                { id: 'slot-5', offeringId: 'offering-3', dayOfWeek: 4, startTime: '14:00', endTime: '15:30', room: 'Lab-2', building: 'Teknoloji Binasi', deliveryType: 'lab' },
-            ],
-            examSessions: [
-                { id: 'exam-3', offeringId: 'offering-3', examType: 'quiz', examDate: toIsoDate(addDays(now, 1)), startTime: '14:00', endTime: '15:30', building: 'Teknoloji Binasi', room: 'Lab-2', notes: 'Kisa quiz', isPublished: true },
-            ],
-        },
-        {
-            id: 'offering-4',
-            courseId: 'catalog-4',
-            termId: activeTerm.id,
-            departmentId: departments[0].id,
-            classLevel: 1,
-            section: 'A',
-            instructorName: 'Dr. Ogretim Uyesi Deniz Yalcin',
-            isActive: true,
-            weeklyHours: 4,
-            allowedAbsenceHours: 12,
-            course: courseCatalog[3],
-            scheduleSlots: [
-                { id: 'slot-6', offeringId: 'offering-4', dayOfWeek: 0, startTime: '13:30', endTime: '15:15', room: 'C-101', building: 'Merkez Yerleske', deliveryType: 'face_to_face' },
-            ],
-            examSessions: [
-                { id: 'exam-4', offeringId: 'offering-4', examType: 'final', examDate: toIsoDate(addDays(now, 16)), startTime: '13:00', endTime: '15:00', building: 'Merkez Yerleske', room: 'C-101', notes: null, isPublished: true },
-            ],
-        },
-        {
-            id: 'offering-5',
-            courseId: 'catalog-5',
-            termId: activeTerm.id,
-            departmentId: departments[0].id,
-            classLevel: 3,
-            section: 'A',
-            instructorName: 'Prof. Dr. Banu Cetin',
-            isActive: true,
-            weeklyHours: 3,
-            allowedAbsenceHours: 9,
-            course: courseCatalog[4],
-            scheduleSlots: [
-                { id: 'slot-7', offeringId: 'offering-5', dayOfWeek: 2, startTime: '15:00', endTime: '16:30', room: 'A-305', building: 'Merkez Yerleske', deliveryType: 'face_to_face' },
-            ],
-            examSessions: [
-                { id: 'exam-5', offeringId: 'offering-5', examType: 'final', examDate: toIsoDate(addDays(now, 18)), startTime: '15:00', endTime: '17:00', building: 'Merkez Yerleske', room: 'A-305', notes: null, isPublished: true },
-            ],
-        },
-    ];
-
-    const menuMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const periodId = `menu-period-${menuMonth.getFullYear()}-${menuMonth.getMonth() + 1}`;
     const cafeteriaPeriod: CafeteriaMenuPeriod = {
-        id: periodId,
-        year: menuMonth.getFullYear(),
-        month: menuMonth.getMonth() + 1,
-        validFrom: toIsoDate(menuMonth),
-        validTo: toIsoDate(new Date(menuMonth.getFullYear(), menuMonth.getMonth() + 1, 0)),
+        id: 'menu-period-2026-5',
+        year: 2026,
+        month: 5,
+        validFrom: '2026-05-01',
+        validTo: '2026-05-31',
         version: 1,
         isPublished: true,
-        days: createMenuDays(periodId, menuMonth),
+        days: createMay2026Menu('menu-period-2026-5'),
     };
 
     return {

@@ -51,35 +51,34 @@ export default function MealCard({ meal }: MealCardProps) {
     return (
         <View style={styles.container}>
             {/* İkon alanı */}
-            <View style={[styles.iconContainer, { backgroundColor: `${color}1A` }]}>
+            <View style={[styles.iconContainer, { backgroundColor: `${color}20` }]}>
                 <Text style={styles.icon}>{icon}</Text>
             </View>
 
             {/* İçerik alanı */}
             <View style={styles.content}>
                 <Text style={styles.name}>{meal.name}</Text>
-                {meal.badges && meal.badges.length > 0 && (
-                    <View style={styles.badgeContainer}>
-                        {meal.badges.map((badge, index) => {
-                            const badgeStyle = getBadgeStyle(badge);
-                            return (
-                                <View
-                                    key={index}
-                                    style={[styles.badge, { backgroundColor: badgeStyle.backgroundColor }]}
-                                >
-                                    <Text style={[styles.badgeText, { color: badgeStyle.color }]}>
-                                        {badge}
-                                    </Text>
-                                </View>
-                            );
-                        })}
-                    </View>
-                )}
+                <Text style={styles.calories}>{meal.calories} kcal</Text>
             </View>
 
-            <View style={styles.caloriePill}>
-                <Text style={styles.calorieText}>{meal.calories} kcal</Text>
-            </View>
+            {/* Badge'ler */}
+            {meal.badges && meal.badges.length > 0 && (
+                <View style={styles.badgeContainer}>
+                    {meal.badges.map((badge, index) => {
+                        const badgeStyle = getBadgeStyle(badge);
+                        return (
+                            <View
+                                key={index}
+                                style={[styles.badge, { backgroundColor: badgeStyle.backgroundColor }]}
+                            >
+                                <Text style={[styles.badgeText, { color: badgeStyle.color }]}>
+                                    {badge}
+                                </Text>
+                            </View>
+                        );
+                    })}
+                </View>
+            )}
         </View>
     );
 }
@@ -91,15 +90,12 @@ const styles = StyleSheet.create({
         backgroundColor: colors.cardWhite,
         paddingVertical: spacing.md,
         paddingHorizontal: spacing.lg,
-        borderRadius: borderRadius.lg,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginBottom: spacing.sm,
-        ...shadows.card,
+        borderBottomWidth: 1,
+        borderBottomColor: colors.border,
     },
     iconContainer: {
-        width: 48,
-        height: 48,
+        width: 44,
+        height: 44,
         borderRadius: borderRadius.md,
         alignItems: 'center',
         justifyContent: 'center',
@@ -112,10 +108,15 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     name: {
-        fontSize: fontSize.md,
+        fontSize: fontSize.lg,
         fontWeight: fontWeight.semibold,
         color: colors.textDark,
         marginBottom: spacing.xs,
+    },
+    calories: {
+        fontSize: fontSize.sm,
+        color: colors.primaryAccent,
+        fontWeight: fontWeight.medium,
     },
     badgeContainer: {
         flexDirection: 'row',
@@ -129,19 +130,5 @@ const styles = StyleSheet.create({
     badgeText: {
         fontSize: fontSize.xs,
         fontWeight: fontWeight.semibold,
-    },
-    caloriePill: {
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.backgroundLight,
-        borderWidth: 1,
-        borderColor: colors.border,
-        marginLeft: spacing.sm,
-    },
-    calorieText: {
-        fontSize: fontSize.sm,
-        fontWeight: fontWeight.medium,
-        color: colors.textSecondary,
     },
 });

@@ -21,6 +21,12 @@ interface AuthResult {
     message?: string;
 }
 
+interface PrototypeStudentInput {
+    fullName: string;
+    departmentCode: string;
+    classLevel: number;
+}
+
 interface AuthContextType {
     isLoggedIn: boolean;
     isLoading: boolean;
@@ -34,6 +40,7 @@ interface AuthContextType {
     shouldShowAuth: boolean;
     login: (email: string, password: string) => Promise<AuthResult>;
     registerDemo: (input: DemoSignupInput) => Promise<AuthResult>;
+    enterPrototypeStudent: (input: PrototypeStudentInput) => Promise<AuthResult>;
     enterFallbackDemo: () => Promise<AuthResult>;
     changePassword: (newPassword: string) => Promise<AuthResult>;
     refreshProfile: () => Promise<void>;
@@ -60,6 +67,7 @@ const AuthContext = createContext<AuthContextType>({
     shouldShowAuth: false,
     login: async () => ({ success: false, error: 'Auth context hazır değil.' }),
     registerDemo: async () => ({ success: false, error: 'Auth context hazır değil.' }),
+    enterPrototypeStudent: async () => ({ success: false, error: 'Auth context hazır değil.' }),
     enterFallbackDemo: async () => ({ success: false, error: 'Auth context hazır değil.' }),
     changePassword: async () => ({ success: false, error: 'Auth context hazır değil.' }),
     refreshProfile: async () => {},
@@ -355,6 +363,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: true };
     };
 
+    const enterPrototypeStudent = async (input: PrototypeStudentInput): Promise<AuthResult> => {
+        const fullName = input.fullName.trim();
+        if (!fullName) {
+            return { success: false, error: 'Ad soyad alanı zorunludur.' };
+        }
+
+        const departments = fallbackDataset.departments;
+        const department = departments.find((item) => item.code === input.departmentCode) ?? departments[0];
+        if (!department) {
+            return { success: false, error: 'Bölüm verisi bulunamadı.' };
+        }
+
+        const safeClassLevel = Math.min(Math.max(Number(input.classLevel) || 1, 1), 4);
+        const slugName = fullName
+            .toLocaleLowerCase('tr-TR')
+            .replace(/[^a-z0-9ığüşöç\s-]/gi, '')
+            .trim()
+            .replace(/\s+/g, '.');
+        const profileRecord: StudentProfile = {
+            id: `prototype-${department.code.toLowerCase()}-${safeClassLevel}-${Date.now()}`,
+            schoolEmail: `${slugName || 'ogrenci'}@ogrenci.bandirma.edu.tr`,
+            fullName,
+            phone: null,
+            facultyName: department.facultyName,
+            departmentId: department.id,
+            departmentCode: department.code,
+            departmentName: department.departmentName,
+            classLevel: safeClassLevel,
+            studentNumber: `PROTO-${department.code}-${safeClassLevel}`,
+            isActive: true,
+            source: 'demo_signup',
+            mustChangePassword: false,
+            passwordChangedAt: new Date().toISOString(),
+            tcLast4: null,
+        };
+
+        const account: FallbackAuthRecord = {
+            email: profileRecord.schoolEmail.toLowerCase(),
+            password: 'prototype',
+            profile: profileRecord,
+        };
+
+        const accounts = await loadMergedFallbackAccounts();
+        const nextAccounts = [
+            account,
+            ...accounts.filter((candidate) => candidate.email !== account.email),
+        ];
+
+        await saveFallbackAccounts(nextAccounts);
+        await saveFallbackAuth(account);
+        setProfile(profileRecord);
+        setSession(null);
+
+        return { success: true };
+    };
+
     const changePassword = async (newPassword: string): Promise<AuthResult> => {
         const password = newPassword.trim();
         if (password.length < 6) {
@@ -441,6 +505,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 shouldShowAuth,
                 login,
                 registerDemo,
+                enterPrototypeStudent,
                 enterFallbackDemo,
                 changePassword,
                 refreshProfile,

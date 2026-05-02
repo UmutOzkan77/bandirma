@@ -146,37 +146,6 @@ export async function fetchEventsByDate(date: string): Promise<Event[]> {
     }));
 }
 
-export async function fetchEventById(eventId: string): Promise<Event | null> {
-    if (!canUseBackend()) {
-        return fallbackEvents().find(item => item.id === eventId) || null;
-    }
-
-    const { data, error } = await supabase!
-        .from('events')
-        .select('*')
-        .eq('id', eventId)
-        .single();
-
-    if (error || !data) {
-        console.error('Event fetch error:', error?.message);
-        return fallbackEvents().find(item => item.id === eventId) || null;
-    }
-
-    return {
-        id: data.id,
-        communityId: data.community_id,
-        title: data.title,
-        description: data.description,
-        image: data.image,
-        date: data.date,
-        time: data.time?.substring(0, 5),
-        endTime: data.end_time?.substring(0, 5),
-        location: data.location,
-        createdAt: new Date(data.created_at),
-        color: data.color || eventDotColors[0],
-    };
-}
-
 export async function fetchEventsByCommunity(communityId: string): Promise<Event[]> {
     if (!canUseBackend()) {
         return getEventsByCommunityId(communityId);

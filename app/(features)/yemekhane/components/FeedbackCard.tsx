@@ -11,30 +11,12 @@ import { voteFeedback } from '../api';
 
 interface FeedbackCardProps {
     feedback: Feedback;
-    variant?: 'compact' | 'full';
 }
 
-const nameMap: Record<string, string> = {
-    user1: 'Muhammed Salih Ay',
-    user2: 'Merve K.',
-    user3: 'Berk A.',
-    user4: 'Selin T.',
-};
-
-const getInitials = (name: string) => {
-    const parts = name.replace('.', '').split(' ').filter(Boolean);
-    if (parts.length === 0) return 'Ö';
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
-};
-
-export default function FeedbackCard({ feedback, variant = 'full' }: FeedbackCardProps) {
+export default function FeedbackCard({ feedback }: FeedbackCardProps) {
     const [likes, setLikes] = useState(feedback.likes);
     const [dislikes, setDislikes] = useState(feedback.dislikes);
     const [userVote, setUserVote] = useState<'like' | 'dislike' | null>(null);
-
-    const displayName = nameMap[feedback.userId] || 'Öğrenci';
-    const initials = getInitials(displayName);
 
     const handleLike = async () => {
         if (userVote === null) {
@@ -62,55 +44,68 @@ export default function FeedbackCard({ feedback, variant = 'full' }: FeedbackCar
         }
     };
 
+
+    const categoryColor = feedback.mealTime === 'lunch' ? colors.primaryAccent : colors.primaryDark;
+
     return (
-        <View style={[styles.container, variant === 'compact' && styles.containerCompact]}>
-            <View style={styles.avatar}>
-                <Text style={styles.avatarText}>{initials}</Text>
+        <View style={styles.container}>
+            {/* Avatar */}
+            <View style={styles.avatarContainer}>
+                <View style={styles.avatar}>
+                    <Text style={styles.avatarIcon}>👤</Text>
+                </View>
+                {/* Kategori renk çizgisi */}
+                <View style={[styles.categoryLine, { backgroundColor: categoryColor }]} />
             </View>
 
+            {/* İçerik */}
             <View style={styles.content}>
+                {/* Üst kısım - kategori ve süre */}
                 <View style={styles.header}>
-                    <Text style={styles.name}>{displayName}</Text>
+                    <Text style={[styles.category, { color: categoryColor }]}>
+                        {feedback.mealTime === 'lunch' ? 'ÖĞLE' : 'AKŞAM'} • {feedback.category}
+                    </Text>
                     <Text style={styles.timeAgo}>{feedback.timeAgo}</Text>
                 </View>
-                {variant === 'full' && (
-                    <Text style={styles.mealName}>{feedback.mealName}</Text>
-                )}
+
+                {/* Yemek adı */}
+                <Text style={styles.mealName}>{feedback.mealName}</Text>
+
+                {/* Yorum */}
                 <Text style={styles.comment}>{feedback.comment}</Text>
 
-                {variant === 'full' && (
-                    <View style={styles.footer}>
-                        <View style={styles.reactions}>
-                            <TouchableOpacity
-                                style={styles.reactionButton}
-                                onPress={handleLike}
-                                disabled={userVote !== null}
-                            >
-                                <Text style={styles.reactionIcon}>👍</Text>
-                                <Text style={[
-                                    styles.reactionCount,
-                                    userVote === 'like' && styles.reactionCountActive
-                                ]}>{likes}</Text>
-                            </TouchableOpacity>
+                {/* Alt kısım - like/dislike ve yanıtla */}
+                <View style={styles.footer}>
+                    <View style={styles.reactions}>
+                        <TouchableOpacity
+                            style={styles.reactionButton}
+                            onPress={handleLike}
+                            disabled={userVote !== null}
+                        >
+                            <Text style={styles.reactionIcon}>👍</Text>
+                            <Text style={[
+                                styles.reactionCount,
+                                userVote === 'like' && styles.reactionCountActive
+                            ]}>{likes}</Text>
+                        </TouchableOpacity>
 
-                            <TouchableOpacity
-                                style={styles.reactionButton}
-                                onPress={handleDislike}
-                                disabled={userVote !== null}
-                            >
-                                <Text style={styles.reactionIcon}>👎</Text>
-                                <Text style={[
-                                    styles.reactionCount,
-                                    userVote === 'dislike' && styles.reactionCountActiveNegative
-                                ]}>{dislikes}</Text>
-                            </TouchableOpacity>
-                        </View>
-
-                        <TouchableOpacity style={styles.replyButton}>
-                            <Text style={styles.replyText}>Yanıtla</Text>
+                        <TouchableOpacity
+                            style={styles.reactionButton}
+                            onPress={handleDislike}
+                            disabled={userVote !== null}
+                        >
+                            <Text style={styles.reactionIcon}>👎</Text>
+                            <Text style={[
+                                styles.reactionCount,
+                                userVote === 'dislike' && styles.reactionCountActiveNegative
+                            ]}>{dislikes}</Text>
                         </TouchableOpacity>
                     </View>
-                )}
+
+                    <TouchableOpacity style={styles.replyButton}>
+                        <Text style={styles.replyText}>Yanıtla</Text>
+                    </TouchableOpacity>
+                </View>
             </View>
         </View>
     );
@@ -124,23 +119,28 @@ const styles = StyleSheet.create({
         marginBottom: spacing.md,
         padding: spacing.lg,
         borderRadius: borderRadius.xl,
-        borderWidth: 1,
-        borderColor: colors.border,
         ...shadows.card,
     },
-    avatar: {
-        width: 36,
-        height: 36,
-        borderRadius: borderRadius.full,
-        backgroundColor: colors.backgroundLight,
+    avatarContainer: {
         alignItems: 'center',
-        justifyContent: 'center',
         marginRight: spacing.md,
     },
-    avatarText: {
-        fontSize: fontSize.sm,
-        fontWeight: fontWeight.bold,
-        color: colors.textDark,
+    avatar: {
+        width: 40,
+        height: 40,
+        borderRadius: borderRadius.full,
+        backgroundColor: colors.primaryAccent,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    avatarIcon: {
+        fontSize: 20,
+    },
+    categoryLine: {
+        width: 3,
+        flex: 1,
+        marginTop: spacing.sm,
+        borderRadius: borderRadius.full,
     },
     content: {
         flex: 1,
@@ -151,19 +151,19 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: spacing.xs,
     },
-    name: {
-        fontSize: fontSize.sm,
+    category: {
+        fontSize: fontSize.xs,
         fontWeight: fontWeight.semibold,
-        color: colors.textDark,
+        letterSpacing: 0.5,
     },
     timeAgo: {
         fontSize: fontSize.xs,
         color: colors.textSecondary,
     },
     mealName: {
-        fontSize: fontSize.sm,
+        fontSize: fontSize.lg,
+        fontWeight: fontWeight.semibold,
         color: colors.textDark,
-        fontWeight: '600',
         marginBottom: spacing.xs,
     },
     comment: {
@@ -210,8 +210,5 @@ const styles = StyleSheet.create({
         fontSize: fontSize.sm,
         color: colors.textSecondary,
         fontWeight: fontWeight.medium,
-    },
-    containerCompact: {
-        paddingVertical: spacing.md,
     },
 });
