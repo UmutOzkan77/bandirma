@@ -22,15 +22,17 @@ export default function FloatingActionButton({ onPress }: FloatingActionButtonPr
 const styles = StyleSheet.create({
     button: {
         position: 'absolute',
-        bottom: 24,
-        right: 24,
+        bottom: 92,
+        right: 20,
         width: 56,
         height: 56,
         borderRadius: borderRadius.full,
-        backgroundColor: colors.primary,
+        backgroundColor: '#004A99',
         justifyContent: 'center',
         alignItems: 'center',
+        zIndex: 50,
         ...shadows.fab,
+        elevation: 10,
     },
     icon: {
         fontSize: 32,

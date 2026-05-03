@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { colors, fontSize, fontWeight, spacing, borderRadius, shadows } from '../theme';
 import { Course } from '../types';
 
@@ -67,9 +67,6 @@ export default function CourseCard({ course, isActive = false, onRemove }: Cours
                 {course.canRemove && onRemove && (
                     <View style={styles.footerRow}>
                         <Text style={styles.codeText}>{course.code}</Text>
-                        <TouchableOpacity style={styles.removeButton} onPress={() => onRemove(course.offeringId)}>
-                            <Text style={styles.removeText}>Localden Kaldir</Text>
-                        </TouchableOpacity>
                     </View>
                 )}
             </View>
@@ -248,17 +245,6 @@ const styles = StyleSheet.create({
     codeText: {
         fontSize: fontSize.xs,
         color: colors.textSecondary,
-        fontWeight: fontWeight.bold,
-    },
-    removeButton: {
-        borderRadius: borderRadius.sm,
-        backgroundColor: '#FEE2E2',
-        paddingHorizontal: spacing.md,
-        paddingVertical: spacing.xs,
-    },
-    removeText: {
-        fontSize: fontSize.xs,
-        color: '#B91C1C',
         fontWeight: fontWeight.bold,
     },
 });
