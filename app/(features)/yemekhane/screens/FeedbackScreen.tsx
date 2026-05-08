@@ -236,7 +236,10 @@ export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
 
             {/* Yeni yorum ekleme butonu */}
             <TouchableOpacity
-                style={[styles.addButton, { bottom: spacing.xxxl + spacing.md + insets.bottom }]}
+                style={[
+                    styles.addButton,
+                    { bottom: spacing.xxxl + spacing.xl + Math.max(insets.bottom, spacing.xl) },
+                ]}
                 activeOpacity={0.8}
                 onPress={() => setShowAddModal(true)}
             >
@@ -420,6 +423,7 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         paddingBottom: 0,
+        flexGrow: 1,
     },
     addButton: {
         position: 'absolute',

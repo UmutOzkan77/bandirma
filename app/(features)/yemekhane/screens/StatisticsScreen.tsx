@@ -77,7 +77,7 @@ export default function StatisticsScreen({ onGoBack }: StatisticsScreenProps) {
                 style={styles.content}
                 contentContainerStyle={[
                     styles.contentContainer,
-                    { paddingBottom: spacing.xxxl + Math.max(insets.bottom, spacing.xl) },
+                    { paddingBottom: spacing.xxxl + spacing.lg + Math.max(insets.bottom, spacing.xl) },
                 ]}
                 showsVerticalScrollIndicator={false}
             >
@@ -229,6 +229,7 @@ const styles = StyleSheet.create({
     },
     contentContainer: {
         paddingBottom: 0,
+        flexGrow: 1,
     },
     titleSection: {
         paddingHorizontal: spacing.lg,
