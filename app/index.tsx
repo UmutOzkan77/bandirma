@@ -184,8 +184,13 @@ export default function HomeScreen() {
                                 const isActive = activeTime >= course.startTime && activeTime <= course.endTime;
                                 return (
                                     <View key={`${course.offeringId}-${course.startTime}`} style={[styles.lessonRow, isActive && styles.lessonRowActive]}>
-                                        <View>
-                                            <Text style={[styles.lessonTitle, isActive && styles.lessonTitleActive]}>{course.courseName}</Text>
+                                        <View style={styles.lessonContent}>
+                                            <Text
+                                                style={[styles.lessonTitle, isActive && styles.lessonTitleActive]}
+                                                numberOfLines={2}
+                                            >
+                                                {course.courseName}
+                                            </Text>
                                             <Text style={[styles.lessonMeta, isActive && styles.lessonMetaActive]}>
                                                 {course.room} {course.building ? `• ${course.building}` : ''}
                                             </Text>
@@ -405,6 +410,11 @@ const styles = StyleSheet.create({
         borderRadius: 14,
         marginBottom: 8,
     },
+    lessonContent: {
+        flex: 1,
+        minWidth: 0,
+        paddingRight: 12,
+    },
     lessonRowActive: {
         backgroundColor: '#EFF6FF',
     },
@@ -412,6 +422,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: '#0F172A',
+        flexShrink: 1,
     },
     lessonTitleActive: {
         color: '#1D4ED8',
@@ -420,6 +431,7 @@ const styles = StyleSheet.create({
         marginTop: 4,
         fontSize: 12,
         color: '#64748B',
+        flexShrink: 1,
     },
     lessonMetaActive: {
         color: '#2563EB',
@@ -428,6 +440,7 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '700',
         color: '#334155',
+        flexShrink: 0,
     },
     lessonTimeActive: {
         color: '#1D4ED8',
