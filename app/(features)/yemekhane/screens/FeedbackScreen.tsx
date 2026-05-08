@@ -236,7 +236,7 @@ export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
 
             {/* Yeni yorum ekleme butonu */}
             <TouchableOpacity
-                style={[styles.addButton, { bottom: spacing.xxxl + insets.bottom }]}
+                style={[styles.addButton, { bottom: spacing.xxxl + spacing.md + insets.bottom }]}
                 activeOpacity={0.8}
                 onPress={() => setShowAddModal(true)}
             >
