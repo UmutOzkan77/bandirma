@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { serviceHours, DailyMenu, Meal, feedbackData } from '../mockData';
 import DaySelector from '../components/DaySelector';
@@ -17,6 +18,31 @@ interface MenuScreenProps {
 const dayNames = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi'];
 const dayShorts = ['Paz', 'Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt'];
 
+const normalizeMealType = (itemType: string | null | undefined, itemName: string) => {
+    if (!itemType) {
+        return 'mainDish';
+    }
+
+    switch (itemType) {
+        case 'soup':
+            return 'soup';
+        case 'dessert':
+            return 'dessert';
+        case 'drink':
+            return 'drink';
+        case 'salad':
+            return 'salad';
+        case 'side':
+            return 'sideDish';
+        case 'main':
+            return 'mainDish';
+        case 'holiday':
+            return 'mainDish';
+        default:
+            return 'mainDish';
+    }
+};
+
 
 function mapMenuData(menuPeriodDays: NonNullable<ReturnType<typeof useAcademic>['menuPeriod']>['days']): DailyMenu[] {
     return menuPeriodDays.map((day) => {
@@ -26,7 +52,7 @@ function mapMenuData(menuPeriodDays: NonNullable<ReturnType<typeof useAcademic>[
             .map((item) => ({
                 id: item.id,
                 name: item.itemName,
-                type: (item.itemType as any) || 'mainDish',
+                type: normalizeMealType(item.itemType, item.itemName) as any,
                 calories: item.calories || 0,
             }));
 
@@ -49,6 +75,7 @@ function mapMenuData(menuPeriodDays: NonNullable<ReturnType<typeof useAcademic>[
 
 export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedback }: MenuScreenProps) {
     const { loading, menuPeriod } = useAcademic();
+    const insets = useSafeAreaInsets();
     const [selectedDayId, setSelectedDayId] = useState('');
     const [userVotes, setUserVotes] = useState<Record<string, 'like' | 'dislike' | null>>({});
     const [votes, setVotes] = useState<Record<string, { likes: number; dislikes: number }>>({});
@@ -56,9 +83,13 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     const menuData = useMemo(() => (menuPeriod ? mapMenuData(menuPeriod.days) : []), [menuPeriod]);
 
     useEffect(() => {
-        if (menuData.length > 0 && !selectedDayId) {
-            setSelectedDayId(menuData[0].id);
+        if (menuData.length === 0 || selectedDayId) {
+            return;
         }
+
+        const todayIso = new Date().toISOString().slice(0, 10);
+        const todayMenu = menuData.find((day) => day.date === todayIso);
+        setSelectedDayId(todayMenu?.id ?? menuData[0].id);
     }, [menuData, selectedDayId]);
 
     const selectedMenu = useMemo(() => menuData.find((day) => day.id === selectedDayId) || menuData[0], [menuData, selectedDayId]);
@@ -110,7 +141,15 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
     }
 
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false} bounces>
+        <ScrollView
+            style={styles.container}
+            contentContainerStyle={[
+                styles.contentContainer,
+                { paddingBottom: spacing.xxxl + Math.max(insets.bottom, spacing.xl) },
+            ]}
+            showsVerticalScrollIndicator={false}
+            bounces
+        >
             <View style={styles.header}>
                 <Text style={styles.headerTitle}>Kampüs Yemekhanesi</Text>
             </View>
@@ -135,9 +174,16 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                 </View>
 
                 <View style={styles.menuCards}>
-                    {selectedMenu.meals.map((meal) => (
-                        <MealCard key={meal.id} meal={meal} />
-                    ))}
+                    {selectedMenu.meals.length > 0 ? (
+                        selectedMenu.meals.map((meal) => (
+                            <MealCard key={meal.id} meal={meal} />
+                        ))
+                    ) : (
+                        <View style={styles.emptyMenuCard}>
+                            <Text style={styles.emptyMenuTitle}>Bugün menü bulunmuyor.</Text>
+                            <Text style={styles.emptyMenuSubtitle}>Resmi tatil veya menü açıklanmadı.</Text>
+                        </View>
+                    )}
                 </View>
 
                 <VoteSection
@@ -160,7 +206,6 @@ export default function MenuScreen({ onNavigateToStatistics, onNavigateToFeedbac
                     <Text style={styles.feedbackButtonText}>Yorum Yap</Text>
                 </TouchableOpacity>
 
-                <View style={styles.bottomSpacer} />
             </View>
         </ScrollView>
     );
@@ -195,6 +240,9 @@ const styles = StyleSheet.create({
     content: {
         paddingBottom: spacing.xxxl,
     },
+    contentContainer: {
+        paddingBottom: 0,
+    },
     feedbackButton: {
         backgroundColor: colors.primaryDark,
         marginHorizontal: spacing.lg,
@@ -214,9 +262,6 @@ const styles = StyleSheet.create({
         fontSize: fontSize.md,
         fontWeight: fontWeight.bold,
         color: colors.textLight,
-    },
-    bottomSpacer: {
-        height: spacing.xxxl,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -256,6 +301,26 @@ const styles = StyleSheet.create({
     },
     menuCards: {
         paddingHorizontal: spacing.lg,
+    },
+    emptyMenuCard: {
+        backgroundColor: colors.cardWhite,
+        borderRadius: borderRadius.lg,
+        borderWidth: 1,
+        borderColor: colors.border,
+        padding: spacing.lg,
+        alignItems: 'center',
+        ...shadows.card,
+    },
+    emptyMenuTitle: {
+        fontSize: fontSize.md,
+        fontWeight: fontWeight.semibold,
+        color: colors.textDark,
+        marginBottom: spacing.xs,
+    },
+    emptyMenuSubtitle: {
+        fontSize: fontSize.sm,
+        color: colors.textSecondary,
+        textAlign: 'center',
     },
     communityHeader: {
         marginTop: spacing.lg,

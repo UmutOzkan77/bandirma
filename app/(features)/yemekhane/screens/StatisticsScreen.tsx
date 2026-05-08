@@ -6,6 +6,7 @@
  */
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { calendarData, monthlyFavorite, turkishMonths, weeklyMenuData, DailyMenu } from '../mockData';
 import CalendarView from '../components/CalendarView';
@@ -15,8 +16,9 @@ interface StatisticsScreenProps {
 }
 
 export default function StatisticsScreen({ onGoBack }: StatisticsScreenProps) {
-    const [currentMonth, setCurrentMonth] = useState(1); // Şubat (0-indexed -> 1)
-    const [currentYear, setCurrentYear] = useState(2026);
+    const insets = useSafeAreaInsets();
+    const [currentMonth, setCurrentMonth] = useState(() => new Date().getMonth());
+    const [currentYear, setCurrentYear] = useState(() => new Date().getFullYear());
 
     // Seçili gün detayı için state
     const [selectedMenu, setSelectedMenu] = useState<DailyMenu | null>(null);
@@ -69,14 +71,14 @@ export default function StatisticsScreen({ onGoBack }: StatisticsScreenProps) {
                 <TouchableOpacity style={styles.backButton} onPress={onGoBack}>
                     <Text style={styles.backIcon}>←</Text>
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>İstatistikler</Text>
-                <TouchableOpacity style={styles.moreButton}>
-                    <Text style={styles.moreIcon}>⋯</Text>
-                </TouchableOpacity>
             </View>
 
             <ScrollView
                 style={styles.content}
+                contentContainerStyle={[
+                    styles.contentContainer,
+                    { paddingBottom: spacing.xxxl + Math.max(insets.bottom, spacing.xl) },
+                ]}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Başlık */}
@@ -117,8 +119,6 @@ export default function StatisticsScreen({ onGoBack }: StatisticsScreenProps) {
                     </View>
                 </View>
 
-                {/* Alt boşluk */}
-                <View style={styles.bottomSpacer} />
             </ScrollView>
 
             {/* Gün Detay Modalı */}
@@ -224,22 +224,11 @@ const styles = StyleSheet.create({
         fontWeight: fontWeight.semibold,
         color: colors.textDark,
     },
-    moreButton: {
-        width: 40,
-        height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: colors.cardWhite,
-        borderRadius: borderRadius.full,
-        borderWidth: 1,
-        borderColor: colors.border,
-    },
-    moreIcon: {
-        fontSize: 24,
-        color: colors.textDark,
-    },
     content: {
         flex: 1,
+    },
+    contentContainer: {
+        paddingBottom: 0,
     },
     titleSection: {
         paddingHorizontal: spacing.lg,
@@ -315,9 +304,6 @@ const styles = StyleSheet.create({
         width: 80,
         height: 80,
         borderRadius: borderRadius.md,
-    },
-    bottomSpacer: {
-        height: spacing.xxxl,
     },
     // Modal Styles
     modalOverlay: {

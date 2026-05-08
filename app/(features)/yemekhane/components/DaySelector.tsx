@@ -14,12 +14,35 @@ interface DaySelectorProps {
 }
 
 export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySelectorProps) {
-    const weekdayOrder = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'];
-    const fallbackDay = days[0] || null;
-    const weekdayDays = weekdayOrder.map((name) => ({
-        name,
-        day: days.find((day) => day.dayName === name) || fallbackDay,
-    }));
+    const toIsoDate = (value: string) => {
+        if (value.includes('.')) {
+            const [dd, mm, yyyy] = value.split('.').map((part) => Number(part));
+            if (!Number.isNaN(dd) && !Number.isNaN(mm) && !Number.isNaN(yyyy)) {
+                const month = String(mm).padStart(2, '0');
+                const day = String(dd).padStart(2, '0');
+                return `${yyyy}-${month}-${day}`;
+            }
+        }
+
+        if (value.includes('-')) {
+            return value.slice(0, 10);
+        }
+
+        return '';
+    };
+
+    const today = new Date();
+    const dayOfWeek = (today.getDay() + 6) % 7;
+    const monday = new Date(today);
+    monday.setDate(today.getDate() - dayOfWeek);
+
+    const menuByDate = new Map(days.map((day) => [toIsoDate(day.date), day]));
+    const weekdayDays = Array.from({ length: 5 }, (_, index) => {
+        const date = new Date(monday);
+        date.setDate(monday.getDate() + index);
+        const iso = date.toISOString().slice(0, 10);
+        return menuByDate.get(iso);
+    }).filter(Boolean) as DailyMenu[];
 
     return (
         <ScrollView
@@ -27,17 +50,17 @@ export default function DaySelector({ days, selectedDayId, onDaySelect }: DaySel
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.container}
         >
-            {weekdayDays.map(({ name, day }) => {
-                const isSelected = day?.id === selectedDayId;
+            {weekdayDays.map((day) => {
+                const isSelected = day.id === selectedDayId;
                 return (
                     <TouchableOpacity
-                        key={day?.id ?? `weekday-${name}`}
+                        key={day.id}
                         style={[styles.dayItem, isSelected && styles.dayItemSelected]}
-                        onPress={() => day && onDaySelect(day.id)}
+                        onPress={() => onDaySelect(day.id)}
                         activeOpacity={0.7}
                     >
                         <Text style={[styles.dayLabel, isSelected && styles.dayLabelSelected]}>
-                            {name}
+                            {day.dayName}
                         </Text>
                     </TouchableOpacity>
                 );

@@ -18,6 +18,7 @@ import {
     Alert,
     ActivityIndicator
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, spacing, borderRadius, fontSize, fontWeight, shadows } from '../theme';
 import { feedbackData, Feedback } from '../mockData';
 import { fetchFeedback, addFeedback } from '../api';
@@ -31,6 +32,7 @@ interface FeedbackScreenProps {
 }
 
 export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
+    const insets = useSafeAreaInsets();
     const [sortBy, setSortBy] = useState<SortOption>('helpful');
     const [showSortMenu, setShowSortMenu] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -177,9 +179,7 @@ export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
                     <Text style={styles.backIcon}>←</Text>
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Öğrenci Geri Bildirimleri</Text>
-                <TouchableOpacity style={styles.searchButton}>
-                    <Text style={styles.searchIcon}>🔍</Text>
-                </TouchableOpacity>
+                <View style={styles.headerSpacer} />
             </View>
 
             {/* Sıralama filtresi */}
@@ -221,6 +221,10 @@ export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
 
             <ScrollView
                 style={styles.content}
+                contentContainerStyle={[
+                    styles.contentContainer,
+                    { paddingBottom: spacing.xxxl + Math.max(insets.bottom, spacing.xl) },
+                ]}
                 showsVerticalScrollIndicator={false}
             >
                 {/* Yorum kartları */}
@@ -228,13 +232,11 @@ export default function FeedbackScreen({ onGoBack }: FeedbackScreenProps) {
                     <FeedbackCard key={feedback.id} feedback={feedback} />
                 ))}
 
-                {/* Alt boşluk */}
-                <View style={styles.bottomSpacer} />
             </ScrollView>
 
             {/* Yeni yorum ekleme butonu */}
             <TouchableOpacity
-                style={styles.addButton}
+                style={[styles.addButton, { bottom: spacing.xl + spacing.md + insets.bottom }]}
                 activeOpacity={0.8}
                 onPress={() => setShowAddModal(true)}
             >
@@ -352,15 +354,12 @@ const styles = StyleSheet.create({
         fontSize: fontSize.xxl,
         fontWeight: fontWeight.bold,
         color: colors.textDark,
+        flex: 1,
+        textAlign: 'center',
     },
-    searchButton: {
+    headerSpacer: {
         width: 40,
         height: 40,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    searchIcon: {
-        fontSize: 20,
     },
     filterSection: {
         backgroundColor: colors.cardWhite,
@@ -419,8 +418,8 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: spacing.md,
     },
-    bottomSpacer: {
-        height: 100,
+    contentContainer: {
+        paddingBottom: 0,
     },
     addButton: {
         position: 'absolute',
