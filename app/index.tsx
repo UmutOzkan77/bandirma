@@ -100,6 +100,7 @@ export default function HomeScreen() {
         : 'Güncel sınav duyurusu bulunmuyor.';
 
     const menuItems = todaysMenu?.items.slice(0, 4) ?? [];
+    const isWeekend = [0, 6].includes(new Date().getDay());
 
     return (
         <SafeAreaView style={styles.safeArea} edges={['top']}>
@@ -119,7 +120,7 @@ export default function HomeScreen() {
                             </TouchableOpacity>
                             <View>
                                 <Text style={styles.eyebrow}>ÖĞRENCİ</Text>
-                                <Text style={styles.studentName}>Muhammed Salih Ay</Text>
+                                <Text style={styles.studentName}>{profile?.fullName ?? 'Bandırma Öğrencisi'}</Text>
                             </View>
                         </View>
 
@@ -152,7 +153,9 @@ export default function HomeScreen() {
                     </View>
 
                     <View style={styles.card}>
-                        {menuItems.length > 0 ? (
+                        {isWeekend ? (
+                            <Text style={styles.emptyText}>Resmi Tatil</Text>
+                        ) : menuItems.length > 0 ? (
                             menuItems.map((item) => (
                                 <View key={item.id} style={styles.listRow}>
                                     <View>
