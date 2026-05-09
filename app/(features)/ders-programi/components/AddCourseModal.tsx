@@ -237,17 +237,17 @@ export default function AddCourseModal({ visible, onClose, onSearch, onSave }: A
                         {courseName.trim().length >= 2 && !selectedOffering && !isSearching && (
                             <Text style={styles.helperText}>Kaydetmek için buluttaki aktif derslerden eşleşen bir ders adı girin.</Text>
                         )}
-                    </ScrollView>
 
-                    <TouchableOpacity
-                        style={[styles.saveButton, (!selectedOffering || isSaving) && styles.saveButtonDisabled]}
-                        onPress={handleSave}
-                        disabled={!selectedOffering || isSaving}
-                        activeOpacity={0.85}
-                    >
-                        <Ionicons name="save" size={24} color={colors.textLight} />
-                        <Text style={styles.saveButtonText}>{isSaving ? 'Kaydediliyor' : 'Dersi Kaydet'}</Text>
-                    </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.saveButton, (!selectedOffering || isSaving) && styles.saveButtonDisabled]}
+                            onPress={handleSave}
+                            disabled={!selectedOffering || isSaving}
+                            activeOpacity={0.85}
+                        >
+                            <Ionicons name="save" size={24} color={colors.textLight} />
+                            <Text style={styles.saveButtonText}>{isSaving ? 'Kaydediliyor' : 'Dersi Kaydet'}</Text>
+                        </TouchableOpacity>
+                    </ScrollView>
                 </View>
             </View>
         </Modal>
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
     formContent: {
         paddingHorizontal: spacing.xxl,
         paddingTop: spacing.xxl,
-        paddingBottom: 120,
+        paddingBottom: spacing.xxl,
     },
     sectionTitle: {
         fontSize: fontSize.title,
@@ -410,10 +410,7 @@ const styles = StyleSheet.create({
         color: colors.textSecondary,
     },
     saveButton: {
-        position: 'absolute',
-        left: spacing.xxl,
-        right: spacing.xxl,
-        bottom: spacing.xxl,
+        marginTop: spacing.xxl,
         height: 72,
         borderRadius: borderRadius.lg,
         backgroundColor: colors.primary,
